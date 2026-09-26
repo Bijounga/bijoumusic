@@ -6,7 +6,13 @@
   cursor: grab;
   touch-action: none;
   overflow: hidden;
-  background: var(--surface-1);
+  background: var(--screen-bg);
+  box-shadow: var(--screen-shadow);
+  /* A theme's screen can be a different value than the panes around it (a dark
+     LCD inside a light theme), so remap the tokens this panel draws with to the
+     screen's own. Nothing inside opens a popover, so this can't leak outward. */
+  --text-secondary: var(--screen-text);
+  --accent: var(--screen-accent);
 }
 
 .panel:active {
@@ -53,14 +59,14 @@
   bottom: 0;
   left: 0;
   width: 0;
-  background: rgba(240, 193, 75, 0.22);
+  background: rgba(var(--favorite-level-1-rgb), 0.22);
   border-left: 1px solid var(--favorite-level-1);
   border-right: 1px solid var(--favorite-level-1);
   pointer-events: none;
 }
 
 .rangeOverlayDrawing {
-  background: rgba(240, 193, 75, 0.35);
+  background: rgba(var(--favorite-level-1-rgb), 0.35);
 }
 
 .canvasLayer {
@@ -111,7 +117,7 @@
   height: 12px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 0 2px var(--surface-1);
+  box-shadow: 0 0 0 2px var(--screen-ring);
   pointer-events: none;
   transition: transform var(--duration-fast) var(--ease-standard);
 }

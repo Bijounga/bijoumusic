@@ -1,7 +1,13 @@
 import AppShell from './components/layout/AppShell'
+import TitleBar from './components/layout/TitleBar'
 
 function App(): React.JSX.Element {
-  return <AppShell />
+  return (
+    <>
+      <TitleBar />
+      <AppShell />
+    </>
+  )
 }
 
 export default App

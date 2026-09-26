@@ -64,5 +64,10 @@ export const IpcChannels = {
   premiereAnalyzeResponse: 'premiere:analyze-response',
   downloadTrack: 'downloader:download',
   downloadProgress: 'downloader:progress',
-  getVideoInfo: 'downloader:get-video-info'
+  getVideoInfo: 'downloader:get-video-info',
+  windowMinimize: 'window:minimize',
+  windowToggleMaximize: 'window:toggle-maximize',
+  windowClose: 'window:close',
+  windowIsMaximized: 'window:is-maximized',
+  windowMaximizedChanged: 'window:maximized-changed'
 } as const

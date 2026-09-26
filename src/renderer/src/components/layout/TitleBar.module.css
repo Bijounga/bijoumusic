@@ -1,0 +1,89 @@
+/* Replaces the native Windows title bar (the window is frameless). Everything
+   visual comes from the --titlebar-* / --caption-* theme tokens, so the dark
+   theme can match the old native bar while glossy themes restyle it fully. */
+.bar {
+  flex-shrink: 0;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  background: var(--titlebar-bg);
+  border-bottom: 1px solid var(--titlebar-border);
+  color: var(--titlebar-text);
+  -webkit-app-region: drag;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  margin: 0 8px 0 12px;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 12px;
+  text-shadow: var(--titlebar-text-shadow);
+  white-space: nowrap;
+}
+
+.captions {
+  align-self: flex-start;
+  margin-left: auto;
+  margin-right: var(--caption-inset);
+  display: flex;
+  gap: var(--caption-gap);
+  -webkit-app-region: no-drag;
+}
+
+.caption {
+  width: var(--caption-width);
+  height: var(--caption-height);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--caption-border);
+  border-top: none;
+  border-radius: var(--caption-radius);
+  background: var(--caption-bg);
+  box-shadow: var(--caption-shadow);
+  color: var(--caption-icon);
+  outline: none;
+  cursor: default;
+  transition: background var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.caption svg {
+  width: 10px;
+  height: 10px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--caption-stroke);
+  filter: var(--caption-icon-filter);
+}
+
+.caption:hover {
+  background: var(--caption-bg-hover);
+}
+
+.caption:active {
+  background: var(--caption-bg-active);
+}
+
+.close {
+  width: var(--caption-close-width);
+  border-color: var(--caption-close-border);
+  background: var(--caption-close-bg);
+}
+
+.close:hover {
+  background: var(--caption-close-bg-hover);
+  box-shadow: var(--caption-close-shadow-hover);
+  color: var(--caption-close-icon-hover);
+}
+
+.close:active {
+  background: var(--caption-close-bg-active);
+}

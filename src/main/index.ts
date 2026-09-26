@@ -16,14 +16,18 @@ import { registerBookmarksIpc } from './ipc/bookmarks.ipc'
 import { registerSettingsIpc } from './ipc/settings.ipc'
 import { registerPremiereIpc } from './ipc/premiere.ipc'
 import { registerDownloaderIpc } from './ipc/downloader.ipc'
+import { registerWindowIpc } from './ipc/window.ipc'
 import { registerAudioProtocolScheme, registerAudioProtocolHandler } from './protocol'
 import { getAppIconPath } from './iconPath'
 import { startPremiereBridge, stopPremiereBridge } from './premiereBridge'
 
 // Pinned to the original folder name so renaming the app's display name doesn't
 // orphan the existing library database — data location and display name are
-// intentionally decoupled.
-app.setPath('userData', join(app.getPath('appData'), 'music-browser'))
+// intentionally decoupled. An explicit --user-data-dir still wins, so test runs
+// can point at a throwaway profile instead of the real library.
+if (!app.commandLine.hasSwitch('user-data-dir')) {
+  app.setPath('userData', join(app.getPath('appData'), 'music-browser'))
+}
 app.setName('BijouMusic')
 
 // The portable Windows build self-extracts and runs fresh from a temp folder on
@@ -56,6 +60,9 @@ function createWindow(): void {
     minWidth: 960,
     minHeight: 600,
     show: false,
+    // Frameless so each theme can draw its own title bar (components/layout/TitleBar).
+    // Windows still provides resize edges, snapping by drag, and the window shadow.
+    frame: false,
     autoHideMenuBar: true,
     backgroundColor: '#0b0d10',
     icon: getAppIconPath(),
@@ -70,6 +77,9 @@ function createWindow(): void {
   window.on('ready-to-show', () => {
     window.show()
   })
+
+  window.on('maximize', () => window.webContents.send(IpcChannels.windowMaximizedChanged, true))
+  window.on('unmaximize', () => window.webContents.send(IpcChannels.windowMaximizedChanged, false))
 
   // Confirmed via direct testing: the long-lived database connection can end up
   // reading stale data relative to what's actually on disk (root cause never
@@ -121,6 +131,7 @@ if (gotSingleInstanceLock) {
     registerSettingsIpc()
     registerPremiereIpc()
     registerDownloaderIpc()
+    registerWindowIpc()
     startPremiereBridge()
 
     createWindow()

@@ -1,0 +1,71 @@
+/* Theme-invariant tokens and global element rules — every value referenced here
+   that varies by theme (--accent, --surface-0, etc.) is defined per-theme in
+   styles/themes/*.css; this file only owns things that stay the same across
+   every theme (motion, type scale, radius scale, and which elements get base
+   styling), plus the structural rules that apply those per-theme tokens. */
+
+:root {
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --duration-fast: 120ms;
+  --duration-medium: 180ms;
+  --duration-slow: 260ms;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+/* Title bar on top, the app shell filling the rest. */
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+body {
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* The theme's window backdrop (none in flat themes). will-change gives it its own
+   compositor layer, so it's rasterized once — without it, a procedural backdrop
+   would be re-rendered under every repaint of the scrolling track list. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--app-backdrop) center / cover no-repeat;
+  will-change: transform;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}

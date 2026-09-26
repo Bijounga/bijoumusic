@@ -19,15 +19,14 @@
   flex-shrink: 0;
 }
 
-/* Colorless by design — no fill, no accent tint, just plain icons that brighten
-   on hover. Outline/box-shadow specifically keep getting reintroduced by the
+/* Colorless in the dark theme — no fill, no accent tint, just plain icons that
+   brighten on hover. Outline/box-shadow keep getting reintroduced by the
    platform's default focus styling, so every state that could draw one is pinned
-   to none with !important rather than trusting cascade order again; border and
-   background stay free for deliberate styling below (a hover backdrop, the play
-   button's ring) since those were never the source of the ring bug. */
+   with !important rather than trusting cascade order. The pinned box-shadow is
+   the theme's own material shadow (none in dark), not a literal none, so glossy
+   themes keep their bubble/orb depth while focused too. */
 .transportBtn,
 .playButton {
-  box-shadow: none !important;
   outline: none !important;
   -webkit-tap-highlight-color: transparent;
   appearance: none;
@@ -44,24 +43,32 @@
   transition: color var(--duration-fast) var(--ease-standard), background var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
 }
 
+.transportBtn,
 .transportBtn:focus,
 .transportBtn:focus-visible,
-.transportBtn:active,
+.transportBtn:active {
+  box-shadow: var(--bubble-shadow) !important;
+  outline: none !important;
+}
+
+.playButton,
 .playButton:focus,
 .playButton:focus-visible,
 .playButton:active {
-  box-shadow: none !important;
+  box-shadow: var(--orb-shadow) !important;
   outline: none !important;
 }
 
 .transportBtn {
   width: 46px;
   height: 46px;
+  background: var(--bubble-bg);
 }
 
+/* background-color only, so a theme's bubble image (if any) stays on top. */
 .transportBtn:hover:not(:disabled) {
   color: var(--text-primary);
-  background: var(--surface-3);
+  background-color: var(--surface-3);
 }
 
 .transportBtn:disabled {
@@ -80,8 +87,9 @@
 .playButton {
   width: 60px;
   height: 60px;
-  color: var(--text-primary);
-  border: 1.5px solid var(--border-subtle);
+  color: var(--orb-icon);
+  border: 1.5px solid var(--orb-border);
+  background: var(--orb-bg);
 }
 
 .playButton:hover:not(:disabled) {
@@ -130,9 +138,10 @@
 }
 
 .auditionBtn {
-  background: none;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  background: var(--control-bg);
+  border: 1px solid var(--control-border);
+  border-radius: var(--control-radius);
+  box-shadow: var(--control-shadow);
   color: var(--text-secondary);
   font-size: 12.5px;
   padding: 5px 10px;
@@ -144,6 +153,7 @@
 }
 
 .auditionBtn:hover {
+  background: var(--control-bg-hover);
   border-color: var(--accent);
   color: var(--text-primary);
 }
@@ -197,9 +207,10 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  background: none;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  background: var(--control-bg);
+  border: 1px solid var(--control-border);
+  border-radius: var(--control-radius);
+  box-shadow: var(--control-shadow);
   color: var(--text-secondary);
   font-size: 12.5px;
   padding: 5px 10px;
@@ -211,6 +222,7 @@
 }
 
 .premiereStatusBtn:hover:not(:disabled) {
+  background: var(--control-bg-hover);
   border-color: var(--accent);
   color: var(--text-primary);
 }

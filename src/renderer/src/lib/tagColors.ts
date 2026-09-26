@@ -4,6 +4,11 @@
 // everywhere it shows up, with zero manual color-picking required. Picked for
 // enough hue separation to stay visually distinct even with a couple dozen tags
 // on screen at once, and readable as white-on-color text in the dark theme.
+//
+// Deliberately theme-invariant, not CSS tokens: this palette identifies
+// individual TAGS from each other, not the app's visual theme — it should stay
+// exactly this set of colors across every theme (dark, Frutiger Aero, etc.), or
+// a tag's color would shift on theme switch with nothing else about it changing.
 const TAG_PALETTE = [
   '#5b8def', // blue
   '#2fb787', // green

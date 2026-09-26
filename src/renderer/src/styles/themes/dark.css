@@ -1,0 +1,144 @@
+/* Theme 1: Dark (default) — today's original look, unchanged. Matches a bare
+   <html> with no data-theme attribute too, so this is what shows during the
+   brief window before main.tsx's synchronous startup read sets the real
+   attribute (no flash of unstyled content), and it's what a corrupted/unknown
+   stored theme id falls back to. */
+html,
+html[data-theme='dark'] {
+  /* Surfaces — layered dark tones with a slight blue cast, not pure black, for panel separation without heavy borders */
+  --surface-0: #0a0d12; /* app background */
+  --surface-1: #12161d; /* sidebar / panels */
+  --surface-2: #191f28; /* now-playing bar / raised elements */
+  --surface-3: #232b37; /* hover / active row */
+  --border-subtle: #2c3542;
+
+  /* Text — near-white primary for ~15:1 contrast, secondary still clears WCAG AA (4.5:1) on surface-0/1 */
+  --text-primary: #f5f7fa;
+  --text-secondary: #a7b1bf;
+  --text-disabled: #6b7684;
+
+  /* Accent — single consistent color for "what's active": selection, active filters, waveform, playhead, focus */
+  --accent: #45b8e6;
+  --accent-strong: #7ecdf0;
+  --accent-contrast: #041c28;
+  --accent-rgb: 69, 184, 230;
+
+  --error: #ff7a7a;
+  --success: #6bcf7f;
+
+  /* Playhead needs a second, contrasting color to stay visible over dense waveform peaks */
+  --playhead: #ff6b6b;
+
+  /* Waveform's unplayed region — same hue family as text-secondary, translucent so it
+     reads as "not yet played" rather than a second, competing color */
+  --waveform-dim: rgba(167, 177, 191, 0.4);
+  --row-waveform-dim: rgba(167, 177, 191, 0.55);
+
+  /* Favorite levels — color + shape, never color alone (paired with icons in components) */
+  --favorite-level-3: #45b8e6; /* Favorite */
+  --favorite-level-2: #7fd858; /* Good */
+  --favorite-level-1: #e0b84f; /* Situational */
+  --favorite-level-0: #6b7280; /* Don't Use */
+  --favorite-level-1-rgb: 224, 184, 79;
+
+  --danger: #ff6b6b;
+
+  /* Marks the volume slider once it's past 100% — a different color from --accent so
+     "you're boosting past normal" reads at a glance, not just from bar position. */
+  --volume-boost: #ff8c5a;
+
+  /* One distinct color per sidebar section heading, purely so sections are easy to
+     tell apart at a glance while scrolling — not used for anything functional. */
+  --section-download: #ff7ab8;
+  --section-library: #8aa0b8;
+  --section-favorites: #f0c14b;
+  --section-energy: #ff8c5a;
+  --section-folders: #45b8e6;
+  --section-tags: #b98ce6;
+  --section-projects: #6fd88f;
+  --section-keybinds: #8a94a6;
+
+  --font-ui: 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Name of the currently playing track in the list. */
+  --row-active-weight: 400;
+
+  /* Title bar — matches the native Windows 11 dark title bar this replaced. */
+  --titlebar-bg: #202020;
+  --titlebar-border: transparent;
+  --titlebar-text: #ffffff;
+  --titlebar-text-shadow: none;
+  --caption-width: 46px;
+  --caption-close-width: 46px;
+  --caption-height: 32px;
+  --caption-gap: 0px;
+  --caption-inset: 0px;
+  --caption-radius: 0;
+  --caption-border: transparent;
+  --caption-bg: transparent;
+  --caption-bg-hover: rgba(255, 255, 255, 0.08);
+  --caption-bg-active: rgba(255, 255, 255, 0.05);
+  --caption-shadow: none;
+  --caption-icon: #ffffff;
+  --caption-icon-filter: none;
+  --caption-stroke: 1;
+  --caption-close-border: transparent;
+  --caption-close-bg: transparent;
+  --caption-close-bg-hover: #c42b1c;
+  --caption-close-bg-active: #b0281a;
+  --caption-close-shadow-hover: none;
+  --caption-close-icon-hover: #ffffff;
+
+  /* Shared floating-panel shadow (popovers, dropdowns, context-ish overlays) —
+     was hardcoded identically in a dozen component files; consolidated here so
+     each theme sets its own elevation feel once instead of in every file. */
+  --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.4);
+
+  /* Material tokens. This theme is flat, so every one of these is an exact
+     no-op: either the value the component used before tokens existed, or
+     none/transparent where the component had no such treatment at all. Every
+     token must exist in every theme file — a theme that omits one silently
+     inherits whatever the previous theme in source order left behind. */
+
+  /* Window backdrop (a full background-image value) — shown behind the panes. */
+  --app-backdrop: none;
+
+  /* The four big layout panes (full background values). */
+  --pane-sidebar: var(--surface-1);
+  --pane-header: var(--surface-1);
+  --pane-list: var(--surface-0);
+  --pane-footer: var(--surface-2);
+
+  /* Bordered pill/trigger buttons ("Aliases", "Preview", sort toggle...).
+     Background values, so `none` matches their old `background: none`. */
+  --control-bg: none;
+  --control-bg-hover: none;
+  --control-border: var(--border-subtle);
+  --control-shadow: none;
+  --control-radius: var(--radius-md);
+
+  /* Borderless round icon buttons (prev/next/shuffle). */
+  --bubble-bg: none;
+  --bubble-shadow: none;
+
+  /* The big play/pause button. */
+  --orb-bg: none;
+  --orb-border: var(--border-subtle);
+  --orb-shadow: none;
+  --orb-icon: var(--text-primary);
+
+  /* Sunken inputs and slider grooves. */
+  --well-shadow: none;
+
+  /* Display "screens" — the big waveform panel and the spectrum/spectrogram
+     panels. Text and accent are remapped inside these, since a theme's screen
+     can be a different value (dark LCD) than the panes around it. */
+  --screen-bg: var(--surface-1);
+  --screen-shadow: none;
+  --screen-text: var(--text-secondary);
+  --screen-accent: var(--accent);
+  --screen-accent-strong: var(--accent-strong);
+  --screen-ring: var(--surface-1);
+  --analyzer-bar-dim: var(--surface-2);
+  --analyzer-bg-dim: var(--surface-1);
+}

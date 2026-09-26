@@ -4,14 +4,18 @@ import { useCachedWaveformPeaks } from '../../audio/useCachedWaveformPeaks'
 import { useTrackTagColors } from '../../hooks/useTrackTagColors'
 import { waveformFillStyle } from '../../lib/tagColors'
 import { useWaveformIntensityStore } from '../../state/waveformIntensityStore'
+import { useThemeStore } from '../../state/themeStore'
 import styles from './TrackList.module.css'
 
-const DEFAULT_BAR_COLOR = 'rgba(167, 177, 191, 0.55)'
+function themeColor(cssVar: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim()
+}
 
 function RowWaveform({ track }: { track: Track }): React.JSX.Element {
   const peaks = useCachedWaveformPeaks(track)
   const tagColors = useTrackTagColors(track.id)
   const intensity = useWaveformIntensityStore((s) => s.intensity)
+  const theme = useThemeStore((s) => s.theme)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -29,7 +33,7 @@ function RowWaveform({ track }: { track: Track }): React.JSX.Element {
     if (!ctx) return
     ctx.scale(dpr, dpr)
     ctx.clearRect(0, 0, width, height)
-    ctx.fillStyle = waveformFillStyle(ctx, width, tagColors, DEFAULT_BAR_COLOR, intensity)
+    ctx.fillStyle = waveformFillStyle(ctx, width, tagColors, themeColor('--row-waveform-dim'), intensity)
 
     // Downsample the full-resolution peaks to however many bars actually fit.
     const targetBars = Math.max(1, Math.floor(width / 2))
@@ -51,7 +55,7 @@ function RowWaveform({ track }: { track: Track }): React.JSX.Element {
       const barHeight = Math.max((max - min) * height * 0.5, 1)
       ctx.fillRect(i * 2, midY - barHeight / 2, 1, barHeight)
     }
-  }, [peaks, tagColors, intensity])
+  }, [peaks, tagColors, intensity, theme])
 
   if (!peaks) return <div className={styles.rowWaveformEmpty} />
 

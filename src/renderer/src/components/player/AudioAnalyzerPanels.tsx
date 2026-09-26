@@ -49,7 +49,12 @@ function hotColor(dim: string, tagColor: string, magnitude: number): string {
  *  thinner than a pixel and read as noise. Each bar's color comes from the
  *  same tag color-wheel the reactive ring uses, always at full strength
  *  (blue fallback only when the track has no tags) — this doesn't fade via
- *  the waveform intensity slider, which is scoped to the waveform panel. */
+ *  the waveform intensity slider, which is scoped to the waveform panel.
+ *
+ *  Both this and drawSpectrogramColumn read theme tokens fresh every animation
+ *  frame, same as ReactiveVisualizer's ring — that's what makes them repaint
+ *  correctly on a theme switch with no explicit retrigger; don't "optimize"
+ *  that away (see ReactiveVisualizer.tsx's matching note). */
 function drawSpectrum(canvas: HTMLCanvasElement, data: Uint8Array | null, tagColors: string[]): void {
   const dpr = window.devicePixelRatio || 1
   canvas.width = Math.round(PANEL_WIDTH * dpr)
@@ -62,8 +67,8 @@ function drawSpectrum(canvas: HTMLCanvasElement, data: Uint8Array | null, tagCol
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   ctx.clearRect(0, 0, PANEL_WIDTH, PANEL_HEIGHT)
 
-  const dim = themeColor('--surface-2')
-  const fallback = themeColor('--accent')
+  const dim = themeColor('--analyzer-bar-dim')
+  const fallback = themeColor('--screen-accent')
   const barWidth = (PANEL_WIDTH - BAR_GAP * (SPECTRUM_BAR_COUNT - 1)) / SPECTRUM_BAR_COUNT
   const binsPerBar = Math.max(1, Math.floor(USABLE_BINS / SPECTRUM_BAR_COUNT))
 
@@ -112,8 +117,8 @@ function drawSpectrogramColumn(
 
   bufferCtx.drawImage(buffer, -1, 0)
 
-  const dim = themeColor('--surface-1')
-  const fallback = themeColor('--accent-strong')
+  const dim = themeColor('--analyzer-bg-dim')
+  const fallback = themeColor('--screen-accent-strong')
   const binsPerPixel = Math.max(1, Math.floor(USABLE_BINS / h))
 
   for (let y = 0; y < h; y++) {

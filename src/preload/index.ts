@@ -143,7 +143,16 @@ const api = {
     ipcRenderer.on(IpcChannels.downloadProgress, listener)
     return () => ipcRenderer.removeListener(IpcChannels.downloadProgress, listener)
   },
-  getVideoInfo: (url: string): Promise<VideoInfoPreview> => ipcRenderer.invoke(IpcChannels.getVideoInfo, url)
+  getVideoInfo: (url: string): Promise<VideoInfoPreview> => ipcRenderer.invoke(IpcChannels.getVideoInfo, url),
+  windowMinimize: (): Promise<void> => ipcRenderer.invoke(IpcChannels.windowMinimize),
+  windowToggleMaximize: (): Promise<void> => ipcRenderer.invoke(IpcChannels.windowToggleMaximize),
+  windowClose: (): Promise<void> => ipcRenderer.invoke(IpcChannels.windowClose),
+  windowIsMaximized: (): Promise<boolean> => ipcRenderer.invoke(IpcChannels.windowIsMaximized),
+  onWindowMaximizedChanged: (callback: (maximized: boolean) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, maximized: boolean): void => callback(maximized)
+    ipcRenderer.on(IpcChannels.windowMaximizedChanged, listener)
+    return () => ipcRenderer.removeListener(IpcChannels.windowMaximizedChanged, listener)
+  }
 }
 
 if (process.contextIsolated) {

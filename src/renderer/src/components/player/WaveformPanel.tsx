@@ -6,6 +6,7 @@ import { useLibraryStore } from '../../state/libraryStore'
 import { useTrackTagColors } from '../../hooks/useTrackTagColors'
 import { waveformFillStyle } from '../../lib/tagColors'
 import { useWaveformIntensityStore } from '../../state/waveformIntensityStore'
+import { useThemeStore } from '../../state/themeStore'
 import { audioEngine } from '../../audio/AudioEngine'
 import { formatDuration } from '../../lib/format'
 import styles from './WaveformPanel.module.css'
@@ -74,6 +75,7 @@ function WaveformPanel(): React.JSX.Element {
   const tagColors = useTrackTagColors(currentTrack?.id)
   const tagIntensity = useWaveformIntensityStore((s) => s.intensity)
   const setTagIntensity = useWaveformIntensityStore((s) => s.setIntensity)
+  const theme = useThemeStore((s) => s.theme)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const dimCanvasRef = useRef<HTMLCanvasElement>(null)
@@ -127,14 +129,14 @@ function WaveformPanel(): React.JSX.Element {
       // "the track's own colors, dimmed" vs "lit up" instead of two unrelated hues.
       const dimAlpha = tagColors.length > 0 ? 0.4 : 1
       drawWaveform(dimCanvas, width, height, peaks, tagColors, themeColor('--waveform-dim'), dimAlpha, tagIntensity)
-      drawWaveform(brightCanvas, width, height, peaks, tagColors, themeColor('--accent'), 1, tagIntensity)
+      drawWaveform(brightCanvas, width, height, peaks, tagColors, themeColor('--screen-accent'), 1, tagIntensity)
     }
 
     redraw()
     const resizeObserver = new ResizeObserver(redraw)
     resizeObserver.observe(container)
     return () => resizeObserver.disconnect()
-  }, [peaks, tagColors, tagIntensity])
+  }, [peaks, tagColors, tagIntensity, theme])
 
   // Playhead progress: updates the clip width every animation frame by reading the
   // audio engine directly, bypassing React state entirely — this is what keeps the

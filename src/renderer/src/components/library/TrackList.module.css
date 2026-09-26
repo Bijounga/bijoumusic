@@ -47,11 +47,12 @@
 
 .rowActive .filename {
   color: var(--accent-strong);
+  font-weight: var(--row-active-weight);
 }
 
 .rowSelected {
   box-shadow: inset 3px 0 0 var(--accent);
-  background: rgba(69, 184, 230, 0.1);
+  background: rgba(var(--accent-rgb), 0.1);
 }
 
 .rowActive.rowSelected {

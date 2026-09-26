@@ -8,8 +8,10 @@
   width: 22px;
   height: 22px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-1);
+  border: 1px solid var(--control-border);
+  background-color: var(--surface-1);
+  background-image: var(--control-bg);
+  box-shadow: var(--control-shadow);
   font-size: 11px;
   color: var(--text-secondary);
   cursor: pointer;

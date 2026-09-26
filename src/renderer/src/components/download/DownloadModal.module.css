@@ -175,13 +175,13 @@
 .errorText {
   margin: 10px 0 0;
   font-size: 12px;
-  color: var(--error, #ff7a7a);
+  color: var(--error);
 }
 
 .successText {
   margin: 8px 0 0;
   font-size: 13px;
-  color: var(--success, #6bcf7f);
+  color: var(--success);
 }
 
 .previewPlayer {

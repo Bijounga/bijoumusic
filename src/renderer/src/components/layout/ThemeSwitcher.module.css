@@ -1,0 +1,14 @@
+.select {
+  background: var(--surface-2);
+  border: 1px solid var(--control-border);
+  box-shadow: var(--control-shadow);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 12px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.select:focus-visible {
+  border-color: var(--accent);
+}

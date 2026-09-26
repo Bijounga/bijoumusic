@@ -30,7 +30,14 @@ function themeColor(cssVar: string): string {
  *  Always shows full-strength tag colors (blue fallback only when the track has
  *  no tags at all) — unlike the waveform panel, this doesn't fade toward the
  *  fallback via the waveform intensity slider, which is scoped to the waveform
- *  display specifically, not every tag-colored visual in the app. */
+ *  display specifically, not every tag-colored visual in the app.
+ *
+ *  Reads theme tokens fresh every animation frame (themeColor() below), which
+ *  is also what makes this repaint correctly the instant the theme changes —
+ *  no explicit retrigger needed. Don't "optimize" this into a once-per-track
+ *  color read; that would silently reintroduce a stale-color-after-theme-switch
+ *  bug (see WaveformPanel.tsx/RowWaveform.tsx, which redraw only on dependency
+ *  changes and need the active theme in their effect deps for exactly this reason). */
 function drawRing(canvas: HTMLCanvasElement, tagColors: string[], isPlaying: boolean): void {
   const dpr = window.devicePixelRatio || 1
   canvas.width = CANVAS_SIZE * dpr

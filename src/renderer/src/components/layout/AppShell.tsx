@@ -36,6 +36,7 @@ import DownloadModal from '../download/DownloadModal'
 import ReactiveVisualizer from '../player/ReactiveVisualizer'
 import AudioAnalyzerPanels from '../player/AudioAnalyzerPanels'
 import SidebarSection from './SidebarSection'
+import ThemeSwitcher from './ThemeSwitcher'
 import styles from './AppShell.module.css'
 
 const AUTO_RESCAN_INTERVAL_MS = 15 * 60 * 1000
@@ -365,6 +366,7 @@ function AppShell(): React.JSX.Element {
         </div>
         <div className={styles.transportRow}>
           <NowPlayingBar />
+          <ThemeSwitcher />
           <span className={styles.badge}>
             {appInfo ? `v${appInfo.version} · ${appInfo.platform}` : 'connecting…'}
           </span>

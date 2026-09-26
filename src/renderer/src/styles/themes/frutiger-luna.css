@@ -1,0 +1,159 @@
+/* Theme 2: Frutiger Aero — frosted glass panes over a blue sky with clouds,
+   glossy "bubble" buttons, a blue orb play button, and deep-blue LCD-style
+   display screens (waveform, spectrum). A genuine light theme: navy text on
+   near-white glass.
+
+   Contrast comes from value structure rather than one flat pale blue: the sky
+   and the LCD screens are the dark anchors, the glass panes are the light
+   field, and raised elements (inputs, popovers) are opaque white. --surface-2
+   in particular must stay white — it is the fill for every input, popover and
+   dropdown, all of which put --text-primary directly on top of it. */
+html[data-theme='frutiger-luna'] {
+  --surface-0: #e4eef9;
+  --surface-1: #f1f7fd;
+  --surface-2: #ffffff;
+  --surface-3: #d3e5f7;
+  --border-subtle: #9cbbdc;
+
+  --text-primary: #0b1d33;
+  --text-secondary: #2b4665;
+  --text-disabled: #62799a;
+
+  /* accent-strong is darker than accent here (the dark theme's is lighter):
+     "strong" means "most contrast against its surface", and on white glass that
+     is the darker one. */
+  --accent: #1a5fc0;
+  --accent-strong: #0c4a9e;
+  --accent-contrast: #ffffff;
+  --accent-rgb: 26, 95, 192;
+
+  --error: #b8312f;
+  --success: #237a45;
+
+  --playhead: #ff7a3d;
+
+  /* Main waveform sits on the dark LCD screen, so its unplayed bars are a light
+     translucent blue; row waveforms sit on white glass, so theirs are navy. */
+  --waveform-dim: rgba(170, 212, 255, 0.6);
+  --row-waveform-dim: rgba(28, 56, 92, 0.62);
+
+  --favorite-level-3: #1a5fc0;
+  --favorite-level-2: #3a8f4f;
+  --favorite-level-1: #c28a1e;
+  --favorite-level-0: #62799a;
+  --favorite-level-1-rgb: 194, 138, 30;
+
+  --danger: #b8312f;
+  --volume-boost: #d0662a;
+
+  /* Darker than the dark theme's section colors — these are small uppercase
+     labels sitting on light glass, so they need real contrast, not pastel. */
+  --section-download: #b83a74;
+  --section-library: #4a6482;
+  --section-favorites: #9a6a12;
+  --section-energy: #b55a1f;
+  --section-folders: #1f64c4;
+  --section-tags: #6e44b0;
+  --section-projects: #237a45;
+  --section-keybinds: #53677d;
+
+  /* Corbel: the Vista-era ClearType humanist sans closest in spirit to
+     Frutiger itself (the typeface this aesthetic is named after), and it ships
+     with Windows — no bundled font file needed. */
+  --font-ui: 'Corbel', 'Segoe UI', system-ui, sans-serif;
+
+  --row-active-weight: 700;
+
+  /* Title bar: translucent Aero glass (the sky shows through), a glowing title,
+     and Windows 7-style caption buttons hanging from the top edge — glossy
+     glass minimize/maximize and the red close button that glows on hover. */
+  --titlebar-bg: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(226, 240, 254, 0.55) 50%,
+    rgba(186, 218, 248, 0.5) 51%,
+    rgba(206, 230, 252, 0.6) 100%
+  );
+  --titlebar-border: rgba(70, 110, 160, 0.45);
+  --titlebar-text: #0b1d33;
+  --titlebar-text-shadow: 0 0 8px rgba(255, 255, 255, 0.95), 0 0 2px rgba(255, 255, 255, 0.9);
+  --caption-width: 28px;
+  --caption-close-width: 46px;
+  --caption-height: 20px;
+  --caption-gap: 1px;
+  --caption-inset: 8px;
+  --caption-radius: 0 0 5px 5px;
+  --caption-border: rgba(38, 72, 118, 0.7);
+  --caption-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.75) 0%, rgba(230, 242, 254, 0.55) 45%, rgba(170, 205, 240, 0.5) 50%, rgba(200, 226, 250, 0.65) 100%);
+  --caption-bg-hover: linear-gradient(180deg, #d9f1ff 0%, #9fd6ff 45%, #3f9be6 50%, #69c0ff 100%);
+  --caption-bg-active: linear-gradient(180deg, #a9d8ff 0%, #5aa9e8 45%, #1e6fc0 50%, #3f93dd 100%);
+  --caption-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  --caption-icon: #ffffff;
+  --caption-icon-filter: drop-shadow(0 0 1px rgba(0, 25, 60, 0.95)) drop-shadow(0 1px 1px rgba(0, 25, 60, 0.6));
+  --caption-stroke: 1.8;
+  --caption-close-border: rgba(120, 25, 10, 0.75);
+  --caption-close-bg: linear-gradient(180deg, #f3b3a6 0%, #e27b66 45%, #c9432b 50%, #db5d40 100%);
+  --caption-close-bg-hover: linear-gradient(180deg, #ffd0c4 0%, #ff8d73 45%, #e8432a 50%, #ff7a52 100%);
+  --caption-close-bg-active: linear-gradient(180deg, #e39787 0%, #c9533d 45%, #a72d17 50%, #bf4428 100%);
+  --caption-close-shadow-hover: 0 0 8px rgba(255, 90, 50, 0.75), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  --caption-close-icon-hover: #ffffff;
+
+  --shadow-float: 0 10px 28px rgba(18, 48, 90, 0.35);
+
+  /* Procedural sky: a vertical blue gradient plus SVG feTurbulence clouds, so
+     no image asset is needed. Rendered on its own composited layer (see
+     tokens.css body::before), so scrolling the track list never re-rasterizes it. */
+  --app-backdrop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='1000' viewBox='0 0 1600 1000' preserveAspectRatio='xMidYMid slice'%3E%3Cdefs%3E%3ClinearGradient id='s' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%231a4fae'/%3E%3Cstop offset='0.5' stop-color='%23367fd6'/%3E%3Cstop offset='1' stop-color='%238cc6f2'/%3E%3C/linearGradient%3E%3Cfilter id='c' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0021 0.0046' numOctaves='5' seed='11'/%3E%3CfeColorMatrix type='matrix' values='0 0.35 0 0 0.72  0 0.3 0 0 0.78  0 0.15 0 0 0.9  3.9 0 0 0 -2.1'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='1600' height='1000' fill='url(%23s)'/%3E%3Crect width='1600' height='1000' filter='url(%23c)'/%3E%3C/svg%3E");
+
+  /* Frosted glass panes — translucent enough for the sky to read through, but
+     every one still keeps navy text above 5:1 even over a bright cloud. The
+     header and footer bars get the classic Aero split gloss (a hard light/dark
+     break at the midpoint). */
+  --pane-sidebar: linear-gradient(180deg, rgba(240, 247, 255, 0.62), rgba(222, 236, 252, 0.55));
+  --pane-header: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.78) 0%,
+    rgba(236, 245, 254, 0.68) 50%,
+    rgba(214, 232, 251, 0.64) 51%,
+    rgba(230, 241, 253, 0.7) 100%
+  );
+  --pane-list: rgba(244, 249, 255, 0.72);
+  --pane-footer: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.88) 0%,
+    rgba(236, 245, 254, 0.82) 50%,
+    rgba(214, 232, 251, 0.82) 51%,
+    rgba(230, 242, 254, 0.86) 100%
+  );
+
+  --control-bg: linear-gradient(180deg, #ffffff 0%, #eef5fd 49%, #d7e8f9 50%, #e9f3fd 100%);
+  --control-bg-hover: linear-gradient(180deg, #ffffff 0%, #e3f2ff 49%, #bfdcfa 50%, #dcefff 100%);
+  --control-border: #86a9d0;
+  --control-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 1px 2px rgba(18, 58, 110, 0.22);
+  --control-radius: 999px;
+
+  --bubble-bg: radial-gradient(ellipse 70% 42% at 50% 22%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.3) 70%, rgba(255, 255, 255, 0) 72%),
+    linear-gradient(180deg, #f6fbff 0%, #d5e8fa 55%, #e8f3fe 100%);
+  --bubble-shadow: inset 0 0 0 1px #86a9d0, inset 0 -2px 4px rgba(120, 175, 235, 0.35), 0 1px 3px rgba(18, 58, 110, 0.3);
+
+  --orb-bg: radial-gradient(ellipse 72% 46% at 50% 20%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.25) 68%, rgba(255, 255, 255, 0) 70%),
+    radial-gradient(circle at 50% 115%, #a6ecff 0%, rgba(166, 236, 255, 0) 58%),
+    linear-gradient(180deg, #4d9ff2 0%, #1b5cbd 55%, #0d3f92 100%);
+  --orb-border: #0b3a80;
+  --orb-shadow: 0 3px 8px rgba(10, 45, 105, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  --orb-icon: #ffffff;
+
+  --well-shadow: inset 0 1px 2px rgba(18, 58, 110, 0.22);
+
+  /* LCD screen: deep blue with a soft top glow and a diagonal glass reflection. */
+  --screen-bg: linear-gradient(172deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.04) 34%, rgba(255, 255, 255, 0) 34.3%),
+    radial-gradient(ellipse 110% 90% at 50% 0%, rgba(110, 185, 255, 0.28), rgba(110, 185, 255, 0) 65%),
+    linear-gradient(180deg, #0f3a7a 0%, #0a2b5e 60%, #07204a 100%);
+  --screen-shadow: inset 0 2px 10px rgba(0, 10, 30, 0.55), inset 0 0 0 1px rgba(160, 210, 255, 0.18);
+  --screen-text: #a9d4ff;
+  --screen-accent: #7fdcff;
+  --screen-accent-strong: #c8f0ff;
+  --screen-ring: #0a2b5e;
+  --analyzer-bar-dim: #16498f;
+  --analyzer-bg-dim: #0a2b5e;
+}

@@ -1,0 +1,179 @@
+.list {
+  padding: 2px 0 4px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 12.5px;
+}
+
+.label {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.keys {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.key {
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 11px;
+  padding: 2px 6px;
+  font-family: inherit;
+}
+
+.keyButton {
+  composes: key;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.keyButton:hover {
+  border-color: var(--accent);
+}
+
+.keyAwaiting {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.deleteBtn {
+  color: var(--text-disabled);
+  font-size: 12px;
+  line-height: 1;
+  padding: 0 2px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.deleteBtn:hover {
+  color: var(--danger);
+  background: var(--surface-2);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 8px 0;
+}
+
+.addButton {
+  background: none;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 5px 8px;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+}
+
+.addButton:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.wizard {
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  margin-top: 6px;
+}
+
+.wizardStepLabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 0 0 6px;
+}
+
+.actionOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.actionOption {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  padding: 6px 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.actionOption:hover {
+  border-color: var(--accent);
+}
+
+.folderSearchInput {
+  width: 100%;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 5px 8px;
+  font-size: 12.5px;
+  margin-bottom: 6px;
+}
+
+.folderSearchInput:focus {
+  border-color: var(--accent);
+}
+
+.folderResults {
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.folderOption {
+  padding: 5px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folderOption:hover {
+  background: var(--surface-3);
+}
+
+.awaitingKeyPrompt {
+  font-size: 12.5px;
+  color: var(--accent-strong);
+  text-align: center;
+  padding: 10px 0;
+}
+
+.cancelBtn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  margin-top: 6px;
+  padding: 0;
+  text-decoration: underline;
+}

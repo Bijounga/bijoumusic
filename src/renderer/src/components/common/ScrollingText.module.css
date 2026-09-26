@@ -1,0 +1,41 @@
+.container {
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.measure {
+  position: absolute;
+  visibility: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.track {
+  display: inline-flex;
+}
+
+.segment {
+  display: inline-block;
+  padding-right: 40px;
+}
+
+.scrolling {
+  animation: marquee 10s linear infinite;
+}
+
+.static {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}

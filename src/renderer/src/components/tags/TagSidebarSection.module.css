@@ -1,0 +1,172 @@
+.searchInput {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 5px 8px;
+  font-size: 12.5px;
+  margin-bottom: 6px;
+}
+
+.searchInput::placeholder {
+  color: var(--text-disabled);
+}
+
+.searchInput:focus {
+  border-color: var(--accent);
+}
+
+.groupRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13.5px;
+  color: var(--text-primary);
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.groupRow:hover {
+  background: var(--surface-3);
+}
+
+.groupRowDragOver {
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.chevron {
+  width: 14px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 10px;
+  text-align: center;
+}
+
+.groupName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.groupCount {
+  color: var(--text-disabled);
+  font-size: 11.5px;
+}
+
+.deleteGroupBtn {
+  color: var(--text-disabled);
+  font-size: 13px;
+  line-height: 1;
+  padding: 0 2px;
+  border-radius: var(--radius-sm);
+  visibility: hidden;
+}
+
+.groupRow:hover .deleteGroupBtn {
+  visibility: visible;
+}
+
+.deleteGroupBtn:hover {
+  color: var(--danger);
+  background: var(--surface-3);
+}
+
+.renameInput {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  padding: 2px 6px;
+}
+
+.tagRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 26px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: background var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+}
+
+.tagRow:hover {
+  background: var(--surface-3);
+}
+
+.tagRowActive {
+  background: var(--surface-3);
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.tagRowDragOver {
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.tagName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deleteTagBtn {
+  color: var(--text-disabled);
+  font-size: 12px;
+  line-height: 1;
+  padding: 0 2px;
+  border-radius: var(--radius-sm);
+  visibility: hidden;
+}
+
+.tagRow:hover .deleteTagBtn {
+  visibility: visible;
+}
+
+.deleteTagBtn:hover {
+  color: var(--danger);
+  background: var(--surface-2);
+}
+
+.addTagRow {
+  padding: 2px 8px 2px 26px;
+}
+
+.addTagInput {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.addTagInput::placeholder {
+  color: var(--text-disabled);
+}
+
+.addTagInput:focus {
+  border-color: var(--accent);
+}
+
+.newGroupRow {
+  padding: 4px 8px;
+  margin-top: 4px;
+}
+
+.emptyHint {
+  color: var(--text-secondary);
+  font-size: 13px;
+  padding: 4px 8px;
+}

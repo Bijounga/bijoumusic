@@ -1,0 +1,82 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13.5px;
+  color: var(--text-primary);
+  transition: background var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+}
+
+.row:hover {
+  background: var(--surface-3);
+}
+
+.rowActive {
+  background: var(--surface-3);
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.chevron {
+  width: 14px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 10px;
+  text-align: center;
+}
+
+.chevronPlaceholder {
+  width: 14px;
+  flex-shrink: 0;
+}
+
+.folderIcon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+}
+
+.name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.count {
+  color: var(--text-disabled);
+  font-size: 11.5px;
+}
+
+.emptyHint {
+  color: var(--text-secondary);
+  font-size: 13px;
+  padding: 4px 8px;
+}
+
+.contextMenu {
+  position: fixed;
+  z-index: 50;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  padding: 4px;
+  min-width: 150px;
+}
+
+.contextMenuItem {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.contextMenuItem:hover {
+  background: var(--surface-3);
+}

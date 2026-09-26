@@ -1,0 +1,31 @@
+.section {
+  padding: 4px 16px 16px;
+}
+
+.headingRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.chevron {
+  width: 12px;
+  flex-shrink: 0;
+  font-size: 9px;
+  color: var(--text-disabled);
+}
+
+.heading {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.extra {
+  flex-shrink: 0;
+}

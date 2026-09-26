@@ -1,0 +1,18 @@
+.wrap {
+  position: absolute;
+  right: 182px;
+  bottom: 16px;
+  display: flex;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.panel {
+  width: 130px;
+  height: 72px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
+  box-shadow: 0 0 0 1px var(--border-subtle), 0 4px 16px rgba(0, 0, 0, 0.35);
+  filter: drop-shadow(0 0 6px rgba(69, 184, 230, 0.35));
+}

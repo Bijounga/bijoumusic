@@ -1,0 +1,233 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+  min-width: 0;
+  /* Deliberately NOT overflow:auto/hidden here (or on any ancestor up to the
+     window edge) — any non-visible overflow between this row and the window clips
+     the popovers that live inside it (Bookmarks, Tags, etc. all float upward past
+     this row's own height via position:absolute), hiding them behind the waveform
+     instead of over it. On a narrow window the rightmost controls can run past the
+     edge as a result — a much smaller problem than popovers silently not opening. */
+}
+
+.transportCluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Colorless by design — no fill, no accent tint, just plain icons that brighten
+   on hover. Outline/box-shadow specifically keep getting reintroduced by the
+   platform's default focus styling, so every state that could draw one is pinned
+   to none with !important rather than trusting cascade order again; border and
+   background stay free for deliberate styling below (a hover backdrop, the play
+   button's ring) since those were never the source of the ring bug. */
+.transportBtn,
+.playButton {
+  box-shadow: none !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--duration-fast) var(--ease-standard), background var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+}
+
+.transportBtn:focus,
+.transportBtn:focus-visible,
+.transportBtn:active,
+.playButton:focus,
+.playButton:focus-visible,
+.playButton:active {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.transportBtn {
+  width: 46px;
+  height: 46px;
+}
+
+.transportBtn:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--surface-3);
+}
+
+.transportBtn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.transportBtnActive {
+  color: var(--volume-boost);
+}
+
+.transportBtnActive:hover:not(:disabled) {
+  color: var(--volume-boost);
+}
+
+.playButton {
+  width: 60px;
+  height: 60px;
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-subtle);
+}
+
+.playButton:hover:not(:disabled) {
+  border-color: var(--text-primary);
+  transform: scale(1.06);
+}
+
+.playButton:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.trackInfo {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trackName {
+  color: var(--text-primary);
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trackNameEmpty {
+  color: var(--text-secondary);
+}
+
+.trackFolder {
+  color: var(--text-secondary);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.auditionBtn {
+  background: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  outline: none;
+  flex-shrink: 0;
+  transition: border-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+}
+
+.auditionBtn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.auditionBtn:focus,
+.auditionBtn:focus-visible {
+  outline: none;
+}
+
+.auditionBtnActive {
+  border-color: var(--volume-boost);
+  color: var(--volume-boost);
+}
+
+.badge {
+  color: var(--text-disabled);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.dragHandleBtn {
+  box-shadow: none !important;
+  outline: none !important;
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: none;
+  color: var(--text-disabled);
+  border-radius: var(--radius-sm);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  flex-shrink: 0;
+  transition: color var(--duration-fast) var(--ease-standard), background var(--duration-fast) var(--ease-standard);
+}
+
+.dragHandleBtn:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--surface-3);
+}
+
+.dragHandleBtn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.premiereStatusBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  outline: none;
+  flex-shrink: 0;
+  transition: border-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+}
+
+.premiereStatusBtn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.premiereStatusBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.premiereStatusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-disabled);
+  flex-shrink: 0;
+}
+
+.premiereStatusDotOn {
+  background: var(--favorite-level-2);
+}

@@ -1,0 +1,163 @@
+.menu {
+  position: fixed;
+  width: 260px;
+  max-height: 420px;
+  overflow-y: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  padding: 8px;
+  z-index: 50;
+}
+
+.trackName {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  padding: 2px 4px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 6px;
+}
+
+.playRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13.5px;
+  color: var(--text-primary);
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.playRow:hover {
+  background: var(--surface-3);
+}
+
+.dangerRow {
+  color: var(--danger);
+  margin-top: 4px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 9px;
+}
+
+.sectionHeading {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 10px 0 4px;
+  padding: 0 4px;
+}
+
+.sectionHeading:first-of-type {
+  margin-top: 6px;
+}
+
+.inlineRow {
+  padding: 2px 4px 4px;
+}
+
+.searchInput {
+  width: 100%;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 5px 8px;
+  font-size: 12.5px;
+  margin-bottom: 4px;
+}
+
+.searchInput::placeholder {
+  color: var(--text-disabled);
+}
+
+.searchInput:focus {
+  border-color: var(--accent);
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 4px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.checkRow:hover {
+  background: var(--surface-3);
+}
+
+.checkbox {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--accent-contrast);
+}
+
+.checkboxChecked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Some (not all) of the selected tracks have this tag/project — a dash instead of
+   a checkmark, so clicking to "apply to all" vs. "already on everything" reads at
+   a glance during a bulk edit. */
+.checkboxIndeterminate {
+  background: none;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.checkLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkGroup {
+  color: var(--text-disabled);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.deleteBtn {
+  color: var(--text-disabled);
+  font-size: 12px;
+  line-height: 1;
+  padding: 0 2px;
+  border-radius: var(--radius-sm);
+  visibility: hidden;
+}
+
+.checkRow:hover .deleteBtn {
+  visibility: visible;
+}
+
+.deleteBtn:hover {
+  color: var(--danger);
+  background: var(--surface-2);
+}
+
+.emptyHint {
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 4px;
+}

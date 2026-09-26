@@ -1,0 +1,177 @@
+.panel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  cursor: grab;
+  touch-action: none;
+  overflow: hidden;
+  background: var(--surface-1);
+}
+
+.panel:active {
+  cursor: grabbing;
+}
+
+.panelDrawing {
+  cursor: crosshair;
+}
+
+.tagIntensityControl {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  cursor: default;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.tagIntensityVisible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tagIntensityControl input[type='range'] {
+  width: 70px;
+  height: 12px;
+  cursor: pointer;
+}
+
+.panelDrawing:active {
+  cursor: crosshair;
+}
+
+.rangeOverlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  background: rgba(240, 193, 75, 0.22);
+  border-left: 1px solid var(--favorite-level-1);
+  border-right: 1px solid var(--favorite-level-1);
+  pointer-events: none;
+}
+
+.rangeOverlayDrawing {
+  background: rgba(240, 193, 75, 0.35);
+}
+
+.canvasLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.progressWrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+}
+
+.playhead::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.playheadHandle {
+  position: relative;
+  top: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--surface-1);
+  pointer-events: none;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.playheadDragging {
+  cursor: grabbing;
+}
+
+.playheadDragging .playheadHandle {
+  transform: scale(1.2);
+}
+
+/* Always mounted (never conditionally rendered) so the refs exist before the very
+   first pointer event — visibility is toggled by a class instead, which avoids a
+   race where the first pointermove after entering would have nothing to write to
+   yet. Position/text are still written on every move via direct DOM refs. */
+.hoverLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--text-secondary);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.hoverTime {
+  position: absolute;
+  top: 6px;
+  /* left + transform are both set inline per-move, so the label can clamp inward
+     near the edges instead of running off the panel. */
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.hoverLine.hoverVisible {
+  opacity: 0.6;
+}
+
+.hoverTime.hoverVisible {
+  opacity: 1;
+}
+
+.hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  pointer-events: none;
+}

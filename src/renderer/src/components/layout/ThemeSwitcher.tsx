@@ -4,7 +4,10 @@ import styles from './ThemeSwitcher.module.css'
 const THEME_LABELS: Record<ThemeId, string> = {
   dark: 'Dark',
   'frutiger-luna': 'Frutiger Aero',
-  'frutiger-aero-dark': 'Frutiger Aero Dark'
+  'frutiger-aero-dark': 'Frutiger Aero Dark',
+  'frutiger-aqua': 'Frutiger Aqua',
+  'vaporwave-95': 'Vaporwave 95',
+  'y2k-chrome': 'Y2K Chrome'
 }
 
 function ThemeSwitcher(): React.JSX.Element {

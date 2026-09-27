@@ -139,9 +139,44 @@ html[data-theme='frutiger-aero-dark'] {
     linear-gradient(180deg, #0a1628 0%, #060e1c 60%, #030812 100%);
   --screen-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(120, 180, 255, 0.14);
   --screen-text: #9cc4ea;
-  --screen-accent: #5fd4ff;
-  --screen-accent-strong: #bff0ff;
+  /* Played waveform / playhead: aurora teal-green, echoing the aurora glow in
+     this theme's night sky, and distinct from every other theme's fill color. */
+  --screen-accent: #3ef0c4;
+  --screen-accent-strong: #b8ffec;
   --screen-ring: #060e1c;
   --analyzer-bar-dim: #10284a;
   --analyzer-bg-dim: #060e1c;
+
+  --row-active-text-shadow: none;
+  --bubble-radius: 50%;
+  --titlebar-weight: 400;
+  --caption-top: 0px;
+
+  /* Glass-pill lighting on the played waveform (WaveformPanel applyGloss),
+     slightly dimmer sheen than the light theme so it doesn't glare on black. */
+  --waveform-gloss-top: rgba(255, 255, 255, 0.62);
+  --waveform-gloss-mid: rgba(255, 255, 255, 0.16);
+  --waveform-gloss-shade: rgba(0, 18, 40, 0.38);
+  --waveform-gloss-glow: rgba(200, 255, 240, 0.55);
+
+  /* Overlay drawn over the waveform itself — none in this theme. */
+  --screen-overlay: none;
+
+  /* Hardware-theme hooks (volume fader cap, key travel, disc overlay) — this
+     theme keeps the plain accent-dot thumb and no press/disc effects. */
+  --thumb-width: 12px;
+  --thumb-height: 12px;
+  --thumb-radius: 50%;
+  --thumb-bg: var(--accent);
+  --thumb-boost-bg: var(--volume-boost);
+  --press-depth: 0px;
+  /* The spinning album art becomes a glass bubble: a top-left highlight, a small
+     glint, a glowing rim, and a faint soap-bubble rainbow. */
+  --disc-overlay:
+    radial-gradient(ellipse 34% 22% at 38% 22%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 55%, rgba(255, 255, 255, 0) 75%),
+    radial-gradient(circle at 70% 76%, rgba(255, 255, 255, 0.85) 0 5%, rgba(255, 255, 255, 0) 10%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 48%),
+    radial-gradient(circle, rgba(170, 235, 255, 0) 58%, rgba(170, 235, 255, 0.25) 78%, rgba(170, 235, 255, 0.75) 94%, rgba(170, 235, 255, 0.95) 100%),
+    conic-gradient(from 200deg, rgba(120, 220, 255, 0.12), rgba(255, 140, 230, 0.1), rgba(255, 240, 150, 0.1), rgba(140, 255, 200, 0.12), rgba(120, 220, 255, 0.12)),
+    radial-gradient(circle, rgba(60, 170, 255, 0) 50%, rgba(60, 170, 255, 0.28) 100%);
 }

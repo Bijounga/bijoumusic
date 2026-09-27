@@ -29,6 +29,38 @@ function themeColor(cssVar: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim()
 }
 
+/** The same color with its alpha replaced; anything unparseable becomes fully
+ *  transparent, which makes the gloss pass below a no-op. */
+function withAlpha(color: string, alpha: number): string {
+  const m = color.match(/^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i)
+  return m ? `rgba(${m[1]}, ${m[2]}, ${m[3]}, ${alpha})` : 'rgba(0, 0, 0, 0)'
+}
+
+/** Aero glass-pill lighting painted onto the already-drawn bars only
+ *  (source-atop): a bright sheen over the top half ending in a crisp edge just
+ *  above the midline, a darker shade through the lower half, and a soft glow of
+ *  reflected light along the very bottom. Every stop is a theme token, and flat
+ *  themes set them all transparent. */
+function applyGloss(ctx: CanvasRenderingContext2D, widthPx: number, heightPx: number): void {
+  const top = themeColor('--waveform-gloss-top')
+  const mid = themeColor('--waveform-gloss-mid')
+  const shade = themeColor('--waveform-gloss-shade')
+  const glow = themeColor('--waveform-gloss-glow')
+  if ([top, mid, shade, glow].every((c) => c === 'transparent')) return
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, heightPx)
+  gradient.addColorStop(0, top)
+  gradient.addColorStop(0.47, mid)
+  gradient.addColorStop(0.475, withAlpha(shade, 0))
+  gradient.addColorStop(0.8, shade)
+  gradient.addColorStop(1, glow)
+  ctx.globalAlpha = 1
+  ctx.globalCompositeOperation = 'source-atop'
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, widthPx, heightPx)
+  ctx.globalCompositeOperation = 'source-over'
+}
+
 function drawWaveform(
   canvas: HTMLCanvasElement,
   widthPx: number,
@@ -37,7 +69,8 @@ function drawWaveform(
   tagColors: string[],
   fallbackColor: string,
   alpha: number,
-  tagIntensity: number
+  tagIntensity: number,
+  glossy = false
 ): void {
   const dpr = window.devicePixelRatio || 1
   canvas.width = widthPx * dpr
@@ -65,6 +98,8 @@ function drawWaveform(
     const x = i * barWidth
     ctx.fillRect(x, midY - barHeight / 2, Math.max(barWidth - 1, 1), barHeight)
   }
+
+  if (glossy) applyGloss(ctx, widthPx, heightPx)
 }
 
 function WaveformPanel(): React.JSX.Element {
@@ -129,7 +164,7 @@ function WaveformPanel(): React.JSX.Element {
       // "the track's own colors, dimmed" vs "lit up" instead of two unrelated hues.
       const dimAlpha = tagColors.length > 0 ? 0.4 : 1
       drawWaveform(dimCanvas, width, height, peaks, tagColors, themeColor('--waveform-dim'), dimAlpha, tagIntensity)
-      drawWaveform(brightCanvas, width, height, peaks, tagColors, themeColor('--screen-accent'), 1, tagIntensity)
+      drawWaveform(brightCanvas, width, height, peaks, tagColors, themeColor('--screen-accent'), 1, tagIntensity, true)
     }
 
     redraw()

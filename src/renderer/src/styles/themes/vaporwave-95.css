@@ -1,0 +1,171 @@
+/* Theme 4: Vaporwave 95 — Windows 95 chrome inside a vaporwave scene.
+
+   The sidebar, header and footer are flat Windows 95 panels in a lavender-tinted
+   silver, with hard two-tone bevels and square corners (the opposite material of
+   the glossy Aero themes). The track list is a solid pastel sunset-tinted
+   gradient, and the neon sunset scene plays inside the CRT screens behind the
+   waveform. The play button is the striped sun, and the title bar is a
+   Windows 98-style gradient in magenta.
+
+   Legibility rules carried over from the Aero themes: dark text on the light
+   chrome, light text only on the dark CRT screens (remapped there), and the
+   pink/cyan "glitch" split is used sparingly — only on the playing track's
+   name and the window title, never on dense list content. */
+html[data-theme='vaporwave-95'] {
+  --surface-0: #efe9fb;
+  --surface-1: #ebe5f8;
+  --surface-2: #fbf9ff;
+  --surface-3: #ddd2f5;
+  --border-subtle: #9c8cc4;
+
+  --text-primary: #1b0f33;
+  --text-secondary: #4a3a6e;
+  --text-disabled: #85799e;
+
+  --accent: #c81d92;
+  --accent-strong: #9c1072;
+  --accent-contrast: #ffffff;
+  --accent-rgb: 200, 29, 146;
+
+  --error: #c0203a;
+  --success: #1d8a5a;
+
+  --playhead: #ff71ce;
+
+  /* On the CRT, the unplayed waveform is soft lavender and the played part is
+     neon pink (--screen-accent below), from the classic vaporwave palette. Row
+     waveforms are a saturated violet on the pale list. */
+  --waveform-dim: rgba(196, 160, 255, 0.58);
+  --row-waveform-dim: rgba(118, 58, 196, 0.62);
+
+  --favorite-level-3: #c81d92;
+  --favorite-level-2: #1d8a5a;
+  --favorite-level-1: #b7791f;
+  --favorite-level-0: #85799e;
+  --favorite-level-1-rgb: 183, 121, 31;
+
+  --danger: #c0203a;
+  --volume-boost: #d8602a;
+
+  --section-download: #c2187a;
+  --section-library: #5a4a86;
+  --section-favorites: #946312;
+  --section-energy: #bb4d1c;
+  --section-folders: #1273a8;
+  --section-tags: #7a3cc0;
+  --section-projects: #1d7a4f;
+  --section-keybinds: #5f5680;
+
+  /* The TrueType descendant of Windows 95's MS Sans Serif UI font. */
+  --font-ui: 'Microsoft Sans Serif', Tahoma, 'Segoe UI', sans-serif;
+
+  --row-active-weight: 700;
+  --row-active-text-shadow: -1px 0 rgba(255, 0, 200, 0.5), 1px 0 rgba(0, 210, 255, 0.55);
+
+  /* Windows 98-style gradient caption, recolored magenta, with a bold title and
+     square bevelled Windows 95 caption buttons centered in the bar. Close is the
+     same grey as the others (true to 95) and only turns hot pink on hover. */
+  --titlebar-bg: linear-gradient(90deg, #2d0a6e 0%, #7a1fb8 42%, #e0409f 78%, #ff8ac8 100%);
+  --titlebar-border: #1b0f33;
+  --titlebar-text: #ffffff;
+  --titlebar-text-shadow: -1px 0 rgba(255, 60, 200, 0.7), 1px 0 rgba(0, 230, 255, 0.7);
+  --titlebar-weight: 700;
+  --caption-top: 6px;
+  --caption-width: 22px;
+  --caption-close-width: 22px;
+  --caption-height: 20px;
+  --caption-gap: 2px;
+  --caption-inset: 6px;
+  --caption-radius: 0;
+  --caption-border: #1b0f33;
+  --caption-bg: #d4cce8;
+  --caption-bg-hover: #e6def8;
+  --caption-bg-active: #c2b8de;
+  --caption-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #8f80b8;
+  --caption-icon: #1b0f33;
+  --caption-icon-filter: none;
+  --caption-stroke: 2;
+  --caption-close-border: #1b0f33;
+  --caption-close-bg: #d4cce8;
+  --caption-close-bg-hover: #ff4fb8;
+  --caption-close-bg-active: #d8309a;
+  --caption-close-shadow-hover: inset 1px 1px 0 #ffc4e8, inset -1px -1px 0 #9c1072;
+  --caption-close-icon-hover: #ffffff;
+
+  /* Hard offset drop shadow, no blur — the retro-desktop way to float a window. */
+  --shadow-float: 4px 4px 0 rgba(27, 15, 51, 0.55);
+
+  /* No window backdrop: every pane is opaque here. The sunset scene lives inside
+     the CRT screens instead (see --screen-bg), where it can't sit behind the
+     colored row waveforms and wash them out. */
+  --app-backdrop: none;
+
+  /* Opaque Windows 95 chrome for the sidebar, header and footer. The track list
+     is a solid pale lavender-to-pink gradient: a hint of sunset color with
+     nothing bright behind the waveforms, so tag colors keep full contrast. A
+     faint graph-paper grid on top gives it texture without competing. */
+  --pane-sidebar: #d4cce8;
+  --pane-header: #d4cce8;
+  --pane-list: linear-gradient(rgba(74, 40, 120, 0.07) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, rgba(74, 40, 120, 0.07) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(180deg, #f7f3ff 0%, #fbedf8 100%);
+  --pane-footer: #d4cce8;
+
+  /* Windows 95 push buttons: chrome-colored face, a black outer edge, a white
+     top-left bevel and a shadowed bottom-right bevel. Square corners. */
+  --control-bg: #d4cce8;
+  --control-bg-hover: #e6def8;
+  --control-border: #1b0f33;
+  --control-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #8f80b8;
+  --control-radius: 0;
+
+  --bubble-bg: #d4cce8;
+  --bubble-shadow: inset 0 0 0 1px #1b0f33, inset 2px 2px 0 #ffffff, inset -2px -2px 0 #8f80b8;
+  --bubble-radius: 0;
+
+  /* The play button is the vaporwave sun: yellow-to-pink with horizontal cutouts
+     across its lower half (painted in the footer's chrome color, so they read as
+     gaps). Dark icon, since white would sit on yellow/orange. */
+  --orb-bg: linear-gradient(180deg, transparent 0 56%, #d4cce8 56% 60%, transparent 60% 68%, #d4cce8 68% 73%, transparent 73% 81%, #d4cce8 81% 87%, transparent 87%),
+    linear-gradient(180deg, #ffe066 0%, #ffa24a 42%, #ff4fa0 78%, #c8187e 100%);
+  --orb-border: #7a0f5c;
+  --orb-shadow: 0 0 16px rgba(255, 79, 160, 0.6);
+  --orb-icon: #2d0a4e;
+
+  /* Sunken Windows 95 text fields. */
+  --well-shadow: inset 1px 1px 0 #8f80b8;
+
+  /* Purple CRT showing a dim vaporwave sunset (sky, striped sun, neon grid
+     floor) under scanlines, so the waveform plays over the scene like a
+     visualizer. The scene is kept dark enough that pink/cyan waveforms and tag
+     colors still read clearly over it. */
+  --screen-bg: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.3) 2px 3px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='400' viewBox='0 0 1600 400' preserveAspectRatio='xMidYMax slice'%3E%3Cdefs%3E%3ClinearGradient id='sky' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%230e0219'/%3E%3Cstop offset='0.6' stop-color='%232c0a4a'/%3E%3Cstop offset='1' stop-color='%235c1360'/%3E%3C/linearGradient%3E%3ClinearGradient id='sun' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffc46b'/%3E%3Cstop offset='0.6' stop-color='%23ff7a6a'/%3E%3Cstop offset='1' stop-color='%23ff3f9e'/%3E%3C/linearGradient%3E%3ClinearGradient id='fl' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%231c0436'/%3E%3Cstop offset='1' stop-color='%2307000f'/%3E%3C/linearGradient%3E%3Cmask id='m'%3E%3Crect width='1600' height='400' fill='white'/%3E%3Crect y='190' width='1600' height='3' fill='black'/%3E%3Crect y='205' width='1600' height='5' fill='black'/%3E%3Crect y='222' width='1600' height='7' fill='black'/%3E%3Crect y='241' width='1600' height='9' fill='black'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='1600' height='262' fill='url(%23sky)'/%3E%3Ccircle cx='800' cy='256' r='150' fill='url(%23sun)' fill-opacity='0.34' mask='url(%23m)'/%3E%3Crect y='262' width='1600' height='138' fill='url(%23fl)'/%3E%3Cpath d='M0 265H1600 M0 273H1600 M0 287H1600 M0 307H1600 M0 332H1600 M0 363H1600 M0 400H1600 M800 262L-3200 400 M800 262L-3000 400 M800 262L-2800 400 M800 262L-2600 400 M800 262L-2400 400 M800 262L-2200 400 M800 262L-2000 400 M800 262L-1800 400 M800 262L-1600 400 M800 262L-1400 400 M800 262L-1200 400 M800 262L-1000 400 M800 262L-800 400 M800 262L-600 400 M800 262L-400 400 M800 262L-200 400 M800 262L0 400 M800 262L200 400 M800 262L400 400 M800 262L600 400 M800 262L800 400 M800 262L1000 400 M800 262L1200 400 M800 262L1400 400 M800 262L1600 400 M800 262L1800 400 M800 262L2000 400 M800 262L2200 400 M800 262L2400 400 M800 262L2600 400 M800 262L2800 400 M800 262L3000 400 M800 262L3200 400 M800 262L3400 400 M800 262L3600 400 M800 262L3800 400 M800 262L4000 400 M800 262L4200 400 M800 262L4400 400 M800 262L4600 400 M800 262L4800 400' stroke='%23ff4fd8' stroke-width='2' stroke-opacity='0.2' fill='none'/%3E%3Crect y='261' width='1600' height='2' fill='%23ff9ae0' fill-opacity='0.55'/%3E%3C/svg%3E") center bottom / cover no-repeat,
+    #0e0219;
+  --screen-shadow: inset 0 0 26px rgba(0, 0, 0, 0.85), inset 0 0 0 2px #1b0f33;
+  --screen-text: #ffb8ee;
+  --screen-accent: #ff71ce;
+  --screen-accent-strong: #ffc6ee;
+  --screen-ring: #150426;
+  --analyzer-bar-dim: #3a0f5e;
+  --analyzer-bg-dim: #150426;
+
+  /* Glossy lighting on the played waveform — off in this theme. */
+  --waveform-gloss-top: transparent;
+  --waveform-gloss-mid: transparent;
+  --waveform-gloss-shade: transparent;
+  --waveform-gloss-glow: transparent;
+
+  /* Overlay drawn over the waveform itself — none in this theme. */
+  --screen-overlay: none;
+
+  /* Hardware-theme hooks (volume fader cap, key travel, disc overlay) — this
+     theme keeps the plain accent-dot thumb and no press/disc effects. */
+  --thumb-width: 12px;
+  --thumb-height: 12px;
+  --thumb-radius: 50%;
+  --thumb-bg: var(--accent);
+  --thumb-boost-bg: var(--volume-boost);
+  --press-depth: 0px;
+  --disc-overlay: none;
+}

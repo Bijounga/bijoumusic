@@ -1,0 +1,184 @@
+/* Theme 6: Y2K Chrome — the app as a physical Y2K media player. Brushed
+   aluminium panels (fine horizontal hairlines over a metallic sheen), chrome
+   push-buttons, brushed-metal knobs for the transport and play buttons, and an
+   amber backlit dot-matrix LCD: the waveform screen gets a pixel-grid overlay
+   drawn over the waveform itself, so it reads like real hardware.
+
+   Legibility: graphite text on light metal; the brushing is kept faint behind
+   the track list (like the vaporwave grid) so it textures without competing
+   with the row waveforms. Amber text only on the dark LCD. */
+html[data-theme='y2k-chrome'] {
+  --surface-0: #e4e6e9;
+  --surface-1: #eef0f2;
+  --surface-2: #fafbfc;
+  --surface-3: #d3d8de;
+  --border-subtle: #9ea5ae;
+
+  --text-primary: #14171b;
+  --text-secondary: #434a53;
+  --text-disabled: #7d848d;
+
+  --accent: #c9640a;
+  --accent-strong: #8a4300;
+  --accent-contrast: #ffffff;
+  --accent-rgb: 201, 100, 10;
+
+  --error: #b8312f;
+  --success: #2a7a3f;
+
+  --playhead: #ffb000;
+
+  /* Unlit LCD segments ghost faintly (as real ones do); row waveforms are graphite. */
+  --waveform-dim: rgba(255, 150, 0, 0.3);
+  --row-waveform-dim: rgba(40, 46, 54, 0.5);
+
+  --favorite-level-3: #c9640a;
+  --favorite-level-2: #2a7a3f;
+  --favorite-level-1: #a87a12;
+  --favorite-level-0: #7d848d;
+  --favorite-level-1-rgb: 168, 122, 18;
+
+  --danger: #b8312f;
+  --volume-boost: #d0501a;
+
+  --section-download: #a8326a;
+  --section-library: #4b5563;
+  --section-favorites: #8f6a0a;
+  --section-energy: #b0501a;
+  --section-folders: #1d5fa8;
+  --section-tags: #6b3fa8;
+  --section-projects: #2a7a3f;
+  --section-keybinds: #515a66;
+
+  /* Bahnschrift: Windows' DIN-style face — the look of labels printed on
+     hardware. */
+  --font-ui: 'Bahnschrift', 'Segoe UI', system-ui, sans-serif;
+
+  --row-active-weight: 700;
+  --row-active-text-shadow: none;
+
+  /* Brushed-metal title bar with engraved text and small chrome caption keys. */
+  --titlebar-bg: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.14) 0 1px, rgba(0, 0, 0, 0.035) 1px 2px),
+    linear-gradient(180deg, #f2f3f5 0%, #d7dbe0 55%, #c6cbd1 100%);
+  --titlebar-border: #8a919a;
+  --titlebar-text: #1d2126;
+  --titlebar-text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+  --titlebar-weight: 600;
+  --caption-top: 6px;
+  --caption-width: 26px;
+  --caption-close-width: 26px;
+  --caption-height: 20px;
+  --caption-gap: 4px;
+  --caption-inset: 8px;
+  --caption-radius: 5px;
+  --caption-border: #7a818b;
+  --caption-bg: linear-gradient(180deg, #fdfdfd 0%, #e1e4e8 45%, #c4c9cf 50%, #e6e8eb 100%);
+  --caption-bg-hover: linear-gradient(180deg, #ffffff 0%, #eef0f2 45%, #d2d6db 50%, #f0f2f4 100%);
+  --caption-bg-active: linear-gradient(180deg, #c8cdd3 0%, #b3b9c0 100%);
+  --caption-shadow: inset 0 1px 0 #ffffff, 0 1px 1px rgba(0, 0, 0, 0.25);
+  --caption-icon: #2a2f36;
+  --caption-icon-filter: none;
+  --caption-stroke: 1.6;
+  --caption-close-border: #7a818b;
+  --caption-close-bg: linear-gradient(180deg, #fdfdfd 0%, #e1e4e8 45%, #c4c9cf 50%, #e6e8eb 100%);
+  --caption-close-bg-hover: linear-gradient(180deg, #ff9a88 0%, #e0452c 50%, #c9321a 100%);
+  --caption-close-bg-active: linear-gradient(180deg, #d9533c 0%, #a82814 100%);
+  --caption-close-shadow-hover: 0 0 6px rgba(230, 60, 30, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  --caption-close-icon-hover: #ffffff;
+
+  --shadow-float: 0 8px 22px rgba(20, 24, 30, 0.35);
+
+  --app-backdrop: none;
+
+  /* Brushed aluminium: fine horizontal hairlines over a metallic sheen. The list's
+     brushing is the faintest, so it textures without competing with waveforms. */
+  --pane-sidebar: linear-gradient(45deg, rgba(0, 0, 0, 0) 38%, #565c64 38% 62%, rgba(0, 0, 0, 0) 62%) left 8px top 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #f1f3f5 0 2.6px, #7d848e 3px 3.8px, rgba(0, 0, 0, 0) 4.3px) left 5px top 5px / 10px 10px no-repeat,
+    linear-gradient(45deg, rgba(0, 0, 0, 0) 38%, #565c64 38% 62%, rgba(0, 0, 0, 0) 62%) right 8px top 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #f1f3f5 0 2.6px, #7d848e 3px 3.8px, rgba(0, 0, 0, 0) 4.3px) right 5px top 5px / 10px 10px no-repeat,
+    linear-gradient(45deg, rgba(0, 0, 0, 0) 38%, #565c64 38% 62%, rgba(0, 0, 0, 0) 62%) left 8px bottom 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #f1f3f5 0 2.6px, #7d848e 3px 3.8px, rgba(0, 0, 0, 0) 4.3px) left 5px bottom 5px / 10px 10px no-repeat,
+    linear-gradient(45deg, rgba(0, 0, 0, 0) 38%, #565c64 38% 62%, rgba(0, 0, 0, 0) 62%) right 8px bottom 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #f1f3f5 0 2.6px, #7d848e 3px 3.8px, rgba(0, 0, 0, 0) 4.3px) right 5px bottom 5px / 10px 10px no-repeat,
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.16) 0 1px, rgba(0, 0, 0, 0.03) 1px 3px),
+    linear-gradient(90deg, #cdd1d6 0%, #e2e5e9 45%, #d0d4d9 100%);
+  --pane-header: linear-gradient(45deg, rgba(0, 0, 0, 0) 38%, #565c64 38% 62%, rgba(0, 0, 0, 0) 62%) left 8px top 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #f1f3f5 0 2.6px, #7d848e 3px 3.8px, rgba(0, 0, 0, 0) 4.3px) left 5px top 5px / 10px 10px no-repeat,
+    linear-gradient(45deg, rgba(0, 0, 0, 0) 38%, #565c64 38% 62%, rgba(0, 0, 0, 0) 62%) right 8px top 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #f1f3f5 0 2.6px, #7d848e 3px 3.8px, rgba(0, 0, 0, 0) 4.3px) right 5px top 5px / 10px 10px no-repeat,
+    linear-gradient(45deg, rgba(0, 0, 0, 0) 38%, #565c64 38% 62%, rgba(0, 0, 0, 0) 62%) left 8px bottom 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #f1f3f5 0 2.6px, #7d848e 3px 3.8px, rgba(0, 0, 0, 0) 4.3px) left 5px bottom 5px / 10px 10px no-repeat,
+    linear-gradient(45deg, rgba(0, 0, 0, 0) 38%, #565c64 38% 62%, rgba(0, 0, 0, 0) 62%) right 8px bottom 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #f1f3f5 0 2.6px, #7d848e 3px 3.8px, rgba(0, 0, 0, 0) 4.3px) right 5px bottom 5px / 10px 10px no-repeat,
+    linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)) top / 100% 1px no-repeat,
+    radial-gradient(circle, rgba(40, 44, 50, 0.22) 0 1.1px, rgba(0, 0, 0, 0) 1.6px) 0 0 / 5px 5px,
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.14) 0 1px, rgba(0, 0, 0, 0.03) 1px 2px),
+    linear-gradient(180deg, #f3f4f6 0%, #d9dde2 50%, #c9ced4 100%);
+  --pane-list: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.35) 0 1px, rgba(0, 0, 0, 0.018) 1px 3px),
+    linear-gradient(180deg, #eef0f2 0%, #e4e7ea 100%);
+  --pane-footer: linear-gradient(45deg, rgba(0, 0, 0, 0) 38%, #565c64 38% 62%, rgba(0, 0, 0, 0) 62%) left 8px bottom 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #f1f3f5 0 2.6px, #7d848e 3px 3.8px, rgba(0, 0, 0, 0) 4.3px) left 5px bottom 5px / 10px 10px no-repeat,
+    linear-gradient(45deg, rgba(0, 0, 0, 0) 38%, #565c64 38% 62%, rgba(0, 0, 0, 0) 62%) right 8px bottom 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #f1f3f5 0 2.6px, #7d848e 3px 3.8px, rgba(0, 0, 0, 0) 4.3px) right 5px bottom 5px / 10px 10px no-repeat,
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.14) 0 1px, rgba(0, 0, 0, 0.03) 1px 2px),
+    linear-gradient(180deg, #e8eaed 0%, #cfd3d8 55%, #bcc2c9 100%);
+
+  /* Chrome push-buttons: a mirror sheen breaking at the middle, rounded-rect keys. */
+  --control-bg: linear-gradient(180deg, #fdfdfe 0%, #e3e6e9 48%, #c9ced4 52%, #e2e5e8 100%);
+  --control-bg-hover: linear-gradient(180deg, #ffffff 0%, #eef0f2 48%, #d6dade 52%, #eceef1 100%);
+  --control-border: #7d848e;
+  --control-shadow: inset 0 1px 0 #ffffff, 0 1px 2px rgba(0, 0, 0, 0.25);
+  --control-radius: 5px;
+
+  /* Brushed-metal knobs: a conic gradient gives the radial "spun metal" sheen. */
+  --bubble-bg: radial-gradient(circle, rgba(255, 255, 255, 0) 58%, rgba(0, 0, 0, 0.12) 60%, rgba(255, 255, 255, 0) 62%),
+    conic-gradient(from 20deg, #f4f5f7, #b7bcc3, #eef0f2, #a9afb7, #f4f5f7, #b7bcc3, #eef0f2, #a9afb7, #f4f5f7);
+  --bubble-shadow: inset 0 0 0 1px #7d848e, inset 0 2px 2px rgba(255, 255, 255, 0.8), 0 2px 4px rgba(0, 0, 0, 0.35);
+  --bubble-radius: 50%;
+
+  /* The play button is the big spun-metal knob, ringed by an amber power-LED glow. */
+  --orb-bg: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 45%),
+    conic-gradient(from 10deg, #f6f7f8, #aeb4bb, #eceef0, #9fa6ae, #f6f7f8, #aeb4bb, #eceef0, #9fa6ae, #f6f7f8);
+  --orb-border: #6b727c;
+  --orb-shadow: 0 0 0 3px rgba(255, 176, 0, 0.35), 0 0 12px rgba(255, 160, 0, 0.35), 0 3px 8px rgba(0, 0, 0, 0.4);
+  --orb-icon: #1d2126;
+
+  --well-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.28);
+
+  /* Amber backlit LCD behind glass, in a dark bezel. */
+  --screen-bg: linear-gradient(172deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 34%, rgba(255, 255, 255, 0) 34.3%),
+    radial-gradient(ellipse 35% 140% at 0% 50%, rgba(255, 150, 0, 0.14), rgba(255, 150, 0, 0) 70%),
+    radial-gradient(ellipse 35% 140% at 100% 50%, rgba(255, 150, 0, 0.14), rgba(255, 150, 0, 0) 70%),
+    radial-gradient(ellipse 100% 90% at 50% 45%, #2e1a02 0%, #170c00 70%, #0b0600 100%);
+  --screen-shadow: inset 0 0 0 3px #2b2f35, inset 0 0 0 4px rgba(255, 255, 255, 0.07), inset 0 4px 14px rgba(0, 0, 0, 0.8);
+  --screen-text: #ffb347;
+  --screen-accent: #ffb000;
+  --screen-accent-strong: #ffe2a3;
+  --screen-ring: #170c00;
+  --analyzer-bar-dim: #3a2200;
+  --analyzer-bg-dim: #170c00;
+  /* Dot-matrix pixel grid over the waveform itself. */
+  --screen-overlay: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.42) 0 1px, rgba(0, 0, 0, 0) 1px 3px),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.42) 0 1px, rgba(0, 0, 0, 0) 1px 3px);
+
+  --waveform-gloss-top: transparent;
+  --waveform-gloss-mid: transparent;
+  --waveform-gloss-shade: transparent;
+  --waveform-gloss-glow: transparent;
+
+  /* Hardware details: a rectangular mixer-fader cap for the volume thumb (grip
+     lines over brushed metal, orange grips once boosting past 100%), 1px key
+     travel on the transport buttons, and the spinning album art dressed as a
+     CD: rainbow sheen, a clear hub ring, and the spindle hole. */
+  --thumb-width: 10px;
+  --thumb-height: 18px;
+  --thumb-radius: 2px;
+  --thumb-bg: linear-gradient(180deg, rgba(0, 0, 0, 0) 0 36%, #5f666f 36% 42%, rgba(0, 0, 0, 0) 42% 58%, #5f666f 58% 64%, rgba(0, 0, 0, 0) 64%),
+    linear-gradient(90deg, #a9afb7 0%, #f5f6f8 45%, #c1c6cc 100%);
+  --thumb-boost-bg: linear-gradient(180deg, rgba(0, 0, 0, 0) 0 36%, #d0501a 36% 42%, rgba(0, 0, 0, 0) 42% 58%, #d0501a 58% 64%, rgba(0, 0, 0, 0) 64%),
+    linear-gradient(90deg, #a9afb7 0%, #f5f6f8 45%, #c1c6cc 100%);
+  --press-depth: 1px;
+  --disc-overlay: radial-gradient(circle, #e4e7ea 0 6%, #8b929b 6.5% 8%, rgba(255, 255, 255, 0.45) 8.5% 17%, rgba(0, 0, 0, 0.3) 17.5% 18.5%, rgba(0, 0, 0, 0) 19%),
+    radial-gradient(circle, rgba(0, 0, 0, 0) 64%, rgba(255, 255, 255, 0.28) 70%, rgba(0, 0, 0, 0) 73%),
+    conic-gradient(from 30deg, rgba(255, 60, 200, 0.2), rgba(60, 200, 255, 0.2), rgba(255, 240, 80, 0.18), rgba(80, 255, 170, 0.2), rgba(255, 60, 200, 0.2), rgba(60, 200, 255, 0.2), rgba(255, 240, 80, 0.18), rgba(80, 255, 170, 0.2), rgba(255, 60, 200, 0.2));
+}

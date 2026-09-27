@@ -19,6 +19,16 @@
   cursor: grabbing;
 }
 
+/* Theme overlay drawn over the waveform itself (e.g. an LCD pixel grid); none in
+   most themes. Last in paint order, so it sits above the canvases. */
+.panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--screen-overlay);
+  pointer-events: none;
+}
+
 .panelDrawing {
   cursor: crosshair;
 }

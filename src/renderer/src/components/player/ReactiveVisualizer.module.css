@@ -26,6 +26,18 @@
   box-shadow: 0 0 0 1px var(--border-subtle), 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
+/* Theme overlay on the spinning art (e.g. a CD's sheen and spindle hole); none
+   in most themes. Static while the art spins underneath, the way a real disc's
+   rainbow stays put relative to the light. */
+.discClip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--disc-overlay);
+  pointer-events: none;
+}
+
 .disc {
   width: 100%;
   height: 100%;

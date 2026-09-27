@@ -148,6 +148,11 @@ const api = {
   windowToggleMaximize: (): Promise<void> => ipcRenderer.invoke(IpcChannels.windowToggleMaximize),
   windowClose: (): Promise<void> => ipcRenderer.invoke(IpcChannels.windowClose),
   windowIsMaximized: (): Promise<boolean> => ipcRenderer.invoke(IpcChannels.windowIsMaximized),
+  onWindowZoomChanged: (callback: (zoom: number) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, zoom: number): void => callback(zoom)
+    ipcRenderer.on(IpcChannels.windowZoomChanged, listener)
+    return () => ipcRenderer.removeListener(IpcChannels.windowZoomChanged, listener)
+  },
   onWindowMaximizedChanged: (callback: (maximized: boolean) => void): (() => void) => {
     const listener = (_event: Electron.IpcRendererEvent, maximized: boolean): void => callback(maximized)
     ipcRenderer.on(IpcChannels.windowMaximizedChanged, listener)

@@ -141,4 +141,29 @@ html[data-theme='dark'] {
   --screen-ring: var(--surface-1);
   --analyzer-bar-dim: var(--surface-2);
   --analyzer-bg-dim: var(--surface-1);
+
+  /* Hooks added for the Vaporwave 95 theme — no-ops here. */
+  --row-active-text-shadow: none;
+  --bubble-radius: 50%;
+  --titlebar-weight: 400;
+  --caption-top: 0px;
+
+  /* Glossy lighting on the played waveform — off in this theme. */
+  --waveform-gloss-top: transparent;
+  --waveform-gloss-mid: transparent;
+  --waveform-gloss-shade: transparent;
+  --waveform-gloss-glow: transparent;
+
+  /* Overlay drawn over the waveform itself — none in this theme. */
+  --screen-overlay: none;
+
+  /* Hardware-theme hooks (volume fader cap, key travel, disc overlay) — this
+     theme keeps the plain accent-dot thumb and no press/disc effects. */
+  --thumb-width: 12px;
+  --thumb-height: 12px;
+  --thumb-radius: 50%;
+  --thumb-bg: var(--accent);
+  --thumb-boost-bg: var(--volume-boost);
+  --press-depth: 0px;
+  --disc-overlay: none;
 }

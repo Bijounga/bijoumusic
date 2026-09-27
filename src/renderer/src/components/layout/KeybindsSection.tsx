@@ -9,7 +9,9 @@ const FIXED_KEYBINDS: { label: string; keys: string[] }[] = [
   { label: 'Play / pause', keys: ['Space'] },
   { label: 'Previous / next track', keys: ['↑', '↓'] },
   { label: 'Seek −5s / +5s', keys: ['←', '→'] },
-  { label: 'Return to folders', keys: ['Backspace'] }
+  { label: 'Return to folders', keys: ['Backspace'] },
+  { label: 'Zoom (per monitor)', keys: ['Ctrl −', 'Ctrl +'] },
+  { label: 'Reset zoom', keys: ['Ctrl 0'] }
 ]
 
 const ACTION_LABELS: Record<CustomKeybindAction, string> = {

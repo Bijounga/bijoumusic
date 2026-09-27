@@ -4,8 +4,8 @@ import { setSetting } from '../lib/settingsSync'
 // Grows as each theme actually ships (see the theming plan) — only list a theme
 // id here once its styles/themes/*.css file is real, or the switcher would offer
 // something with no styling behind it.
-export type ThemeId = 'dark' | 'frutiger-luna' | 'frutiger-aero-dark'
-const KNOWN_THEMES: ThemeId[] = ['dark', 'frutiger-luna', 'frutiger-aero-dark']
+export type ThemeId = 'dark' | 'frutiger-luna' | 'frutiger-aero-dark' | 'frutiger-aqua' | 'vaporwave-95' | 'y2k-chrome'
+const KNOWN_THEMES: ThemeId[] = ['dark', 'frutiger-luna', 'frutiger-aero-dark', 'frutiger-aqua', 'vaporwave-95', 'y2k-chrome']
 const DEFAULT_THEME: ThemeId = 'dark'
 
 const STORAGE_KEY = 'bijoumusic:theme'

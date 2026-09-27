@@ -17,6 +17,7 @@ import { registerSettingsIpc } from './ipc/settings.ipc'
 import { registerPremiereIpc } from './ipc/premiere.ipc'
 import { registerDownloaderIpc } from './ipc/downloader.ipc'
 import { registerWindowIpc } from './ipc/window.ipc'
+import { attachDisplayZoom } from './displayZoom'
 import { registerAudioProtocolScheme, registerAudioProtocolHandler } from './protocol'
 import { getAppIconPath } from './iconPath'
 import { startPremiereBridge, stopPremiereBridge } from './premiereBridge'
@@ -77,6 +78,8 @@ function createWindow(): void {
   window.on('ready-to-show', () => {
     window.show()
   })
+
+  attachDisplayZoom(window)
 
   window.on('maximize', () => window.webContents.send(IpcChannels.windowMaximizedChanged, true))
   window.on('unmaximize', () => window.webContents.send(IpcChannels.windowMaximizedChanged, false))

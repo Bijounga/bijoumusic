@@ -69,5 +69,6 @@ export const IpcChannels = {
   windowToggleMaximize: 'window:toggle-maximize',
   windowClose: 'window:close',
   windowIsMaximized: 'window:is-maximized',
-  windowMaximizedChanged: 'window:maximized-changed'
+  windowMaximizedChanged: 'window:maximized-changed',
+  windowZoomChanged: 'window:zoom-changed'
 } as const

@@ -1,9 +1,11 @@
-import { useRef } from 'react'
 import type { Track } from '@shared/types'
 import { usePlaybackStore } from '../state/playbackStore'
 import { useShuffleStore } from '../state/shuffleStore'
 
-const RESTART_VS_PREVIOUS_WINDOW_MS = 2500
+// Past this point into a track, Back restarts it; before it, Back goes to the
+// previous track — the usual music-player rule. A quick double-press still goes
+// back, since the first press lands at 0:00, inside the threshold.
+const RESTART_THRESHOLD_SECONDS = 3
 
 interface TransportControls {
   next: () => void
@@ -11,17 +13,17 @@ interface TransportControls {
   hasNext: boolean
 }
 
-/** Shared next/previous logic for the bottom bar buttons, media keys, and (later)
- *  anything else that needs transport controls — steps through the same
- *  `visibleTracks` list TrackList renders, so it never disagrees with what's on screen. */
+/** Shared next/previous logic for the bottom bar buttons, media keys, and
+ *  autoplay. Next steps through the same `visibleTracks` list TrackList renders
+ *  (or picks randomly in shuffle mode); Previous retraces actual listening
+ *  history from the playback store, so it returns to the track you really came
+ *  from — after a random pick, a shuffle step, or clicking around the list. */
 export function useTransportControls(visibleTracks: Track[]): TransportControls {
   const currentTrack = usePlaybackStore((s) => s.currentTrack)
   const playTrack = usePlaybackStore((s) => s.playTrack)
+  const playPreviousFromHistory = usePlaybackStore((s) => s.playPreviousFromHistory)
   const seek = usePlaybackStore((s) => s.seek)
   const shuffleEnabled = useShuffleStore((s) => s.enabled)
-  const pushShuffleHistory = useShuffleStore((s) => s.pushHistory)
-  const popShuffleHistory = useShuffleStore((s) => s.popHistory)
-  const lastPreviousPressRef = useRef(0)
 
   const currentIndex = currentTrack ? visibleTracks.findIndex((t) => t.id === currentTrack.id) : -1
 
@@ -42,33 +44,20 @@ export function useTransportControls(visibleTracks: Track[]): TransportControls 
         visibleTracks.length > 1 && currentTrack
           ? visibleTracks.filter((t) => t.id !== currentTrack.id)
           : visibleTracks
-      if (currentTrack) pushShuffleHistory(currentTrack)
       playTrack(choices[Math.floor(Math.random() * choices.length)])
       return
     }
     step(1)
   }
 
-  // First press restarts the current track; a second press within the window steps
-  // back a track instead — so a stray tap doesn't skip past the track you meant to
-  // restart, but a deliberate quick double-tap still goes back. In shuffle mode,
-  // "back" retraces the actual shuffle history rather than stepping through the
-  // visible list's order, which shuffle deliberately isn't following.
   function previous(): void {
     if (!currentTrack) return
-    const now = Date.now()
-    const isDoublePress = now - lastPreviousPressRef.current < RESTART_VS_PREVIOUS_WINDOW_MS
-    lastPreviousPressRef.current = now
-    if (!isDoublePress) {
+    if (usePlaybackStore.getState().currentTime > RESTART_THRESHOLD_SECONDS) {
       seek(0)
       return
     }
-    if (shuffleEnabled) {
-      const previousTrack = popShuffleHistory()
-      if (previousTrack) playTrack(previousTrack)
-    } else {
-      step(-1)
-    }
+    // With no history yet (e.g. right after launch), fall back to the track above.
+    if (!playPreviousFromHistory()) step(-1)
   }
 
   return {

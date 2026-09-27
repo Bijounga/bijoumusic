@@ -43,13 +43,14 @@
 .slider::-webkit-slider-thumb {
   appearance: none;
   -webkit-appearance: none;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--accent);
+  width: var(--thumb-width);
+  height: var(--thumb-height);
+  border-radius: var(--thumb-radius);
+  background: var(--thumb-bg);
   cursor: pointer;
-  /* Keeps the functional accent color (it still reads "current value" in every
-     theme) and only adds the theme's glossy edge on top. */
+  /* Most themes keep the functional accent color here (it reads "current value")
+     and only add the theme's glossy edge on top; a hardware theme can swap in a
+     fader cap instead. */
   box-shadow: var(--control-shadow);
   transition: transform var(--duration-fast) var(--ease-standard), background var(--duration-fast) var(--ease-standard);
 }
@@ -68,7 +69,7 @@
 }
 
 .sliderBoosted::-webkit-slider-thumb {
-  background: var(--volume-boost);
+  background: var(--thumb-boost-bg);
 }
 
 .sliderBoosted::-moz-range-thumb {

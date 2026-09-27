@@ -48,6 +48,7 @@
 .rowActive .filename {
   color: var(--accent-strong);
   font-weight: var(--row-active-weight);
+  text-shadow: var(--row-active-text-shadow);
 }
 
 .rowSelected {
@@ -96,9 +97,11 @@
   font-size: 11px;
 }
 
+/* Name and tag columns grow with the window (the waveform takes the rest), so
+   wide screens show more of the name instead of only a wider waveform. */
 .tagPills {
   flex-shrink: 0;
-  width: 190px;
+  width: clamp(190px, 12vw, 300px);
   display: flex;
   align-items: center;
   gap: 5px;
@@ -144,7 +147,7 @@
 }
 
 .info {
-  width: 220px;
+  width: clamp(220px, 20vw, 440px);
   flex-shrink: 0;
   min-width: 0;
   display: flex;

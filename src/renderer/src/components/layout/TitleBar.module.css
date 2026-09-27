@@ -23,12 +23,14 @@
 
 .title {
   font-size: 12px;
+  font-weight: var(--titlebar-weight);
   text-shadow: var(--titlebar-text-shadow);
   white-space: nowrap;
 }
 
 .captions {
   align-self: flex-start;
+  margin-top: var(--caption-top);
   margin-left: auto;
   margin-right: var(--caption-inset);
   display: flex;

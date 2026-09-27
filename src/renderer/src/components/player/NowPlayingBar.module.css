@@ -62,7 +62,15 @@
 .transportBtn {
   width: 46px;
   height: 46px;
+  border-radius: var(--bubble-radius);
   background: var(--bubble-bg);
+}
+
+/* Key travel on press — `translate` (not `transform`), so it composes with the
+   play button's hover scale instead of replacing it. 0px in most themes. */
+.transportBtn:active:not(:disabled),
+.playButton:active:not(:disabled) {
+  translate: 0 var(--press-depth);
 }
 
 /* background-color only, so a theme's bubble image (if any) stays on top. */

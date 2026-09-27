@@ -3,6 +3,8 @@ import type { Track } from '@shared/types'
 import { audioEngine } from '../audio/AudioEngine'
 import { useRecentActivityStore } from './recentActivityStore'
 
+const HISTORY_LIMIT = 200
+
 interface PlaybackState {
   currentTrack: Track | null
   isPlaying: boolean
@@ -11,7 +13,13 @@ interface PlaybackState {
   volume: number
   playbackRate: number
   normalizationEnabled: boolean
-  playTrack: (track: Track) => void
+  /** Tracks played before the current one, most recent last. Every way of
+   *  starting a track goes through playTrack, so Back can retrace real listening
+   *  history however you got here (random pick, shuffle, clicking a row, ↑/↓). */
+  history: Track[]
+  playTrack: (track: Track, options?: { fromHistory?: boolean }) => void
+  /** Plays the previous track from history; false if there's no history. */
+  playPreviousFromHistory: () => boolean
   togglePlayPause: () => void
   seek: (seconds: number) => void
   seekBy: (deltaSeconds: number) => void
@@ -48,8 +56,13 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => {
     volume: audioEngine.getVolume(),
     playbackRate: audioEngine.getPlaybackRate(),
     normalizationEnabled: audioEngine.getNormalizationEnabled(),
+    history: [],
 
-    playTrack: (track: Track) => {
+    playTrack: (track: Track, options?: { fromHistory?: boolean }) => {
+      const previous = get().currentTrack
+      if (!options?.fromHistory && previous && previous.id !== track.id) {
+        set({ history: [...get().history, previous].slice(-HISTORY_LIMIT) })
+      }
       audioEngine.loadTrack(track.id, track.loudnessRms)
       void window.api.logPlaybackEvent(track.id, 'played').then(() => {
         // Keep Recently Played / Most Used fresh so they reflect what you're doing
@@ -68,6 +81,15 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => {
       }
 
       set({ currentTrack: track, isPlaying: true, currentTime: 0, duration: 0 })
+    },
+
+    playPreviousFromHistory: () => {
+      const history = get().history
+      const previous = history[history.length - 1]
+      if (!previous) return false
+      set({ history: history.slice(0, -1) })
+      get().playTrack(previous, { fromHistory: true })
+      return true
     },
 
     togglePlayPause: () => {

@@ -43,7 +43,8 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  animation: spin 8s linear infinite;
+  /* 30 steps a second, like every other moving visual (see lib/visualLoop.ts). */
+  animation: spin 8s steps(240) infinite;
   animation-play-state: paused;
 }
 

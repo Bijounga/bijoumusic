@@ -87,22 +87,35 @@
   pointer-events: none;
 }
 
+/* Full width, slid off to the left; WaveformPanel.updatePlayheadVisual moves it
+   (and counter-moves the canvas inside) with transforms so playback never
+   repaints the waveform. Starts fully hidden, before the first position sync. */
 .progressWrap {
   position: absolute;
   top: 0;
   left: 0;
   height: 100%;
-  width: 0%;
+  width: 100%;
   overflow: hidden;
   pointer-events: none;
+  transform: translateX(-100%);
+  will-change: transform;
 }
 
+.progressWrap > canvas {
+  will-change: transform;
+}
+
+/* Positioned purely by transform (set every frame by updatePlayheadVisual) so
+   moving it never triggers layout or repaint. */
 .playhead {
   position: absolute;
   top: 0;
   bottom: 0;
+  left: 0;
   width: 16px;
   transform: translateX(-50%);
+  will-change: transform;
   pointer-events: none;
   display: flex;
   justify-content: center;

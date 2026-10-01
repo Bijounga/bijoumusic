@@ -4,6 +4,8 @@ import { usePlaybackStore } from '../../state/playbackStore'
 import { useTrackTagColors } from '../../hooks/useTrackTagColors'
 import { mixColor, tagColorForSlot } from '../../lib/tagColors'
 import { audioEngine } from '../../audio/AudioEngine'
+import { useThemeStore } from '../../state/themeStore'
+import { cachedThemeColor, startVisualLoop } from '../../lib/visualLoop'
 import styles from './AudioAnalyzerPanels.module.css'
 
 const PANEL_WIDTH = 130
@@ -29,9 +31,7 @@ const USABLE_BINS = 400
 const SPECTRUM_BAR_COUNT = 44
 const BAR_GAP = 2
 
-function themeColor(cssVar: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim()
-}
+const themeColor = cachedThemeColor
 
 /** A hotter, more "lit up" ramp than a flat two-color mix — quiet content
  *  stays close to the dim base, but content pushing toward full magnitude
@@ -51,16 +51,26 @@ function hotColor(dim: string, tagColor: string, magnitude: number): string {
  *  (blue fallback only when the track has no tags) — this doesn't fade via
  *  the waveform intensity slider, which is scoped to the waveform panel.
  *
- *  Both this and drawSpectrogramColumn read theme tokens fresh every animation
- *  frame, same as ReactiveVisualizer's ring — that's what makes them repaint
- *  correctly on a theme switch with no explicit retrigger; don't "optimize"
- *  that away (see ReactiveVisualizer.tsx's matching note). */
-function drawSpectrum(canvas: HTMLCanvasElement, data: Uint8Array | null, tagColors: string[]): void {
+ *  Both this and drawSpectrogramColumn read theme tokens fresh on every draw.
+ *  While playing that's every frame; while paused the spectrum is drawn once,
+ *  and the active theme is in the effect deps so a theme switch repaints it. */
+/** Sizes a canvas's backing store for the current DPR — only when it actually
+ *  changes. Resetting canvas.width every frame reallocates the backing store 60
+ *  times a second, which was a large share of the app's GPU load during playback. */
+function fitCanvas(canvas: HTMLCanvasElement): void {
   const dpr = window.devicePixelRatio || 1
-  canvas.width = Math.round(PANEL_WIDTH * dpr)
-  canvas.height = Math.round(PANEL_HEIGHT * dpr)
+  const w = Math.round(PANEL_WIDTH * dpr)
+  const h = Math.round(PANEL_HEIGHT * dpr)
+  if (canvas.width === w && canvas.height === h) return
+  canvas.width = w
+  canvas.height = h
   canvas.style.width = `${PANEL_WIDTH}px`
   canvas.style.height = `${PANEL_HEIGHT}px`
+}
+
+function drawSpectrum(canvas: HTMLCanvasElement, data: Uint8Array | null, tagColors: string[]): void {
+  const dpr = window.devicePixelRatio || 1
+  fitCanvas(canvas)
 
   const ctx = canvas.getContext('2d')
   if (!ctx) return
@@ -137,11 +147,7 @@ function drawSpectrogramColumn(
     bufferCtx.fillRect(w - 1, y, 1, 1)
   }
 
-  const dpr = window.devicePixelRatio || 1
-  visibleCanvas.width = Math.round(PANEL_WIDTH * dpr)
-  visibleCanvas.height = Math.round(PANEL_HEIGHT * dpr)
-  visibleCanvas.style.width = `${PANEL_WIDTH}px`
-  visibleCanvas.style.height = `${PANEL_HEIGHT}px`
+  fitCanvas(visibleCanvas)
   visibleCtx.imageSmoothingEnabled = false
   visibleCtx.clearRect(0, 0, visibleCanvas.width, visibleCanvas.height)
   visibleCtx.drawImage(buffer, 0, 0, w, h, 0, 0, visibleCanvas.width, visibleCanvas.height)
@@ -150,6 +156,7 @@ function drawSpectrogramColumn(
 function AudioAnalyzerPanels({ track }: { track: Track | null }): React.JSX.Element | null {
   const isPlaying = usePlaybackStore((s) => s.isPlaying)
   const tagColors = useTrackTagColors(track?.id)
+  const theme = useThemeStore((s) => s.theme)
   const spectrumRef = useRef<HTMLCanvasElement>(null)
   const spectrogramRef = useRef<HTMLCanvasElement>(null)
   const spectrogramBufferRef = useRef<HTMLCanvasElement | null>(null)
@@ -163,20 +170,23 @@ function AudioAnalyzerPanels({ track }: { track: Track | null }): React.JSX.Elem
     }
   }, [])
 
+  // Animates only while playing. Paused, the spectrum is drawn once at rest and
+  // the spectrogram simply holds its history, instead of redrawing an unchanging
+  // picture 60 times a second.
   useEffect(() => {
     if (!track) return
-    let rafId: number
-    const tick = (): void => {
-      const data = isPlaying ? audioEngine.getHiResFrequencyData() : null
+    if (!isPlaying) {
+      if (spectrumRef.current) drawSpectrum(spectrumRef.current, null, tagColors)
+      return
+    }
+    return startVisualLoop(() => {
+      const data = audioEngine.getHiResFrequencyData()
       if (spectrumRef.current) drawSpectrum(spectrumRef.current, data, tagColors)
       if (spectrogramRef.current && spectrogramBufferRef.current) {
         drawSpectrogramColumn(spectrogramRef.current, spectrogramBufferRef.current, data, tagColors)
       }
-      rafId = requestAnimationFrame(tick)
-    }
-    rafId = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rafId)
-  }, [track, isPlaying, tagColors])
+    })
+  }, [track, isPlaying, tagColors, theme])
 
   if (!track) return null
 

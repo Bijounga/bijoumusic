@@ -8,6 +8,7 @@ import { waveformFillStyle } from '../../lib/tagColors'
 import { useWaveformIntensityStore } from '../../state/waveformIntensityStore'
 import { useThemeStore } from '../../state/themeStore'
 import { audioEngine } from '../../audio/AudioEngine'
+import { startVisualLoop } from '../../lib/visualLoop'
 import { formatDuration } from '../../lib/format'
 import styles from './WaveformPanel.module.css'
 
@@ -104,6 +105,7 @@ function drawWaveform(
 
 function WaveformPanel(): React.JSX.Element {
   const currentTrack = usePlaybackStore((s) => s.currentTrack)
+  const isPlaying = usePlaybackStore((s) => s.isPlaying)
   const seek = usePlaybackStore((s) => s.seek)
   const duration = usePlaybackStore((s) => s.duration)
   const { peaks, isLoading, failed } = useWaveformPeaks(currentTrack)
@@ -165,6 +167,12 @@ function WaveformPanel(): React.JSX.Element {
       const dimAlpha = tagColors.length > 0 ? 0.4 : 1
       drawWaveform(dimCanvas, width, height, peaks, tagColors, themeColor('--waveform-dim'), dimAlpha, tagIntensity)
       drawWaveform(brightCanvas, width, height, peaks, tagColors, themeColor('--screen-accent'), 1, tagIntensity, true)
+      // The playhead is positioned in pixels, so re-place it for the new width
+      // (matters while paused, when no frame loop is running to do it).
+      if (!isDraggingRef.current) {
+        const duration = audioEngine.getDuration()
+        updatePlayheadVisual(duration > 0 ? Math.min(1, audioEngine.getCurrentTime() / duration) : 0)
+      }
     }
 
     redraw()
@@ -175,24 +183,41 @@ function WaveformPanel(): React.JSX.Element {
 
   // Playhead progress: updates the clip width every animation frame by reading the
   // audio engine directly, bypassing React state entirely — this is what keeps the
-  // moving progress edge smooth instead of causing a re-render per frame.
+  // moving progress edge smooth instead of causing a re-render per frame. The frame
+  // loop only runs while playing; when paused, the audio element's timeupdate
+  // (which also fires on every seek) keeps the playhead right without burning a
+  // 60fps loop on a picture that isn't changing.
   useEffect(() => {
     if (!currentTrack) return
 
-    let rafId: number
-    const tick = (): void => {
+    const syncPlayhead = (): void => {
+      if (isDraggingRef.current) return
       const duration = audioEngine.getDuration()
       const fraction = duration > 0 ? audioEngine.getCurrentTime() / duration : 0
       updatePlayheadVisual(Math.min(1, Math.max(0, fraction)))
-      rafId = requestAnimationFrame(tick)
     }
-    rafId = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rafId)
-  }, [currentTrack])
+    syncPlayhead()
+    const unsubscribe = audioEngine.onTimeUpdate(syncPlayhead)
+    if (!isPlaying) return unsubscribe
 
+    const stopLoop = startVisualLoop(syncPlayhead)
+    return () => {
+      stopLoop()
+      unsubscribe()
+    }
+  }, [currentTrack, isPlaying])
+
+  // Moves the played/unplayed boundary with transforms only — the clip wrapper
+  // slides left while the bright canvas inside it slides right by the same amount,
+  // so the waveform stays put and only the clip edge moves. Unlike resizing the
+  // wrapper (the old approach), this never repaints the full-width waveform; the
+  // GPU just re-composites the existing layers each frame.
   function updatePlayheadVisual(fraction: number): void {
-    if (progressWrapRef.current) progressWrapRef.current.style.width = `${fraction * 100}%`
-    if (playheadRef.current) playheadRef.current.style.left = `${fraction * 100}%`
+    const width = containerRef.current?.clientWidth ?? 0
+    const x = fraction * width
+    if (progressWrapRef.current) progressWrapRef.current.style.transform = `translateX(${x - width}px)`
+    if (brightCanvasRef.current) brightCanvasRef.current.style.transform = `translateX(${width - x}px)`
+    if (playheadRef.current) playheadRef.current.style.transform = `translateX(${x}px) translateX(-50%)`
   }
 
   function fractionFromClientX(clientX: number): number {

@@ -21,8 +21,11 @@
   padding-right: 40px;
 }
 
+/* steps(300) over 10s = 30 position updates a second, matching the visual loop
+   in lib/visualLoop.ts — a plain linear animation updates at the display's full
+   refresh rate (144Hz+ on many monitors), recompositing the window every time. */
 .scrolling {
-  animation: marquee 10s linear infinite;
+  animation: marquee 10s steps(300) infinite;
 }
 
 .static {

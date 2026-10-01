@@ -27,8 +27,10 @@ export function useCustomKeybinds(visibleTracks: Track[]): void {
   const requestOpenAliasEditor = useUiSignalStore((s) => s.requestOpenAliasEditor)
   const requestOpenDownloadModal = useUiSignalStore((s) => s.requestOpenDownloadModal)
 
+  // currentTime is read at key-press time (below) rather than subscribed to:
+  // subscribing re-rendered this hook's host — the whole AppShell — on every
+  // ~4Hz playback time update.
   const currentTrack = usePlaybackStore((s) => s.currentTrack)
-  const currentTime = usePlaybackStore((s) => s.currentTime)
   const playTrack = usePlaybackStore((s) => s.playTrack)
 
   const libraryTracks = useLibraryStore((s) => s.tracks)
@@ -79,6 +81,7 @@ export function useCustomKeybinds(visibleTracks: Track[]): void {
         toggleDrawingRange()
       } else if (bind.action === 'setPreviewStart' || bind.action === 'setPreviewEnd') {
         if (!currentTrack) return
+        const currentTime = usePlaybackStore.getState().currentTime
         // currentTrack is a snapshot from when playback started, not live-patched —
         // read the up-to-date preview range straight from libraryStore instead.
         const liveTrack = libraryTracks.find((t) => t.id === currentTrack.id)
@@ -107,7 +110,6 @@ export function useCustomKeybinds(visibleTracks: Track[]): void {
     requestOpenDownloadModal,
     isCapturingKeybind,
     currentTrack,
-    currentTime,
     playTrack,
     visibleTracks,
     libraryTracks,

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { usePlaybackStore } from '../../state/playbackStore'
 import styles from './ScrollingText.module.css'
 
 interface ScrollingTextProps {
@@ -10,12 +11,16 @@ interface ScrollingTextProps {
 }
 
 /** Long names ellipsis-truncate by default. When `scroll` is set and the text
- *  actually overflows its container, it marquees instead; any truncated name still
- *  shows the full text on hover via the native title tooltip. */
+ *  actually overflows its container, it marquees instead — but only while music
+ *  is playing. A never-ending marquee kept the whole window re-compositing 60
+ *  times a second even when idle (~25% of a CPU core at a small window size, far
+ *  more full-screen on a 4K display). Any truncated name still shows the full
+ *  text on hover via the native title tooltip. */
 function ScrollingText({ text, scroll = false, className }: ScrollingTextProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLSpanElement>(null)
   const [overflowing, setOverflowing] = useState(false)
+  const isPlaying = usePlaybackStore((s) => s.isPlaying)
 
   useEffect(() => {
     const container = containerRef.current
@@ -24,7 +29,7 @@ function ScrollingText({ text, scroll = false, className }: ScrollingTextProps):
     setOverflowing(measure.scrollWidth > container.clientWidth)
   }, [text])
 
-  const shouldScroll = scroll && overflowing
+  const shouldScroll = scroll && overflowing && isPlaying
 
   return (
     <div className={`${styles.container} ${className ?? ''}`} ref={containerRef} title={text}>

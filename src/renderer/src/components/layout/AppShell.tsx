@@ -17,7 +17,7 @@ import { useCustomKeybinds } from '../../hooks/useCustomKeybinds'
 import { useMediaSession } from '../../hooks/useMediaSession'
 import { usePremiereAnalysisResponder } from '../../hooks/usePremiereAnalysisResponder'
 import { useBackgroundWaveformGeneration } from '../../audio/useBackgroundWaveformGeneration'
-import { usePlaybackBoundaryEnforcer } from '../../hooks/usePlaybackBoundaryEnforcer'
+import PlaybackBoundaryWatcher from '../player/PlaybackBoundaryWatcher'
 import { useUiSignalStore } from '../../state/uiSignalStore'
 import { buildFolderTree, filterFolderTree } from '../../lib/folderTree'
 import FolderTree from '../library/FolderTree'
@@ -131,7 +131,6 @@ function AppShell(): React.JSX.Element {
   useCustomKeybinds(visibleTracks)
   useMediaSession(visibleTracks)
   useBackgroundWaveformGeneration(tracks)
-  usePlaybackBoundaryEnforcer(visibleTracks)
   usePremiereAnalysisResponder()
 
   useEffect(() => {
@@ -178,6 +177,7 @@ function AppShell(): React.JSX.Element {
 
   return (
     <div className={styles.shell}>
+      <PlaybackBoundaryWatcher visibleTracks={visibleTracks} />
       <aside className={styles.sidebar}>
         <SidebarSection title="Download" accentColor="var(--section-download)" storageKey="download">
           <button className={styles.textButton} onClick={() => setShowDownloadModal(true)}>

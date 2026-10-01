@@ -5,6 +5,8 @@ import { usePlaybackStore } from '../../state/playbackStore'
 import { useTrackTagColors } from '../../hooks/useTrackTagColors'
 import { tagColorForSlot } from '../../lib/tagColors'
 import { audioEngine } from '../../audio/AudioEngine'
+import { useThemeStore } from '../../state/themeStore'
+import { cachedThemeColor, startVisualLoop } from '../../lib/visualLoop'
 import styles from './ReactiveVisualizer.module.css'
 
 const CANVAS_SIZE = 150
@@ -18,9 +20,7 @@ const BAR_COUNT = 32
 // half across both sides keeps the whole circle reactive instead of half of it.
 const USABLE_BINS = 16
 
-function themeColor(cssVar: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim()
-}
+const themeColor = cachedThemeColor
 
 /** Live frequency bars (real audio analysis, not the pre-computed waveform peaks)
  *  around the disc while playing; a calm flat ring at rest. Idle state is drawn
@@ -32,22 +32,26 @@ function themeColor(cssVar: string): string {
  *  fallback via the waveform intensity slider, which is scoped to the waveform
  *  display specifically, not every tag-colored visual in the app.
  *
- *  Reads theme tokens fresh every animation frame (themeColor() below), which
- *  is also what makes this repaint correctly the instant the theme changes —
- *  no explicit retrigger needed. Don't "optimize" this into a once-per-track
- *  color read; that would silently reintroduce a stale-color-after-theme-switch
- *  bug (see WaveformPanel.tsx/RowWaveform.tsx, which redraw only on dependency
- *  changes and need the active theme in their effect deps for exactly this reason). */
+ *  Reads theme tokens fresh on every draw (themeColor() below). While playing
+ *  that's every frame; while paused it draws once, and the active theme is in
+ *  the effect deps so a theme switch still repaints it.
+ *
+ *  The backing store is only resized when the size actually changes — resetting
+ *  canvas.width every frame reallocated it 60 times a second, which was a large
+ *  share of the app's GPU-process load during playback. */
 function drawRing(canvas: HTMLCanvasElement, tagColors: string[], isPlaying: boolean): void {
   const dpr = window.devicePixelRatio || 1
-  canvas.width = CANVAS_SIZE * dpr
-  canvas.height = CANVAS_SIZE * dpr
-  canvas.style.width = `${CANVAS_SIZE}px`
-  canvas.style.height = `${CANVAS_SIZE}px`
+  const px = Math.round(CANVAS_SIZE * dpr)
+  if (canvas.width !== px || canvas.height !== px) {
+    canvas.width = px
+    canvas.height = px
+    canvas.style.width = `${CANVAS_SIZE}px`
+    canvas.style.height = `${CANVAS_SIZE}px`
+  }
 
   const ctx = canvas.getContext('2d')
   if (!ctx) return
-  ctx.scale(dpr, dpr)
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
 
   const cx = CANVAS_SIZE / 2
@@ -88,20 +92,18 @@ function ReactiveVisualizer({ track }: { track: Track | null }): React.JSX.Eleme
   const art = useAlbumArt(track)
   const isPlaying = usePlaybackStore((s) => s.isPlaying)
   const tagColors = useTrackTagColors(track?.id)
+  const theme = useThemeStore((s) => s.theme)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
+  // Animates only while playing; paused, the idle ring doesn't change, so it's
+  // drawn once instead of 60 times a second.
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas || !track) return
-
-    let rafId: number
-    const tick = (): void => {
-      drawRing(canvas, tagColors, isPlaying)
-      rafId = requestAnimationFrame(tick)
-    }
-    rafId = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rafId)
-  }, [track, isPlaying, tagColors])
+    drawRing(canvas, tagColors, isPlaying)
+    if (!isPlaying) return
+    return startVisualLoop(() => drawRing(canvas, tagColors, isPlaying))
+  }, [track, isPlaying, tagColors, theme])
 
   if (!track) return null
 

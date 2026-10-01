@@ -12,6 +12,9 @@
   width: 100%;
   height: 100%;
   transform: rotate(-90deg);
+  /* Own compositing layer, so updating the ring repaints only the ring — not the
+     play button's glow and gloss layers underneath it. */
+  will-change: transform;
   pointer-events: none;
 }
 
@@ -26,5 +29,6 @@
   stroke: var(--accent);
   stroke-width: 2;
   stroke-linecap: round;
-  transition: stroke-dashoffset 0.1s linear;
+  /* No transition: it animated every update at the display's full refresh rate,
+     for a ring that moves about a pixel a second. */
 }

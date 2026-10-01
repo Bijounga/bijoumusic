@@ -9,10 +9,11 @@ interface PlaybackProgressRingProps {
 }
 
 /** Wraps anything (the play/pause button, album art, whatever) in a ring that
- *  fills clockwise as the current track plays — read directly off the audio engine
- *  every frame (bypassing React state) rather than off the store's currentTime,
- *  same reasoning as the waveform playhead: smooth motion without a re-render
- *  per frame. */
+ *  fills clockwise as the current track plays, set directly on the SVG (no React
+ *  re-render). It updates on the audio element's timeupdate (~4 times a second,
+ *  and on every seek), not every animation frame: on a typical track the ring
+ *  moves about a pixel a second, and repainting it per frame — dragging the play
+ *  button's glow and gloss layers along — cost over a quarter of a CPU core. */
 function PlaybackProgressRing({ size, children }: PlaybackProgressRingProps): React.JSX.Element {
   const currentTrack = usePlaybackStore((s) => s.currentTrack)
   const circleRef = useRef<SVGCircleElement>(null)
@@ -26,17 +27,15 @@ function PlaybackProgressRing({ size, children }: PlaybackProgressRingProps): Re
       return
     }
 
-    let rafId: number
-    const tick = (): void => {
+    const sync = (): void => {
       const duration = audioEngine.getDuration()
       const fraction = duration > 0 ? audioEngine.getCurrentTime() / duration : 0
       if (circleRef.current) {
         circleRef.current.style.strokeDashoffset = String(circumference * (1 - Math.min(1, Math.max(0, fraction))))
       }
-      rafId = requestAnimationFrame(tick)
     }
-    rafId = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rafId)
+    sync()
+    return audioEngine.onTimeUpdate(sync)
   }, [currentTrack, circumference])
 
   const center = size / 2

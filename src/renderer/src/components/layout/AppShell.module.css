@@ -292,20 +292,3 @@
   flex: 1;
   min-width: 0;
 }
-
-.badge {
-  /* Pinned to the corner rather than a flex sibling of the bar — the bar's own
-     content can't be reliably kept from ever reaching this wide (it already
-     scrolls internally when it doesn't fit), so this stays out of that flow
-     entirely and just sits on top of whatever's there, always in the same spot. */
-  position: absolute;
-  right: 16px;
-  bottom: 6px;
-  background: var(--surface-2);
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-  color: var(--text-disabled);
-  font-size: 12px;
-  pointer-events: none;
-  z-index: 5;
-}

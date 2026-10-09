@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { Track } from '@shared/types'
+import { LruCache } from '../lib/lruCache'
 
 // In-memory cache on top of the on-disk one in main — keyed by content hash so a
 // moved/renamed file still hits it, and reselecting a track this session is instant.
-const memoryCache = new Map<string, string | null>()
+const memoryCache = new LruCache<string, string | null>(250)
 
 export function useAlbumArt(track: Track | null): string | null {
   const [art, setArt] = useState<string | null>(null)

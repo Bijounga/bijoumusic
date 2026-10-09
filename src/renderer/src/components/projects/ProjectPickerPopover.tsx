@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Track } from '@shared/types'
 import { useProjectStore } from '../../state/projectStore'
+import { IconWithCount, ProjectIcon } from '../common/ActionIcons'
 import styles from './ProjectPickerPopover.module.css'
 
 function ProjectPickerPopover({ track }: { track: Track | null }): React.JSX.Element {
@@ -54,8 +55,10 @@ function ProjectPickerPopover({ track }: { track: Track | null }): React.JSX.Ele
         className={`${styles.trigger} ${assignedProjectIds.size > 0 ? styles.triggerActive : ''}`}
         disabled={!track}
         onClick={() => setOpen((v) => !v)}
+        title={assignedProjectIds.size > 0 ? `Projects (${assignedProjectIds.size})` : 'Projects'}
+        aria-label="Projects"
       >
-        {assignedProjectIds.size > 0 ? `Projects (${assignedProjectIds.size})` : 'Projects'}
+        <IconWithCount icon={<ProjectIcon />} count={assignedProjectIds.size} />
       </button>
 
       {open && track && (

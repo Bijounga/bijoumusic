@@ -4,6 +4,7 @@ import { usePlaybackStore } from '../../state/playbackStore'
 import { usePreviewClipStore } from '../../state/previewClipStore'
 import { useLibraryStore } from '../../state/libraryStore'
 import { formatDuration } from '../../lib/format'
+import { IconWithCount, ClipIcon } from '../common/ActionIcons'
 import styles from './PreviewClipPopover.module.css'
 
 function PreviewClipPopover({ track }: { track: Track | null }): React.JSX.Element {
@@ -93,8 +94,10 @@ function PreviewClipPopover({ track }: { track: Track | null }): React.JSX.Eleme
         className={`${styles.trigger} ${hasRange ? styles.triggerActive : ''} ${isLooping ? styles.triggerLooping : ''}`}
         disabled={!track}
         onClick={() => setOpen((v) => !v)}
+        title={hasRange ? `Preview clip ${summary}` : 'Preview clip — audition just the best part'}
+        aria-label="Preview clip"
       >
-        {summary}
+        <IconWithCount icon={<ClipIcon />} />
       </button>
 
       {open && track && (

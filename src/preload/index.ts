@@ -2,7 +2,6 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { IpcChannels } from '@shared/ipcChannels'
 import type {
-  AppInfo,
   Track,
   LibraryRoot,
   ScanResult,
@@ -22,11 +21,15 @@ import type {
   DownloadTrackPayload,
   DownloadProgressPayload,
   DownloadResult,
-  VideoInfoPreview
+  VideoInfoPreview,
+  MiniPlayerState,
+  MiniPlayerCommand,
+  UpdateStatus,
+  MoveRootReport,
+  MoveRootResult
 } from '@shared/types'
 
 const api = {
-  getAppInfo: (): Promise<AppInfo> => ipcRenderer.invoke(IpcChannels.appInfo),
   pickLibraryFolder: (): Promise<string | null> => ipcRenderer.invoke(IpcChannels.pickLibraryFolder),
   scanLibrary: (rootPath: string): Promise<ScanResult> => ipcRenderer.invoke(IpcChannels.scanLibrary, rootPath),
   scanFolder: (libraryRootId: number, relativePath: string): Promise<ScanResult> =>
@@ -148,6 +151,41 @@ const api = {
   windowToggleMaximize: (): Promise<void> => ipcRenderer.invoke(IpcChannels.windowToggleMaximize),
   windowClose: (): Promise<void> => ipcRenderer.invoke(IpcChannels.windowClose),
   windowIsMaximized: (): Promise<boolean> => ipcRenderer.invoke(IpcChannels.windowIsMaximized),
+  miniToggle: (): Promise<boolean> => ipcRenderer.invoke(IpcChannels.miniToggle),
+  onMiniOpenChanged: (callback: (open: boolean) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, open: boolean): void => callback(open)
+    ipcRenderer.on(IpcChannels.miniOpenChanged, listener)
+    return () => ipcRenderer.removeListener(IpcChannels.miniOpenChanged, listener)
+  },
+  miniSendState: (state: MiniPlayerState): void => ipcRenderer.send(IpcChannels.miniState, state),
+  miniGetState: (): Promise<MiniPlayerState> => ipcRenderer.invoke(IpcChannels.miniGetState),
+  onMiniState: (callback: (state: MiniPlayerState) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, state: MiniPlayerState): void => callback(state)
+    ipcRenderer.on(IpcChannels.miniState, listener)
+    return () => ipcRenderer.removeListener(IpcChannels.miniState, listener)
+  },
+  miniSendCommand: (command: MiniPlayerCommand): void => ipcRenderer.send(IpcChannels.miniCommand, command),
+  onMiniCommand: (callback: (command: MiniPlayerCommand) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, command: MiniPlayerCommand): void => callback(command)
+    ipcRenderer.on(IpcChannels.miniCommand, listener)
+    return () => ipcRenderer.removeListener(IpcChannels.miniCommand, listener)
+  },
+  miniShowMain: (): void => ipcRenderer.send(IpcChannels.miniShowMain),
+  miniClose: (): void => ipcRenderer.send(IpcChannels.miniClose),
+  perfLog: (line: string): void => ipcRenderer.send(IpcChannels.perfLog, line),
+  libraryAnalyzeMoveRoot: (rootId: number, newPath: string): Promise<MoveRootReport> =>
+    ipcRenderer.invoke(IpcChannels.libraryAnalyzeMoveRoot, rootId, newPath),
+  libraryApplyMoveRoot: (rootId: number, newPath: string): Promise<MoveRootResult> =>
+    ipcRenderer.invoke(IpcChannels.libraryApplyMoveRoot, rootId, newPath),
+  updateGetStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke(IpcChannels.updateGetStatus),
+  updateCheckNow: (): Promise<void> => ipcRenderer.invoke(IpcChannels.updateCheckNow),
+  updateInstallNow: (): Promise<void> => ipcRenderer.invoke(IpcChannels.updateInstallNow),
+  updateOpenReleases: (): void => ipcRenderer.send(IpcChannels.updateOpenReleases),
+  onUpdateStatus: (callback: (status: UpdateStatus) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus): void => callback(status)
+    ipcRenderer.on(IpcChannels.updateStatus, listener)
+    return () => ipcRenderer.removeListener(IpcChannels.updateStatus, listener)
+  },
   onWindowZoomChanged: (callback: (zoom: number) => void): (() => void) => {
     const listener = (_event: Electron.IpcRendererEvent, zoom: number): void => callback(zoom)
     ipcRenderer.on(IpcChannels.windowZoomChanged, listener)

@@ -3,6 +3,7 @@ import type { Track } from '@shared/types'
 import { usePlaybackStore } from '../../state/playbackStore'
 import { useBookmarkStore } from '../../state/bookmarkStore'
 import { formatDuration } from '../../lib/format'
+import { IconWithCount, BookmarkIcon } from '../common/ActionIcons'
 import styles from './BookmarksPopover.module.css'
 
 function BookmarksPopover({ track }: { track: Track | null }): React.JSX.Element {
@@ -46,8 +47,10 @@ function BookmarksPopover({ track }: { track: Track | null }): React.JSX.Element
         className={`${styles.trigger} ${bookmarks.length > 0 ? styles.triggerActive : ''}`}
         disabled={!track}
         onClick={() => setOpen((v) => !v)}
+        title={bookmarks.length > 0 ? `Bookmarks (${bookmarks.length})` : 'Bookmarks'}
+        aria-label="Bookmarks"
       >
-        {bookmarks.length > 0 ? `Bookmarks (${bookmarks.length})` : 'Bookmarks'}
+        <IconWithCount icon={<BookmarkIcon />} count={bookmarks.length} />
       </button>
 
       {open && track && (

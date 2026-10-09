@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePlaybackStore } from '../../state/playbackStore'
+import { IconWithCount, SpeedIcon } from '../common/ActionIcons'
 import styles from './PlaybackSpeedControl.module.css'
 
 const PRESET_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3]
@@ -36,9 +37,10 @@ function PlaybackSpeedControl(): React.JSX.Element {
       <button
         className={`${styles.trigger} ${playbackRate !== 1 ? styles.triggerActive : ''}`}
         onClick={() => setOpen((v) => !v)}
-        title="Playback speed"
+        title={`Playback speed (${formatSpeed(playbackRate)})`}
+        aria-label="Playback speed"
       >
-        {formatSpeed(playbackRate)}
+        <IconWithCount icon={<SpeedIcon />} label={playbackRate !== 1 ? formatSpeed(playbackRate) : undefined} />
       </button>
 
       {open && (

@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react'
 import type { Track } from '@shared/types'
 import { generateWaveformPeaks } from './generateWaveformPeaks'
 import { useLibraryStore } from '../state/libraryStore'
+import { LruCache } from '../lib/lruCache'
 
 // In-memory cache on top of the on-disk one, keyed by content hash — reselecting a
 // track already viewed this session skips even the IPC round-trip.
-const memoryCache = new Map<string, Float32Array>()
+const memoryCache = new LruCache<string, Float32Array>(60)
 
 interface WaveformState {
   peaks: Float32Array | null

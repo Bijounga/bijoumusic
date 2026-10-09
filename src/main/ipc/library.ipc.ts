@@ -15,6 +15,21 @@ import {
 import { scanLibraryRoot, scanFolder } from '../scanner/libraryScanner'
 import { getAppIconPath } from '../iconPath'
 
+// The picture Windows shows under the cursor while a track is dragged out of the
+// app. The source icon is 2000×2000, which made the drag preview cover half the
+// screen; a small copy is made once and reused.
+const DRAG_ICON_SIZE = 32
+let dragIcon: Electron.NativeImage | null = null
+
+function getDragIcon(): Electron.NativeImage {
+  if (!dragIcon) {
+    dragIcon = nativeImage
+      .createFromPath(getAppIconPath())
+      .resize({ width: DRAG_ICON_SIZE, height: DRAG_ICON_SIZE, quality: 'best' })
+  }
+  return dragIcon
+}
+
 function toTrack(row: TrackRow): Track {
   return {
     id: row.id,
@@ -91,7 +106,7 @@ export function registerLibraryIpc(): void {
   // (send/on, not invoke/handle) since it must run synchronously inside the
   // renderer's dragstart handler, matching Electron's documented pattern.
   ipcMain.on(IpcChannels.startTrackDrag, (event, filePaths: string[]) => {
-    const icon = nativeImage.createFromPath(getAppIconPath())
+    const icon = getDragIcon()
     if (filePaths.length <= 1) {
       event.sender.startDrag({ file: filePaths[0], icon })
     } else {

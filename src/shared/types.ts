@@ -1,7 +1,69 @@
-export interface AppInfo {
-  version: string
-  platform: NodeJS.Platform
+/** What "Move library folder" found in the new location, before anything changes. */
+export interface MoveRootReport {
+  oldPath: string
+  newPath: string
+  total: number
+  found: number
+  missing: number
+  /** A few relative paths that weren't found, to show what's different. */
+  missingSamples: string[]
+  /** If the picked folder contains a subfolder with the old folder's name, this
+   *  is its full path — the usual mistake is picking one level too high. */
+  suggestedPath?: string
+  error?: string
 }
+
+export interface MoveRootResult {
+  moved: number
+  missing: number
+  skippedConflicts: number
+  /** Where the safety copy of the database made before the move was saved. */
+  backupPath: string
+}
+
+/** Where the app's self-update stands, shown by the logo at the top of the sidebar.
+ *  'dev' = running from source, where there's no update feed to check. */
+export type UpdateState =
+  | 'idle'
+  | 'dev'
+  | 'checking'
+  | 'not-available'
+  | 'available'
+  | 'downloading'
+  | 'downloaded'
+  | 'available-manual'
+  | 'error'
+
+export interface UpdateStatus {
+  state: UpdateState
+  /** The version the running app is. */
+  currentVersion: string
+  /** The newer version, once one is found. */
+  version?: string
+  /** 0-100 while downloading, when known. */
+  percent?: number
+  message?: string
+}
+
+/** What the pop-out mini player shows — sent from the main window, which owns
+ *  playback, to the mini player window. */
+export interface MiniPlayerState {
+  track: Track | null
+  isPlaying: boolean
+  currentTime: number
+  duration: number
+  /** The main window's theme id, so the mini player always matches it. */
+  theme: string
+  /** 0 to MAX_VOLUME (2 = 200%). */
+  volume: number
+}
+
+export type MiniPlayerCommand =
+  | { type: 'toggle' }
+  | { type: 'next' }
+  | { type: 'previous' }
+  | { type: 'seek'; fraction: number }
+  | { type: 'volume'; value: number }
 
 export interface Track {
   id: number

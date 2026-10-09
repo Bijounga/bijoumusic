@@ -4,17 +4,31 @@ import styles from './TitleBar.module.css'
 
 function TitleBar(): React.JSX.Element {
   const [maximized, setMaximized] = useState(false)
+  const [miniOpen, setMiniOpen] = useState(false)
 
   useEffect(() => {
     window.api.windowIsMaximized().then(setMaximized)
     return window.api.onWindowMaximizedChanged(setMaximized)
   }, [])
 
+  useEffect(() => window.api.onMiniOpenChanged(setMiniOpen), [])
+
   return (
     <div className={styles.bar}>
       <img className={styles.icon} src={iconUrl} alt="" draggable={false} />
       <span className={styles.title}>BijouMusic</span>
       <div className={styles.captions}>
+        <button
+          className={styles.caption}
+          tabIndex={-1}
+          title={miniOpen ? 'Close mini player' : 'Pop out mini player'}
+          onClick={() => window.api.miniToggle()}
+        >
+          <svg viewBox="0 0 10 10" aria-hidden="true">
+            <path d="M0.5 0.5h9v9h-9z" />
+            <path d="M5 5h3.5v3h-3.5z" fill="currentColor" stroke="none" />
+          </svg>
+        </button>
         <button className={styles.caption} tabIndex={-1} title="Minimize" onClick={() => window.api.windowMinimize()}>
           <svg viewBox="0 0 10 10" aria-hidden="true">
             <path d="M0 5.5h10" />

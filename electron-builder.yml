@@ -2,19 +2,41 @@ appId: com.ibrahim.bijoumusic
 productName: BijouMusic
 directories:
   buildResources: build
+# Only the built app goes in the package. This repo's folder also holds other
+# projects (DoodlePadApp, BijouVoiceover, ...) that must never end up inside
+# BijouMusic's installer or its public GitHub releases. Production dependencies
+# are included automatically.
 files:
-  - '!**/.vscode/*'
-  - '!src/*'
-  - '!electron.vite.config.{js,ts,mjs,cjs}'
-  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
-  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - out/**/*
+  - package.json
 asarUnpack:
   - resources/**
 extraResources:
   - from: build/icon.png
     to: build/icon.png
+publish:
+  provider: github
+  owner: Bijounga
+  repo: bijoumusic
+  releaseType: release
 win:
   executableName: bijoumusic
   icon: build/icon.ico
-  target: portable
+  target: nsis
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+mac:
+  target:
+    - target: dmg
+      arch: arm64
+    - target: zip
+      arch: arm64
+  icon: build/icon.png
+  category: public.app-category.music
+  identity: null
+afterSign: scripts/adhoc-sign.cjs
 npmRebuild: false

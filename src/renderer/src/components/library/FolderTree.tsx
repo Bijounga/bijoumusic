@@ -16,6 +16,8 @@ function FolderRow({ node, depth }: { node: FolderNode; depth: number }): React.
   const selectedFolder = useFilterStore((s) => s.selectedFolder)
   const setSelectedFolder = useFilterStore((s) => s.setSelectedFolder)
   const rescanFolder = useLibraryStore((s) => s.rescanFolder)
+  const loadInitial = useLibraryStore((s) => s.loadInitial)
+  const rescan = useLibraryStore((s) => s.rescan)
   const isActive =
     selectedFolder?.libraryRootId === node.libraryRootId && selectedFolder?.relativePath === node.relativePath
   const hasChildren = node.children.length > 0
@@ -31,6 +33,45 @@ function FolderRow({ node, depth }: { node: FolderNode; depth: number }): React.
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [contextMenu])
+
+  // Only a library's top folder can be re-pointed (depth 0 is a root).
+  const isLibraryRoot = depth === 0 && node.relativePath === ''
+
+  async function moveLibraryFolder(): Promise<void> {
+    const picked = await window.api.pickLibraryFolder()
+    if (!picked) return
+    const report = await window.api.libraryAnalyzeMoveRoot(node.libraryRootId, picked)
+    if (report.error) {
+      const hint = report.suggestedPath ? ['', 'Did you mean this folder?', report.suggestedPath] : []
+      alert([report.error, ...hint].join('\n'))
+      return
+    }
+    const lines = [
+      `Move "${node.name}" to:`,
+      report.newPath,
+      '',
+      `${report.found.toLocaleString()} of ${report.total.toLocaleString()} songs were found there. They keep all their tags, ratings and aliases and simply point at the new files.`
+    ]
+    if (report.missing > 0) {
+      lines.push(
+        '',
+        `${report.missing.toLocaleString()} weren't found. They stay in your library marked missing, and reconnect on their own if the files show up later.`,
+        '',
+        'For example, not found there:',
+        ...report.missingSamples.slice(0, 4)
+      )
+    }
+    lines.push('', 'Your original files are not touched.')
+    if (!confirm(lines.join('\n'))) return
+    try {
+      const result = await window.api.libraryApplyMoveRoot(node.libraryRootId, picked)
+      await loadInitial()
+      void rescan(report.newPath)
+      alert(`Moved ${result.moved.toLocaleString()} songs to the new folder.`)
+    } catch (err) {
+      alert(`Couldn't move the folder: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  }
 
   return (
     <>
@@ -77,6 +118,17 @@ function FolderRow({ node, depth }: { node: FolderNode; depth: number }): React.
           >
             Rescan this folder
           </div>
+          {isLibraryRoot && (
+            <div
+              className={styles.contextMenuItem}
+              onClick={() => {
+                setContextMenu(null)
+                void moveLibraryFolder()
+              }}
+            >
+              Move library folder…
+            </div>
+          )}
         </div>
       )}
       {expanded && node.children.map((child) => <FolderRow key={child.path} node={child} depth={depth + 1} />)}

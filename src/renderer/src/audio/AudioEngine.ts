@@ -12,15 +12,12 @@
  */
 
 import { setSetting } from '../lib/settingsSync'
+import { MAX_VOLUME } from '../lib/volume'
 
 type EndedListener = () => void
 
 const VOLUME_STORAGE_KEY = 'bijoumusic:volume'
 const DEFAULT_VOLUME = 0.8
-// Quiet recordings (e.g. some WAV rips) never reach a comfortable level at 100% —
-// routing through a GainNode instead of relying on <audio>.volume (hard-capped at 1)
-// lets the boost go up to 200%.
-export const MAX_VOLUME = 2
 const PLAYBACK_RATE_STORAGE_KEY = 'bijoumusic:playback-rate'
 const DEFAULT_PLAYBACK_RATE = 1
 const MIN_PLAYBACK_RATE = 0.25

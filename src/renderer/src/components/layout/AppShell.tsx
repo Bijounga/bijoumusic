@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { AppInfo } from '@shared/types'
 import { useLibraryStore } from '../../state/libraryStore'
 import { useFilterStore } from '../../state/filterStore'
 import { usePlaybackStore } from '../../state/playbackStore'
@@ -15,6 +14,7 @@ import { useVisibleTracks } from '../../state/useVisibleTracks'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { useCustomKeybinds } from '../../hooks/useCustomKeybinds'
 import { useMediaSession } from '../../hooks/useMediaSession'
+import { useMiniPlayerBridge } from '../../hooks/useMiniPlayerBridge'
 import { usePremiereAnalysisResponder } from '../../hooks/usePremiereAnalysisResponder'
 import { useBackgroundWaveformGeneration } from '../../audio/useBackgroundWaveformGeneration'
 import PlaybackBoundaryWatcher from '../player/PlaybackBoundaryWatcher'
@@ -37,6 +37,7 @@ import ReactiveVisualizer from '../player/ReactiveVisualizer'
 import AudioAnalyzerPanels from '../player/AudioAnalyzerPanels'
 import SidebarSection from './SidebarSection'
 import ThemeSwitcher from './ThemeSwitcher'
+import UpdateBadge from './UpdateBadge'
 import styles from './AppShell.module.css'
 
 const AUTO_RESCAN_INTERVAL_MS = 15 * 60 * 1000
@@ -64,7 +65,6 @@ function hasAnyFilterActive(
 }
 
 function AppShell(): React.JSX.Element {
-  const [appInfo, setAppInfo] = useState<AppInfo | null>(null)
   const [collapseSignal, setCollapseSignal] = useState(0)
   const [folderSearchQuery, setFolderSearchQuery] = useState('')
   const [showDownloadModal, setShowDownloadModal] = useState(false)
@@ -130,11 +130,11 @@ function AppShell(): React.JSX.Element {
 
   useCustomKeybinds(visibleTracks)
   useMediaSession(visibleTracks)
+  useMiniPlayerBridge(visibleTracks)
   useBackgroundWaveformGeneration(tracks)
   usePremiereAnalysisResponder()
 
   useEffect(() => {
-    window.api.getAppInfo().then(setAppInfo)
     // Rescan once on open so anything added since the app last ran shows up without
     // a manual click, then keep repeating in the background — rescan() no-ops on its
     // own if a scan is already running, so overlapping ticks can't stack up.
@@ -179,6 +179,7 @@ function AppShell(): React.JSX.Element {
     <div className={styles.shell}>
       <PlaybackBoundaryWatcher visibleTracks={visibleTracks} />
       <aside className={styles.sidebar}>
+        <UpdateBadge />
         <SidebarSection title="Download" accentColor="var(--section-download)" storageKey="download">
           <button className={styles.textButton} onClick={() => setShowDownloadModal(true)}>
             Download from URL…
@@ -367,9 +368,6 @@ function AppShell(): React.JSX.Element {
         <div className={styles.transportRow}>
           <NowPlayingBar />
           <ThemeSwitcher />
-          <span className={styles.badge}>
-            {appInfo ? `v${appInfo.version} · ${appInfo.platform}` : 'connecting…'}
-          </span>
         </div>
       </footer>
 

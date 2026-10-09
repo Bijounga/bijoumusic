@@ -1,8 +1,7 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { IpcChannels } from '@shared/ipcChannels'
-import type { AppInfo } from '@shared/types'
 import { initDatabase, closeDatabase, refreshDatabaseConnection } from './db/database'
 import { registerLibraryIpc } from './ipc/library.ipc'
 import { registerPlaybackIpc } from './ipc/playback.ipc'
@@ -18,6 +17,10 @@ import { registerPremiereIpc } from './ipc/premiere.ipc'
 import { registerDownloaderIpc } from './ipc/downloader.ipc'
 import { registerWindowIpc } from './ipc/window.ipc'
 import { attachDisplayZoom } from './displayZoom'
+import { registerMiniPlayer, registerMiniPlayerIpc } from './miniPlayer'
+import { perfLog, startPerfWatchdog } from './perfLog'
+import { registerUpdaterIpc, startUpdater } from './updater'
+import { registerLibraryMoveIpc } from './ipc/libraryMove.ipc'
 import { registerAudioProtocolScheme, registerAudioProtocolHandler } from './protocol'
 import { getAppIconPath } from './iconPath'
 import { startPremiereBridge, stopPremiereBridge } from './premiereBridge'
@@ -80,6 +83,8 @@ function createWindow(): void {
   })
 
   attachDisplayZoom(window)
+  registerMiniPlayer(window)
+  startUpdater(window)
 
   window.on('maximize', () => window.webContents.send(IpcChannels.windowMaximizedChanged, true))
   window.on('unmaximize', () => window.webContents.send(IpcChannels.windowMaximizedChanged, false))
@@ -90,8 +95,13 @@ function createWindow(): void {
   // correctly, so this forces exactly that on every refocus, which is also the
   // most natural moment for "something might have changed while I was away").
   window.on('focus', () => {
+    const startedAt = Date.now()
     refreshDatabaseConnection()
-      .then(() => window.webContents.send(IpcChannels.databaseRefreshed))
+      .then(() => {
+        const took = Date.now() - startedAt
+        if (took > 150) perfLog(`reopening the database on window focus took ${took}ms`)
+        window.webContents.send(IpcChannels.databaseRefreshed)
+      })
       .catch((err) => console.error('[index] refreshDatabaseConnection on focus failed:', err))
   })
 
@@ -118,10 +128,6 @@ if (gotSingleInstanceLock) {
       optimizer.watchWindowShortcuts(window)
     })
 
-    ipcMain.handle(IpcChannels.appInfo, (): AppInfo => {
-      return { version: app.getVersion(), platform: process.platform }
-    })
-
     registerLibraryIpc()
     registerPlaybackIpc()
     registerWaveformIpc()
@@ -135,6 +141,10 @@ if (gotSingleInstanceLock) {
     registerPremiereIpc()
     registerDownloaderIpc()
     registerWindowIpc()
+    registerMiniPlayerIpc()
+    registerUpdaterIpc()
+    registerLibraryMoveIpc()
+    startPerfWatchdog()
     startPremiereBridge()
 
     createWindow()

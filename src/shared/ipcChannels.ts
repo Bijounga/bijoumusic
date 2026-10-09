@@ -1,5 +1,4 @@
 export const IpcChannels = {
-  appInfo: 'app:info',
   pickLibraryFolder: 'library:pick-folder',
   scanLibrary: 'library:scan',
   scanFolder: 'library:scan-folder',
@@ -70,5 +69,20 @@ export const IpcChannels = {
   windowClose: 'window:close',
   windowIsMaximized: 'window:is-maximized',
   windowMaximizedChanged: 'window:maximized-changed',
-  windowZoomChanged: 'window:zoom-changed'
+  windowZoomChanged: 'window:zoom-changed',
+  miniToggle: 'mini:toggle',
+  miniOpenChanged: 'mini:open-changed',
+  miniState: 'mini:state',
+  miniGetState: 'mini:get-state',
+  miniCommand: 'mini:command',
+  miniShowMain: 'mini:show-main',
+  miniClose: 'mini:close',
+  perfLog: 'perf:log',
+  libraryAnalyzeMoveRoot: 'library:analyze-move-root',
+  libraryApplyMoveRoot: 'library:apply-move-root',
+  updateStatus: 'update:status',
+  updateGetStatus: 'update:get-status',
+  updateCheckNow: 'update:check-now',
+  updateInstallNow: 'update:install-now',
+  updateOpenReleases: 'update:open-releases'
 } as const

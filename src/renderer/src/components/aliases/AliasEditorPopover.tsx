@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Track } from '@shared/types'
 import { useAliasStore } from '../../state/aliasStore'
 import { useUiSignalStore } from '../../state/uiSignalStore'
+import { IconWithCount, AliasIcon } from '../common/ActionIcons'
 import styles from './AliasEditorPopover.module.css'
 
 function AliasEditorPopover({ track }: { track: Track | null }): React.JSX.Element {
@@ -56,8 +57,10 @@ function AliasEditorPopover({ track }: { track: Track | null }): React.JSX.Eleme
         className={`${styles.trigger} ${aliases.length > 0 ? styles.triggerActive : ''}`}
         disabled={!track}
         onClick={() => setOpen((v) => !v)}
+        title={aliases.length > 0 ? `Aliases (${aliases.length}) — nicknames you can search by` : 'Aliases — nicknames you can search by'}
+        aria-label="Aliases"
       >
-        {aliases.length > 0 ? `Aliases (${aliases.length})` : 'Aliases'}
+        <IconWithCount icon={<AliasIcon />} count={aliases.length} />
       </button>
 
       {open && track && (

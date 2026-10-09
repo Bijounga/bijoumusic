@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Track } from '@shared/types'
 import { useTagStore } from '../../state/tagStore'
+import { IconWithCount, TagIcon } from '../common/ActionIcons'
 import styles from './TagEditorPopover.module.css'
 
 function TagEditorPopover({ track }: { track: Track | null }): React.JSX.Element {
@@ -75,8 +76,10 @@ function TagEditorPopover({ track }: { track: Track | null }): React.JSX.Element
         className={`${styles.trigger} ${assignedIds.size > 0 ? styles.triggerActive : ''}`}
         disabled={!track}
         onClick={() => setOpen((v) => !v)}
+        title={assignedIds.size > 0 ? `Tags (${assignedIds.size})` : 'Tags'}
+        aria-label="Tags"
       >
-        {assignedIds.size > 0 ? `Tags (${assignedIds.size})` : 'Tags'}
+        <IconWithCount icon={<TagIcon />} count={assignedIds.size} />
       </button>
 
       {open && track && (

@@ -1,0 +1,44 @@
+name: Release
+
+# Runs whenever a version tag (v0.5.6, v0.6.0, ...) is pushed. Builds an
+# installer on both Windows and macOS runners and publishes them together
+# to a GitHub Release matching the tag — that release is what the app's
+# built-in auto-updater (electron-updater) checks against.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      # electron-builder's GitHub publish step creates the release for a
+      # tag if one doesn't exist yet, then uploads that platform's assets
+      # to it. Running both platforms in parallel means both can try to
+      # create it at the same moment — usually one just finds the other
+      # already made it and carries on, but occasionally the race lands
+      # badly and one job fails outright with a 422 "already_exists"
+      # error (seen on v0.5.13). max-parallel: 1 trades a bit of wall-clock
+      # time for never hitting that race at all.
+      max-parallel: 1
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+
+      - run: npx electron-vite build
+
+      - run: npx electron-builder --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

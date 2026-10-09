@@ -21,6 +21,7 @@ import PlaybackSpeedControl from './PlaybackSpeedControl'
 import AlbumArt from './AlbumArt'
 import PlaybackProgressRing from './PlaybackProgressRing'
 import ScrollingText from '../common/ScrollingText'
+import { RangeIcon, RepeatIcon, SkimIcon, SendIcon } from '../common/ActionIcons'
 import { PlayIcon, PauseIcon, PreviousTrackIcon, NextTrackIcon, ShuffleIcon, DragHandleIcon } from './TransportIcons'
 import styles from './NowPlayingBar.module.css'
 
@@ -155,7 +156,7 @@ function NowPlayingBar(): React.JSX.Element {
         }
       >
         <span className={`${styles.premiereStatusDot} ${premiereConnected ? styles.premiereStatusDotOn : ''}`} />
-        Premiere
+        <SendIcon size={16} />
       </button>
 
       <EnergySelector track={currentTrack} />
@@ -166,37 +167,40 @@ function NowPlayingBar(): React.JSX.Element {
       <button
         className={`${styles.auditionBtn} ${isDrawingRange ? styles.auditionBtnActive : ''}`}
         onClick={() => toggleDrawingRange()}
+        aria-label="Draw range"
         title={
           isDrawingRange
-            ? 'Drag-to-mark on — click and drag on the waveform to set the in/out points'
-            : 'Toggle drag-to-mark: click and drag on the waveform to set the in/out points'
+            ? 'Draw range on — click and drag on the waveform to set the in/out points'
+            : 'Draw range: click and drag on the waveform to set the in/out points'
         }
       >
-        Draw Range
+        <RangeIcon />
       </button>
       <ProjectPickerPopover track={currentTrack} />
       <TagEditorPopover track={currentTrack} />
       <button
         className={`${styles.auditionBtn} ${autoplayEnabled ? styles.auditionBtnActive : ''}`}
         onClick={() => toggleAutoplay()}
+        aria-label="Keep playing"
         title={
           autoplayEnabled
             ? 'Keep playing is on — the next track starts automatically when one ends'
             : 'Keep playing — automatically start the next track when one ends'
         }
       >
-        Keep Playing
+        <RepeatIcon />
       </button>
       <button
         className={`${styles.auditionBtn} ${auditionEnabled ? styles.auditionBtnActive : ''}`}
         onClick={() => toggleAudition()}
+        aria-label="Audition"
         title={
           auditionEnabled
-            ? 'Rapid audition mode on — each track auto-advances after 10s'
-            : 'Rapid audition mode — skim the list quickly, auto-advancing every 10s'
+            ? 'Audition on — each track auto-advances after 10s'
+            : 'Audition: skim the list quickly, auto-advancing every 10s'
         }
       >
-        Audition
+        <SkimIcon />
       </button>
       <PlaybackSpeedControl />
       <VolumeControl />

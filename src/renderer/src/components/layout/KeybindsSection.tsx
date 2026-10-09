@@ -7,6 +7,7 @@ import styles from './KeybindsSection.module.css'
 
 const FIXED_KEYBINDS: { label: string; keys: string[] }[] = [
   { label: 'Play / pause', keys: ['Space'] },
+  { label: 'Quick search', keys: ['Ctrl Space'] },
   { label: 'Previous / next track', keys: ['↑', '↓'] },
   { label: 'Seek −5s / +5s', keys: ['←', '→'] },
   { label: 'Return to folders', keys: ['Backspace'] },

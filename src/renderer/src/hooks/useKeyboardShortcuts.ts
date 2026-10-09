@@ -30,7 +30,8 @@ export function useKeyboardShortcuts(visibleTracks: Track[]): void {
       if (isCapturingKeybind) return
       if (isTypingTarget(event.target)) return
 
-      if (event.code === 'Space') {
+      // Ctrl + Space is the quick search (QuickSearch), not play/pause.
+      if (event.code === 'Space' && !event.ctrlKey) {
         event.preventDefault()
         togglePlayPause()
         return

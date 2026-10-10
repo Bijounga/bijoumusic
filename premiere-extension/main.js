@@ -4,7 +4,7 @@ const { entrypoints } = uxp
 
 // Shown in the activity log on load, so it's obvious which copy of this panel is
 // actually running (the panel loads from wherever it was last copied/loaded from).
-const PANEL_BUILD = '0.2.3 trim-verify'
+const PANEL_BUILD = '0.2.4 fewer-undo-steps'
 const BRIDGE_URL = 'ws://localhost:8934'
 const RECONNECT_DELAY_MS = 2000
 const DROP_WATCH_INTERVAL_MS = 700
@@ -279,8 +279,8 @@ function sleep(ms) {
 /** Swaps run one at a time — two overlapping swaps (a second drag while the first is
  *  still finishing) are exactly the kind of thing that can upset Premiere. */
 let swapQueue = Promise.resolve()
-function swapInOriginal(proj, trackItem, originalFilePath, trimRange) {
-  const run = swapQueue.then(() => swapInOriginalNow(proj, trackItem, originalFilePath, trimRange))
+function swapInOriginal(proj, trackItem, originalFilePath, trimRange, renameTo) {
+  const run = swapQueue.then(() => swapInOriginalNow(proj, trackItem, originalFilePath, trimRange, renameTo))
   swapQueue = run.catch(() => undefined)
   return run
 }
@@ -313,7 +313,7 @@ function runTrim(proj, label, buildActions) {
  *  the end of the whole file, so if the first try is off, other ways of setting the
  *  end are tried in turn, each checked, with exactly what Premiere did written to
  *  the activity log. */
-async function applyTrimVerified(proj, trackItem, trimRange) {
+async function applyTrimVerified(proj, trackItem, trimRange, extraFirstActions) {
   const wantIn = trimRange.start
   const wantOut = trimRange.end
   const wantDuration = wantOut - wantIn
@@ -321,16 +321,17 @@ async function applyTrimVerified(proj, trackItem, trimRange) {
   const isRight = (m) =>
     Math.abs(m.inPoint - wantIn) <= TRIM_TOLERANCE_SECONDS && Math.abs(m.duration - wantDuration) <= TRIM_TOLERANCE_SECONDS
 
+  // Every try is its own undo step in Premiere, so the first one is the most likely to
+  // be right AND does as much as it can in one go: end first (the clip only ever grows
+  // there, never ends up with its start after its end), then the start, plus whatever
+  // else the caller wants done in the same step (the rename).
   const strategies = [
-    // The order that has always worked on Windows.
-    ['in then out', () => runTrim(proj, 'BijouMusic: swap in original', () => [trackItem.createSetInPointAction(tick(wantIn)), trackItem.createSetOutPointAction(tick(wantOut))])],
-    ['out only', () => runTrim(proj, 'BijouMusic: fix end', () => [trackItem.createSetOutPointAction(tick(wantOut))])],
-    ['out, then in', () => {
-      runTrim(proj, 'BijouMusic: set end', () => [trackItem.createSetOutPointAction(tick(wantOut))])
-      return sleep(TRIM_RETRY_DELAY_MS).then(() => runTrim(proj, 'BijouMusic: set start', () => [trackItem.createSetInPointAction(tick(wantIn))]))
-    }],
+    ['end then start', () => runTrim(proj, 'BijouMusic: place trimmed clip', () => [trackItem.createSetOutPointAction(tick(wantOut)), trackItem.createSetInPointAction(tick(wantIn)), ...(extraFirstActions ? extraFirstActions() : [])])],
+    // The order that worked on Windows before.
+    ['start then end', () => runTrim(proj, 'BijouMusic: trim clip', () => [trackItem.createSetInPointAction(tick(wantIn)), trackItem.createSetOutPointAction(tick(wantOut))])],
+    ['end only', () => runTrim(proj, 'BijouMusic: fix end', () => [trackItem.createSetOutPointAction(tick(wantOut))])],
     // Last resort: in case this Premiere reads the end as a length from the start.
-    ['out as length', () => runTrim(proj, 'BijouMusic: fix end (length)', () => [trackItem.createSetOutPointAction(tick(wantDuration))])]
+    ['end as length', () => runTrim(proj, 'BijouMusic: fix end (length)', () => [trackItem.createSetOutPointAction(tick(wantDuration))])]
   ]
 
   let measured = await measureClip(trackItem)
@@ -353,7 +354,7 @@ async function applyTrimVerified(proj, trackItem, trimRange) {
  *  sequence, swap its underlying media for the full original file and correct the
  *  clip's in/out to the same range within that longer file — the visible clip
  *  doesn't move or resize, but it's no longer capped at the temp file's length. */
-async function swapInOriginalNow(proj, trackItem, originalFilePath, trimRange) {
+async function swapInOriginalNow(proj, trackItem, originalFilePath, trimRange, renameTo) {
   const originalStart = await trackItem.getStartTime()
 
   const placedProjectItem = ppro.ClipProjectItem.cast(await trackItem.getProjectItem())
@@ -363,7 +364,7 @@ async function swapInOriginalNow(proj, trackItem, originalFilePath, trimRange) {
   // clip's in/out are touched.
   await sleep(400)
 
-  const trimmed = await applyTrimVerified(proj, trackItem, trimRange)
+  const trimmed = await applyTrimVerified(proj, trackItem, trimRange, renameTo ? () => [placedProjectItem.createSetNameAction(renameTo)] : null)
 
   // Setting the in/out points also repositions the clip on the timeline (its start
   // shifts by however much the in point moved into the source) — move it back so it
@@ -422,8 +423,9 @@ function watchForDrop(target) {
             expectedDrop = null
             log('drop detected — letting Premiere finish importing before swapping')
             await sleep(DROP_SETTLE_MS)
-            await renameProjectItem(proj, projectItem, basename(target.originalFilePath))
-            await swapInOriginal(proj, item, target.originalFilePath, target.trimRange)
+            // The rename to the real song name happens inside the trim step (one undo
+            // step instead of two).
+            await swapInOriginal(proj, item, target.originalFilePath, target.trimRange, basename(target.originalFilePath))
             log('swapped in the original for dropped ' + tempName)
             return
           }
@@ -1363,6 +1365,46 @@ function scheduleReconnect() {
   }, RECONNECT_DELAY_MS)
 }
 
+/** Copy button for the activity log: puts the log on the clipboard, and also hands
+ *  it to BijouMusic, which copies it too (works even where this panel isn't allowed
+ *  to touch the clipboard) and saves it into the sync folder so it can be read on
+ *  another computer without any screenshots. */
+function setupLogButtons() {
+  const status = document.getElementById('copyLogStatus')
+  const copyBtn = document.getElementById('copyLogBtn')
+  const clearBtn = document.getElementById('clearLogBtn')
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      const text = (document.getElementById('log') || {}).textContent || ''
+      let copied = false
+      let savedTo = null
+      try {
+        await navigator.clipboard.writeText(text)
+        copied = true
+      } catch (err) {
+        // Not allowed in this host — BijouMusic does the copy below.
+      }
+      try {
+        const reply = await sendBridgeRequest({ type: 'share-log', text })
+        copied = copied || !!reply.copied
+        savedTo = reply.savedTo || null
+      } catch (err) {
+        // BijouMusic not reachable.
+      }
+      if (status) {
+        status.textContent = copied ? 'Copied ✓' + (savedTo ? ' — also saved to your sync folder' : '') : 'Could not copy — is BijouMusic running?'
+      }
+    })
+  }
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      const el = document.getElementById('log')
+      if (el) el.textContent = ''
+      if (status) status.textContent = ''
+    })
+  }
+}
+
 let selectionToolsReady = false
 
 entrypoints.setup({
@@ -1374,6 +1416,7 @@ entrypoints.setup({
         if (!selectionToolsReady) {
           selectionToolsReady = true
           setupSelectionToolsUI()
+          setupLogButtons()
         }
       },
       hide() {

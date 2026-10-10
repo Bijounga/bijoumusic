@@ -409,3 +409,15 @@ export function startSync(window: BrowserWindow): void {
   requestSync('startup', 10_000)
   setInterval(() => requestSync('interval', 0), INTERVAL_MS)
 }
+
+/** Saves a text log the Premiere panel sent into the sync folder, so it can be read
+ *  on another computer. Returns where it went, or null when sync isn't set up. */
+export async function saveSharedLog(text: string): Promise<string | null> {
+  const folder = loadState().folder
+  if (!folder || !(await isDir(folder))) return null
+  const target = join(folder, 'premiere-panel-log.txt')
+  await writeFile(target, `Saved ${new Date().toISOString()} from ${hostname()}
+
+${text}`)
+  return target
+}

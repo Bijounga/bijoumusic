@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow, app } from 'electron'
+import { ipcMain, BrowserWindow, app, clipboard } from 'electron'
 import { join } from 'path'
 import { mkdir, writeFile, readFile, unlink, readdir, stat } from 'fs/promises'
 import { randomUUID } from 'crypto'
@@ -13,6 +13,7 @@ import {
   setIncomingRequestHandler,
   type BridgeResponse
 } from '../premiereBridge'
+import { saveSharedLog } from '../sync/syncService'
 
 const TEMP_AUDIO_DIR = join(app.getPath('temp'), 'bijoumusic-premiere')
 
@@ -234,6 +235,11 @@ export function registerPremiereIpc(): void {
         minSilenceSeconds: asNumber(message.minSilenceSeconds)
       })
       return { type: 'analyze-result', ...analysis }
+    }
+    if (message.type === 'share-log') {
+      const text = String(message.text ?? '')
+      clipboard.writeText(text)
+      return { type: 'share-log-result', copied: true, savedTo: await saveSharedLog(text) }
     }
     throw new Error(`Unknown incoming request: ${message.type}`)
   })

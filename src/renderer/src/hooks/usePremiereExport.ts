@@ -35,14 +35,15 @@ export interface PremiereExport {
 export function usePremiereExport(track: Track | null): PremiereExport {
   const liveTracks = useLibraryStore((s) => s.tracks)
   const liveTrack = track ? (liveTracks.find((t) => t.id === track.id) ?? track) : null
+  const liveTrackId = liveTrack?.id ?? null
   const previewStart = liveTrack?.previewStartSeconds ?? null
   const previewEnd = liveTrack?.previewEndSeconds ?? null
 
   const [tempPath, setTempPath] = useState<ReadyTemp | null>(null)
 
   useEffect(() => {
-    if (!liveTrack || previewStart === null || previewEnd === null) return
-    const trackId = liveTrack.id
+    if (liveTrackId === null || previewStart === null || previewEnd === null) return
+    const trackId = liveTrackId
     const start = previewStart
     const end = previewEnd
     let cancelled = false
@@ -50,7 +51,7 @@ export function usePremiereExport(track: Track | null): PremiereExport {
     async function render(): Promise<void> {
       const wav = await renderTrimmedAudioWav(trackId, start, end)
       if (cancelled) return
-      const path = await window.api.premiereSaveTempAudio(trackId, wav)
+      const path = await window.api.premiereSaveTempAudio(trackId, start, end, wav)
       if (cancelled) return
       setTempPath({ trackId, start, end, path })
     }
@@ -59,7 +60,9 @@ export function usePremiereExport(track: Track | null): PremiereExport {
     return () => {
       cancelled = true
     }
-  }, [liveTrack, previewStart, previewEnd])
+    // Keyed on the track's id and range, not the track object: that object is
+    // replaced on every library refresh, which used to re-render the file each time.
+  }, [liveTrackId, previewStart, previewEnd])
 
   const isTempReady =
     liveTrack !== null &&

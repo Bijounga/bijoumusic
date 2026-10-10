@@ -1,6 +1,6 @@
 {
   "name": "bijoumusic",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "BijouMusic — local music library browser for video editing",
   "main": "./out/main/index.js",
   "author": "ibrahim",

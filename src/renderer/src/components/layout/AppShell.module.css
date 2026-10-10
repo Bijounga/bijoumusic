@@ -1,7 +1,7 @@
 .shell {
   display: grid;
   grid-template-columns: 260px 1fr;
-  grid-template-rows: 56px 1fr 258px;
+  grid-template-rows: 56px 1fr auto;
   grid-template-areas:
     'sidebar search'
     'sidebar list'
@@ -273,8 +273,10 @@
 }
 
 .waveformArea {
-  flex: 1;
-  min-height: 0;
+  /* Fixed, so the footer can grow by a row when the player bar wraps (see
+     NowPlayingBar) while a single-row footer stays exactly 258px tall. */
+  flex: none;
+  height: 183px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -284,8 +286,15 @@
   align-items: center;
   gap: 16px;
   padding: 0 16px;
-  height: 74px;
+  min-height: 74px;
   flex-shrink: 0;
+}
+
+@media (max-width: 1380px) {
+  .transportRow {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
 }
 
 .transportRow > :first-child {

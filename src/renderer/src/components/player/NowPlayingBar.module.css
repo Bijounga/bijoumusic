@@ -12,6 +12,29 @@
      edge as a result — a much smaller problem than popovers silently not opening. */
 }
 
+/* The buttons right of the track name. In a wide window they sit in the one row
+   with everything else (display: contents makes this wrapper invisible to the
+   layout); when the window is too narrow for a single row they drop to their own
+   second row rather than running off the edge of the window. */
+.controls {
+  display: contents;
+}
+
+@media (max-width: 1380px) {
+  .bar {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    flex: 1 0 100%;
+  }
+}
+
 .transportCluster {
   display: flex;
   align-items: center;

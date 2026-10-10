@@ -4,7 +4,16 @@ const { entrypoints } = uxp
 
 const BRIDGE_URL = 'ws://localhost:8934'
 const RECONNECT_DELAY_MS = 2000
-const DROP_WATCH_INTERVAL_MS = 500
+const DROP_WATCH_INTERVAL_MS = 700
+// After a dropped clip first shows up, give Premiere a moment to finish importing and
+// conforming it before its media is swapped out from under it — swapping mid-import
+// is a likely cause of a crash on a slower/just-launched Premiere.
+const DROP_SETTLE_MS = 1500
+// In/out points are read back after setting them; they must land within this of the
+// request, and are retried a few times if Premiere hasn't applied them yet.
+const TRIM_TOLERANCE_SECONDS = 0.05
+const TRIM_ATTEMPTS = 4
+const TRIM_RETRY_DELAY_MS = 500
 const DROP_WATCH_TIMEOUT_MS = 20000
 // How close (in seconds) a track item's start needs to be to where we asked
 // Premiere to place it before we're confident it's the one we just inserted —
@@ -261,26 +270,69 @@ async function findTrackItemAt(sequence, audioTrackIndex, atTime) {
   return null
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/** Swaps run one at a time — two overlapping swaps (a second drag while the first is
+ *  still finishing) are exactly the kind of thing that can upset Premiere. */
+let swapQueue = Promise.resolve()
+function swapInOriginal(proj, trackItem, originalFilePath, trimRange) {
+  const run = swapQueue.then(() => swapInOriginalNow(proj, trackItem, originalFilePath, trimRange))
+  swapQueue = run.catch(() => undefined)
+  return run
+}
+
+/** Sets the clip's in/out to trimRange and CHECKS that Premiere really applied them.
+ *  A single set-and-hope used to leave the out point at the end of the whole file on
+ *  some setups (the start landed, the end didn't); reading the values back and
+ *  re-applying whichever one is off makes it deterministic. */
+async function applyTrimVerified(proj, trackItem, trimRange) {
+  let lastIn = null
+  let lastOut = null
+  for (let attempt = 1; attempt <= TRIM_ATTEMPTS; attempt++) {
+    const inNow = (await trackItem.getInPoint()).seconds
+    const outNow = (await trackItem.getOutPoint()).seconds
+    lastIn = inNow
+    lastOut = outNow
+    const needIn = Math.abs(inNow - trimRange.start) > TRIM_TOLERANCE_SECONDS
+    const needOut = Math.abs(outNow - trimRange.end) > TRIM_TOLERANCE_SECONDS
+    if (!needIn && !needOut) {
+      log('trim ok: in ' + inNow.toFixed(2) + 's, out ' + outNow.toFixed(2) + 's (attempt ' + attempt + ')')
+      return true
+    }
+    if (attempt > 1) {
+      log('trim not applied yet (in ' + inNow.toFixed(2) + 's, out ' + outNow.toFixed(2) + 's, wanted ' + trimRange.start.toFixed(2) + 's-' + trimRange.end.toFixed(2) + 's) — retrying')
+    }
+    // Same in-then-out order as before for the first try; later tries only touch
+    // whichever one is still wrong.
+    proj.lockedAccess(() => {
+      proj.executeTransaction((compoundAction) => {
+        if (needIn) compoundAction.addAction(trackItem.createSetInPointAction(ppro.TickTime.createWithSeconds(trimRange.start)))
+        if (needOut) compoundAction.addAction(trackItem.createSetOutPointAction(ppro.TickTime.createWithSeconds(trimRange.end)))
+      }, 'BijouMusic: swap in original')
+    })
+    await sleep(TRIM_RETRY_DELAY_MS)
+  }
+  log('WARNING: could not confirm the trim — clip is at in ' + (lastIn === null ? '?' : lastIn.toFixed(2)) + 's, out ' + (lastOut === null ? '?' : lastOut.toFixed(2)) + 's, wanted ' + trimRange.start.toFixed(2) + 's-' + trimRange.end.toFixed(2) + 's')
+  return false
+}
+
 /** The core non-destructive trim trick: once a trimmed temp clip is sitting on the
  *  sequence, swap its underlying media for the full original file and correct the
  *  clip's in/out to the same range within that longer file — the visible clip
  *  doesn't move or resize, but it's no longer capped at the temp file's length. */
-async function swapInOriginal(proj, trackItem, originalFilePath, trimRange) {
+async function swapInOriginalNow(proj, trackItem, originalFilePath, trimRange) {
   const originalStart = await trackItem.getStartTime()
 
   const placedProjectItem = ppro.ClipProjectItem.cast(await trackItem.getProjectItem())
   const changed = await placedProjectItem.changeMediaFilePath(originalFilePath, true)
   if (!changed) throw new Error('Premiere would not accept the swap to the original file')
+  // Premiere re-reads the new media in the background; give it a moment before the
+  // clip's in/out are touched.
+  await sleep(400)
 
-  const inTick = ppro.TickTime.createWithSeconds(trimRange.start)
-  const outTick = ppro.TickTime.createWithSeconds(trimRange.end)
-
-  proj.lockedAccess(() => {
-    proj.executeTransaction((compoundAction) => {
-      compoundAction.addAction(trackItem.createSetInPointAction(inTick))
-      compoundAction.addAction(trackItem.createSetOutPointAction(outTick))
-    }, 'BijouMusic: swap in original')
-  })
+  const trimmed = await applyTrimVerified(proj, trackItem, trimRange)
 
   // Setting the in/out points also repositions the clip on the timeline (its start
   // shifts by however much the in point moved into the source) — move it back so it
@@ -294,6 +346,7 @@ async function swapInOriginal(proj, trackItem, originalFilePath, trimRange) {
       }, 'BijouMusic: reposition after trim')
     })
   }
+  if (!trimmed) throw new Error('The clip was placed but Premiere did not apply the full trim — see the activity log')
 }
 
 /** Button flow: we drive the whole thing — import, place, and (if a trim range was
@@ -336,6 +389,8 @@ function watchForDrop(target) {
           const projectItem = await item.getProjectItem()
           if (projectItem && stripExtension(projectItem.name) === tempName) {
             expectedDrop = null
+            log('drop detected — letting Premiere finish importing before swapping')
+            await sleep(DROP_SETTLE_MS)
             await renameProjectItem(proj, projectItem, basename(target.originalFilePath))
             await swapInOriginal(proj, item, target.originalFilePath, target.trimRange)
             log('swapped in the original for dropped ' + tempName)

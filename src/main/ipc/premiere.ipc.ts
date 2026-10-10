@@ -1,6 +1,6 @@
 import { ipcMain, BrowserWindow, app } from 'electron'
 import { join } from 'path'
-import { mkdir, writeFile, readFile, unlink } from 'fs/promises'
+import { mkdir, writeFile, readFile, unlink, readdir, stat } from 'fs/promises'
 import { randomUUID } from 'crypto'
 import { spawn } from 'child_process'
 import { IpcChannels } from '@shared/ipcChannels'
@@ -29,7 +29,9 @@ const ANALYZE_TIMEOUT_MS = 20000
 // the needed (padded) range into a small temp file first, so cost scales with
 // the range being analyzed, not the source file's total length.
 const EXTRACT_PADDING_SECONDS = 1
-const FFMPEG_CANDIDATES = ['ffmpeg', 'C:\\ffmpeg\\bin\\ffmpeg.exe']
+// Mac apps launched from Finder don't inherit the shell's PATH, so the usual
+// Homebrew locations are listed explicitly.
+const FFMPEG_CANDIDATES = ['ffmpeg', 'C:\\ffmpeg\\bin\\ffmpeg.exe', '/opt/homebrew/bin/ffmpeg', '/usr/local/bin/ffmpeg']
 
 function runFfmpeg(ffmpegPath: string, args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -175,7 +177,23 @@ async function analyzeClip(options: AnalyzeClipOptions): Promise<PremiereAnalyze
   }
 }
 
+const TEMP_AUDIO_MAX_AGE_MS = 24 * 60 * 60 * 1000
+
+/** Deletes trimmed temp files left over from earlier sessions. Only files more than
+ *  a day old go, so nothing Premiere could still be using from today is touched. */
+async function sweepOldTempAudio(): Promise<void> {
+  try {
+    for (const name of await readdir(TEMP_AUDIO_DIR)) {
+      const full = join(TEMP_AUDIO_DIR, name)
+      if (Date.now() - (await stat(full)).mtimeMs > TEMP_AUDIO_MAX_AGE_MS) await unlink(full).catch(() => undefined)
+    }
+  } catch {
+    // The folder doesn't exist yet: nothing to sweep.
+  }
+}
+
 export function registerPremiereIpc(): void {
+  void sweepOldTempAudio()
   ipcMain.handle(IpcChannels.premierePing, (): Promise<boolean> => pingPremiere())
 
   ipcMain.handle(IpcChannels.premiereGetStatus, (): boolean => isPremiereConnected())
@@ -220,14 +238,21 @@ export function registerPremiereIpc(): void {
     throw new Error(`Unknown incoming request: ${message.type}`)
   })
 
-  // A stable filename per track (not a fresh temp name each time) so a repeated
-  // send just overwrites the previous attempt rather than littering the temp
-  // folder with one file per drag.
+  // One file per track AND range, and an existing file is never rewritten: Premiere
+  // keeps the dropped file open (and may be reading it for its audio cache) well
+  // after the drop, and rewriting a file out from under it can crash it. A repeat
+  // drag of the same range reuses the file already on disk; a new range gets a new
+  // name. Old files are swept up when the app starts (see sweepOldTempAudio).
   ipcMain.handle(
     IpcChannels.premiereSaveTempAudio,
-    async (_event, trackId: number, bytes: Uint8Array): Promise<string> => {
+    async (_event, trackId: number, start: number, end: number, bytes: Uint8Array): Promise<string> => {
       await mkdir(TEMP_AUDIO_DIR, { recursive: true })
-      const filePath = join(TEMP_AUDIO_DIR, `track-${trackId}-preview.wav`)
+      const filePath = join(TEMP_AUDIO_DIR, `track-${trackId}-${Math.round(start * 1000)}-${Math.round(end * 1000)}-preview.wav`)
+      try {
+        if ((await stat(filePath)).size === bytes.byteLength) return filePath
+      } catch {
+        // Not there yet: write it below.
+      }
       await writeFile(filePath, bytes)
       return filePath
     }

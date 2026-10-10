@@ -122,88 +122,90 @@ function NowPlayingBar(): React.JSX.Element {
         {currentTrack && <span className={styles.trackFolder}>{currentTrack.folderPath || '(root)'}</span>}
       </div>
 
-      <button
-        className={styles.dragHandleBtn}
-        disabled={!currentTrack}
-        draggable={!!currentTrack}
-        onDragStart={(e) => {
-          e.preventDefault()
-          if (!currentTrack) return
-          // Tells the extension what to watch for before the drag actually starts —
-          // dragstart can't await this (the gesture would be long over by the time
-          // an async round trip resolves), so the temp file has to already be ready
-          // (see usePremiereExport) and this notification is fire-and-forget.
-          premiereExport.notifyExpectedDrop()
-          window.api.startTrackDrag([premiereExport.getDragPath()])
-        }}
-        aria-label="Drag into Premiere or DaVinci"
-        title="Drag into Premiere or DaVinci"
-      >
-        <DragHandleIcon size={16} />
-      </button>
+      <div className={styles.controls}>
+        <button
+          className={styles.dragHandleBtn}
+          disabled={!currentTrack}
+          draggable={!!currentTrack}
+          onDragStart={(e) => {
+            e.preventDefault()
+            if (!currentTrack) return
+            // Tells the extension what to watch for before the drag actually starts —
+            // dragstart can't await this (the gesture would be long over by the time
+            // an async round trip resolves), so the temp file has to already be ready
+            // (see usePremiereExport) and this notification is fire-and-forget.
+            premiereExport.notifyExpectedDrop()
+            window.api.startTrackDrag([premiereExport.getDragPath()])
+          }}
+          aria-label="Drag into Premiere or DaVinci"
+          title="Drag into Premiere or DaVinci"
+        >
+          <DragHandleIcon size={16} />
+        </button>
 
-      <button
-        className={styles.premiereStatusBtn}
-        onClick={() => void handlePremiereButtonClick()}
-        disabled={sendingToPremiere}
-        aria-label="Send to Premiere"
-        title={
-          sendingToPremiere
-            ? 'Sending…'
-            : premiereConnected
-              ? 'Send the current track to Premiere'
-              : 'Premiere extension not connected — open Premiere with the BijouMusic panel loaded'
-        }
-      >
-        <span className={`${styles.premiereStatusDot} ${premiereConnected ? styles.premiereStatusDotOn : ''}`} />
-        <SendIcon size={16} />
-      </button>
+        <button
+          className={styles.premiereStatusBtn}
+          onClick={() => void handlePremiereButtonClick()}
+          disabled={sendingToPremiere}
+          aria-label="Send to Premiere"
+          title={
+            sendingToPremiere
+              ? 'Sending…'
+              : premiereConnected
+                ? 'Send the current track to Premiere'
+                : 'Premiere extension not connected — open Premiere with the BijouMusic panel loaded'
+          }
+        >
+          <span className={`${styles.premiereStatusDot} ${premiereConnected ? styles.premiereStatusDotOn : ''}`} />
+          <SendIcon size={16} />
+        </button>
 
-      <EnergySelector track={currentTrack} />
-      <FavoriteSelector track={currentTrack} />
-      <AliasEditorPopover track={currentTrack} />
-      <BookmarksPopover track={currentTrack} />
-      <PreviewClipPopover track={currentTrack} />
-      <button
-        className={`${styles.auditionBtn} ${isDrawingRange ? styles.auditionBtnActive : ''}`}
-        onClick={() => toggleDrawingRange()}
-        aria-label="Draw range"
-        title={
-          isDrawingRange
-            ? 'Draw range on — click and drag on the waveform to set the in/out points'
-            : 'Draw range: click and drag on the waveform to set the in/out points'
-        }
-      >
-        <RangeIcon />
-      </button>
-      <ProjectPickerPopover track={currentTrack} />
-      <TagEditorPopover track={currentTrack} />
-      <button
-        className={`${styles.auditionBtn} ${autoplayEnabled ? styles.auditionBtnActive : ''}`}
-        onClick={() => toggleAutoplay()}
-        aria-label="Keep playing"
-        title={
-          autoplayEnabled
-            ? 'Keep playing is on — the next track starts automatically when one ends'
-            : 'Keep playing — automatically start the next track when one ends'
-        }
-      >
-        <RepeatIcon />
-      </button>
-      <button
-        className={`${styles.auditionBtn} ${auditionEnabled ? styles.auditionBtnActive : ''}`}
-        onClick={() => toggleAudition()}
-        aria-label="Audition"
-        title={
-          auditionEnabled
-            ? 'Audition on — each track auto-advances after 10s'
-            : 'Audition: skim the list quickly, auto-advancing every 10s'
-        }
-      >
-        <SkimIcon />
-      </button>
-      <PlaybackSpeedControl />
-      <VolumeControl />
+        <EnergySelector track={currentTrack} />
+        <FavoriteSelector track={currentTrack} />
+        <AliasEditorPopover track={currentTrack} />
+        <BookmarksPopover track={currentTrack} />
+        <PreviewClipPopover track={currentTrack} />
+        <button
+          className={`${styles.auditionBtn} ${isDrawingRange ? styles.auditionBtnActive : ''}`}
+          onClick={() => toggleDrawingRange()}
+          aria-label="Draw range"
+          title={
+            isDrawingRange
+              ? 'Draw range on — click and drag on the waveform to set the in/out points'
+              : 'Draw range: click and drag on the waveform to set the in/out points'
+          }
+        >
+          <RangeIcon />
+        </button>
+        <ProjectPickerPopover track={currentTrack} />
+        <TagEditorPopover track={currentTrack} />
+        <button
+          className={`${styles.auditionBtn} ${autoplayEnabled ? styles.auditionBtnActive : ''}`}
+          onClick={() => toggleAutoplay()}
+          aria-label="Keep playing"
+          title={
+            autoplayEnabled
+              ? 'Keep playing is on — the next track starts automatically when one ends'
+              : 'Keep playing — automatically start the next track when one ends'
+          }
+        >
+          <RepeatIcon />
+        </button>
+        <button
+          className={`${styles.auditionBtn} ${auditionEnabled ? styles.auditionBtnActive : ''}`}
+          onClick={() => toggleAudition()}
+          aria-label="Audition"
+          title={
+            auditionEnabled
+              ? 'Audition on — each track auto-advances after 10s'
+              : 'Audition: skim the list quickly, auto-advancing every 10s'
+          }
+        >
+          <SkimIcon />
+        </button>
+        <PlaybackSpeedControl />
+        <VolumeControl />
+      </div>
     </div>
   )
 }

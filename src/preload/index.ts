@@ -127,8 +127,8 @@ const api = {
     ipcRenderer.on(IpcChannels.premiereStatusChanged, listener)
     return () => ipcRenderer.removeListener(IpcChannels.premiereStatusChanged, listener)
   },
-  premiereSaveTempAudio: (trackId: number, bytes: Uint8Array): Promise<string> =>
-    ipcRenderer.invoke(IpcChannels.premiereSaveTempAudio, trackId, bytes),
+  premiereSaveTempAudio: (trackId: number, start: number, end: number, bytes: Uint8Array): Promise<string> =>
+    ipcRenderer.invoke(IpcChannels.premiereSaveTempAudio, trackId, start, end, bytes),
   premiereSendTrack: (payload: SendToPremierePayload): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke(IpcChannels.premiereSendTrack, payload),
   premiereExpectDrop: (payload: SendToPremierePayload): Promise<{ success: boolean; error?: string }> =>
@@ -187,6 +187,8 @@ const api = {
     ipcRenderer.on(IpcChannels.updateStatus, listener)
     return () => ipcRenderer.removeListener(IpcChannels.updateStatus, listener)
   },
+  /** 'darwin' on a Mac, 'win32' on Windows — for the few places the look differs. */
+  platform: process.platform,
   syncGetStatus: (): Promise<SyncStatus> => ipcRenderer.invoke(IpcChannels.syncGetStatus),
   syncSetup: (): Promise<SyncStatus> => ipcRenderer.invoke(IpcChannels.syncSetup),
   syncNow: (): Promise<SyncStatus> => ipcRenderer.invoke(IpcChannels.syncNow),

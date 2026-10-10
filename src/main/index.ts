@@ -59,15 +59,18 @@ if (!gotSingleInstanceLock) {
 }
 
 function createWindow(): void {
+  const isMac = process.platform === 'darwin'
   const window = new BrowserWindow({
-    width: 1280,
-    height: 800,
+    // Bigger by default on a Mac, where there's no one-click maximize.
+    width: isMac ? 1440 : 1280,
+    height: isMac ? 900 : 800,
     minWidth: 960,
     minHeight: 600,
     show: false,
-    // Frameless so each theme can draw its own title bar (components/layout/TitleBar).
-    // Windows still provides resize edges, snapping by drag, and the window shadow.
-    frame: false,
+    // Windows: frameless so each theme can draw its own title bar (components/layout/
+    // TitleBar), while Windows still provides resize edges, snapping and the shadow.
+    // Mac: the system's own traffic-light buttons, inset into our title bar.
+    ...(isMac ? { titleBarStyle: 'hidden' as const, trafficLightPosition: { x: 14, y: 9 } } : { frame: false }),
     autoHideMenuBar: true,
     backgroundColor: '#0b0d10',
     icon: getAppIconPath(),

@@ -89,3 +89,19 @@
 .close:active {
   background: var(--caption-close-bg-active);
 }
+
+/* Mac: the system draws the close/minimize/zoom buttons at the left of the bar, so
+   leave room for them and keep only the mini-player button on the right. */
+.mac .icon {
+  margin-left: 84px;
+}
+
+.mac .captions {
+  align-self: center;
+  margin-top: 0;
+  margin-right: 12px;
+}
+
+.mac .caption {
+  border-top: 1px solid var(--caption-border);
+}

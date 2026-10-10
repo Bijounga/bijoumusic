@@ -42,3 +42,24 @@ jobs:
       - run: npx electron-builder --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # The two Adobe Premiere panels, attached to every release as their own zips so
+  # they can be downloaded without cloning the repo. They keep the same file name
+  # every release, so ".../releases/latest/download/<name>.zip" is always current.
+  extensions:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zip the extensions
+        run: |
+          mkdir dist-extensions
+          zip -r dist-extensions/BijouMusic-Premiere-Panel.zip premiere-extension
+          cp -r premiere-cep-extension com.bijoumusic.cutsilence
+          zip -r dist-extensions/BijouMusic-Premiere-CutSilence.zip com.bijoumusic.cutsilence
+
+      - name: Attach to the release
+        run: gh release upload "${{ github.ref_name }}" dist-extensions/*.zip --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

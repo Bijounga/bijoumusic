@@ -53,7 +53,9 @@ function UpdateBadge(): React.JSX.Element {
       title={
         ready
           ? 'Restart BijouMusic to finish updating'
-          : `BijouMusic ${version} — click to check for updates`.replace('  ', ' ')
+          : status.state === 'error' && status.message
+            ? `Update check failed: ${status.message}`
+            : `BijouMusic ${version} — click to check for updates`.replace('  ', ' ')
       }
       aria-label="Check for updates"
     >

@@ -2,6 +2,9 @@ const ppro = require('premierepro')
 const uxp = require('uxp')
 const { entrypoints } = uxp
 
+// Shown in the activity log on load, so it's obvious which copy of this panel is
+// actually running (the panel loads from wherever it was last copied/loaded from).
+const PANEL_BUILD = '0.2.3 trim-verify'
 const BRIDGE_URL = 'ws://localhost:8934'
 const RECONNECT_DELAY_MS = 2000
 const DROP_WATCH_INTERVAL_MS = 700
@@ -12,7 +15,6 @@ const DROP_SETTLE_MS = 1500
 // In/out points are read back after setting them; they must land within this of the
 // request, and are retried a few times if Premiere hasn't applied them yet.
 const TRIM_TOLERANCE_SECONDS = 0.05
-const TRIM_ATTEMPTS = 4
 const TRIM_RETRY_DELAY_MS = 500
 const DROP_WATCH_TIMEOUT_MS = 20000
 // How close (in seconds) a track item's start needs to be to where we asked
@@ -283,38 +285,67 @@ function swapInOriginal(proj, trackItem, originalFilePath, trimRange) {
   return run
 }
 
-/** Sets the clip's in/out to trimRange and CHECKS that Premiere really applied them.
- *  A single set-and-hope used to leave the out point at the end of the whole file on
- *  some setups (the start landed, the end didn't); reading the values back and
- *  re-applying whichever one is off makes it deterministic. */
+/** What the clip really is right now: where it sits on the timeline and which part
+ *  of the source it plays. */
+async function measureClip(trackItem) {
+  const start = (await trackItem.getStartTime()).seconds
+  const end = (await trackItem.getEndTime()).seconds
+  const inPoint = (await trackItem.getInPoint()).seconds
+  const outPoint = (await trackItem.getOutPoint()).seconds
+  return { start, end, duration: end - start, inPoint, outPoint }
+}
+
+function describeClip(m) {
+  return 'timeline ' + m.start.toFixed(2) + 's-' + m.end.toFixed(2) + 's (' + m.duration.toFixed(2) + 's long), source in ' + m.inPoint.toFixed(2) + 's / out ' + m.outPoint.toFixed(2) + 's'
+}
+
+function runTrim(proj, label, buildActions) {
+  proj.lockedAccess(() => {
+    proj.executeTransaction((compoundAction) => {
+      for (const action of buildActions()) compoundAction.addAction(action)
+    }, label)
+  })
+}
+
+/** Sets the clip to play trimRange of its source and CHECKS the result — by the
+ *  clip's real length on the timeline and its source in point, not just by what
+ *  Premiere says it applied. On some setups the start landed but the end ran on to
+ *  the end of the whole file, so if the first try is off, other ways of setting the
+ *  end are tried in turn, each checked, with exactly what Premiere did written to
+ *  the activity log. */
 async function applyTrimVerified(proj, trackItem, trimRange) {
-  let lastIn = null
-  let lastOut = null
-  for (let attempt = 1; attempt <= TRIM_ATTEMPTS; attempt++) {
-    const inNow = (await trackItem.getInPoint()).seconds
-    const outNow = (await trackItem.getOutPoint()).seconds
-    lastIn = inNow
-    lastOut = outNow
-    const needIn = Math.abs(inNow - trimRange.start) > TRIM_TOLERANCE_SECONDS
-    const needOut = Math.abs(outNow - trimRange.end) > TRIM_TOLERANCE_SECONDS
-    if (!needIn && !needOut) {
-      log('trim ok: in ' + inNow.toFixed(2) + 's, out ' + outNow.toFixed(2) + 's (attempt ' + attempt + ')')
+  const wantIn = trimRange.start
+  const wantOut = trimRange.end
+  const wantDuration = wantOut - wantIn
+  const tick = (seconds) => ppro.TickTime.createWithSeconds(seconds)
+  const isRight = (m) =>
+    Math.abs(m.inPoint - wantIn) <= TRIM_TOLERANCE_SECONDS && Math.abs(m.duration - wantDuration) <= TRIM_TOLERANCE_SECONDS
+
+  const strategies = [
+    // The order that has always worked on Windows.
+    ['in then out', () => runTrim(proj, 'BijouMusic: swap in original', () => [trackItem.createSetInPointAction(tick(wantIn)), trackItem.createSetOutPointAction(tick(wantOut))])],
+    ['out only', () => runTrim(proj, 'BijouMusic: fix end', () => [trackItem.createSetOutPointAction(tick(wantOut))])],
+    ['out, then in', () => {
+      runTrim(proj, 'BijouMusic: set end', () => [trackItem.createSetOutPointAction(tick(wantOut))])
+      return sleep(TRIM_RETRY_DELAY_MS).then(() => runTrim(proj, 'BijouMusic: set start', () => [trackItem.createSetInPointAction(tick(wantIn))]))
+    }],
+    // Last resort: in case this Premiere reads the end as a length from the start.
+    ['out as length', () => runTrim(proj, 'BijouMusic: fix end (length)', () => [trackItem.createSetOutPointAction(tick(wantDuration))])]
+  ]
+
+  let measured = await measureClip(trackItem)
+  log('trim wanted ' + wantIn.toFixed(2) + 's-' + wantOut.toFixed(2) + 's (' + wantDuration.toFixed(2) + 's long); clip before: ' + describeClip(measured))
+  for (const [name, apply] of strategies) {
+    await apply()
+    await sleep(TRIM_RETRY_DELAY_MS)
+    measured = await measureClip(trackItem)
+    if (isRight(measured)) {
+      log('trim ok via "' + name + '": ' + describeClip(measured))
       return true
     }
-    if (attempt > 1) {
-      log('trim not applied yet (in ' + inNow.toFixed(2) + 's, out ' + outNow.toFixed(2) + 's, wanted ' + trimRange.start.toFixed(2) + 's-' + trimRange.end.toFixed(2) + 's) — retrying')
-    }
-    // Same in-then-out order as before for the first try; later tries only touch
-    // whichever one is still wrong.
-    proj.lockedAccess(() => {
-      proj.executeTransaction((compoundAction) => {
-        if (needIn) compoundAction.addAction(trackItem.createSetInPointAction(ppro.TickTime.createWithSeconds(trimRange.start)))
-        if (needOut) compoundAction.addAction(trackItem.createSetOutPointAction(ppro.TickTime.createWithSeconds(trimRange.end)))
-      }, 'BijouMusic: swap in original')
-    })
-    await sleep(TRIM_RETRY_DELAY_MS)
+    log('trim after "' + name + '" is not right yet: ' + describeClip(measured))
   }
-  log('WARNING: could not confirm the trim — clip is at in ' + (lastIn === null ? '?' : lastIn.toFixed(2)) + 's, out ' + (lastOut === null ? '?' : lastOut.toFixed(2)) + 's, wanted ' + trimRange.start.toFixed(2) + 's-' + trimRange.end.toFixed(2) + 's')
+  log('WARNING: could not get the clip trimmed to ' + wantIn.toFixed(2) + 's-' + wantOut.toFixed(2) + 's — it is at: ' + describeClip(measured))
   return false
 }
 
@@ -1338,6 +1369,7 @@ entrypoints.setup({
   panels: {
     bridgePanel: {
       show() {
+        log('BijouMusic panel build ' + PANEL_BUILD)
         connect()
         if (!selectionToolsReady) {
           selectionToolsReady = true

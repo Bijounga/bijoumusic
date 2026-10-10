@@ -14,6 +14,7 @@ import {
 } from '../db/repositories/tracksRepo'
 import { scanLibraryRoot, scanFolder } from '../scanner/libraryScanner'
 import { getAppIconPath } from '../iconPath'
+import { requestSync } from '../sync/syncService'
 
 // The picture Windows shows under the cursor while a track is dragged out of the
 // app. The source icon is 2000×2000, which made the drag preview cover half the
@@ -118,9 +119,12 @@ export function registerLibraryIpc(): void {
     const root = getOrCreateLibraryRoot(rootPath, basename(rootPath))
     const senderWindow = BrowserWindow.fromWebContents(event.sender)
 
-    return scanLibraryRoot(root.id, root.path, (progress) => {
+    const result = await scanLibraryRoot(root.id, root.path, (progress) => {
       senderWindow?.webContents.send(IpcChannels.scanProgress, progress)
     })
+    // New songs may have facts waiting for them in the sync folder.
+    requestSync('scan')
+    return result
   })
 
   ipcMain.handle(
@@ -130,9 +134,11 @@ export function registerLibraryIpc(): void {
       if (!root) throw new Error('Library folder not found')
       const senderWindow = BrowserWindow.fromWebContents(event.sender)
 
-      return scanFolder(root.id, root.path, relativePath, (progress) => {
+      const result = await scanFolder(root.id, root.path, relativePath, (progress) => {
         senderWindow?.webContents.send(IpcChannels.scanProgress, progress)
       })
+      requestSync('scan')
+      return result
     }
   )
 }

@@ -38,6 +38,7 @@ import AudioAnalyzerPanels from '../player/AudioAnalyzerPanels'
 import SidebarSection from './SidebarSection'
 import ThemeSwitcher from './ThemeSwitcher'
 import UpdateBadge from './UpdateBadge'
+import SyncBadge from './SyncBadge'
 import styles from './AppShell.module.css'
 
 const AUTO_RESCAN_INTERVAL_MS = 15 * 60 * 1000
@@ -180,6 +181,7 @@ function AppShell(): React.JSX.Element {
       <PlaybackBoundaryWatcher visibleTracks={visibleTracks} />
       <aside className={styles.sidebar}>
         <UpdateBadge />
+        <SyncBadge />
         <SidebarSection title="Download" accentColor="var(--section-download)" storageKey="download">
           <button className={styles.textButton} onClick={() => setShowDownloadModal(true)}>
             Download from URL…

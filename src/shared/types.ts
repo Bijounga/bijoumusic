@@ -21,6 +21,19 @@ export interface MoveRootResult {
   backupPath: string
 }
 
+/** Where syncing tags etc. between machines (through a cloud folder) stands. */
+export type SyncState = 'off' | 'unavailable' | 'syncing' | 'ok' | 'error'
+
+export interface SyncStatus {
+  state: SyncState
+  /** The sync folder, once set up. */
+  folder?: string
+  lastSyncAt?: number
+  /** How many facts the last sync changed on this machine. */
+  changed?: number
+  message?: string
+}
+
 /** Where the app's self-update stands, shown by the logo at the top of the sidebar.
  *  'dev' = running from source, where there's no update feed to check. */
 export type UpdateState =

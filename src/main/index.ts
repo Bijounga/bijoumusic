@@ -21,6 +21,7 @@ import { registerMiniPlayer, registerMiniPlayerIpc } from './miniPlayer'
 import { perfLog, startPerfWatchdog } from './perfLog'
 import { registerUpdaterIpc, startUpdater } from './updater'
 import { registerLibraryMoveIpc } from './ipc/libraryMove.ipc'
+import { exportSyncOnQuit, registerSyncIpc, startSync } from './sync/syncService'
 import { registerAudioProtocolScheme, registerAudioProtocolHandler } from './protocol'
 import { getAppIconPath } from './iconPath'
 import { startPremiereBridge, stopPremiereBridge } from './premiereBridge'
@@ -85,6 +86,7 @@ function createWindow(): void {
   attachDisplayZoom(window)
   registerMiniPlayer(window)
   startUpdater(window)
+  startSync(window)
 
   window.on('maximize', () => window.webContents.send(IpcChannels.windowMaximizedChanged, true))
   window.on('unmaximize', () => window.webContents.send(IpcChannels.windowMaximizedChanged, false))
@@ -144,6 +146,7 @@ if (gotSingleInstanceLock) {
     registerMiniPlayerIpc()
     registerUpdaterIpc()
     registerLibraryMoveIpc()
+    registerSyncIpc()
     startPerfWatchdog()
     startPremiereBridge()
 
@@ -161,6 +164,7 @@ if (gotSingleInstanceLock) {
   })
 
   app.on('before-quit', () => {
+    exportSyncOnQuit()
     closeDatabase()
     stopPremiereBridge()
   })

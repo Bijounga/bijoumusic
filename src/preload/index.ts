@@ -25,6 +25,7 @@ import type {
   MiniPlayerState,
   MiniPlayerCommand,
   UpdateStatus,
+  SyncStatus,
   MoveRootReport,
   MoveRootResult
 } from '@shared/types'
@@ -185,6 +186,14 @@ const api = {
     const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus): void => callback(status)
     ipcRenderer.on(IpcChannels.updateStatus, listener)
     return () => ipcRenderer.removeListener(IpcChannels.updateStatus, listener)
+  },
+  syncGetStatus: (): Promise<SyncStatus> => ipcRenderer.invoke(IpcChannels.syncGetStatus),
+  syncSetup: (): Promise<SyncStatus> => ipcRenderer.invoke(IpcChannels.syncSetup),
+  syncNow: (): Promise<SyncStatus> => ipcRenderer.invoke(IpcChannels.syncNow),
+  onSyncStatus: (callback: (status: SyncStatus) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, status: SyncStatus): void => callback(status)
+    ipcRenderer.on(IpcChannels.syncStatus, listener)
+    return () => ipcRenderer.removeListener(IpcChannels.syncStatus, listener)
   },
   onWindowZoomChanged: (callback: (zoom: number) => void): (() => void) => {
     const listener = (_event: Electron.IpcRendererEvent, zoom: number): void => callback(zoom)

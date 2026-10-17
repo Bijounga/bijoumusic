@@ -1,6 +1,6 @@
 .badge {
   width: calc(100% - 20px);
-  margin: -4px 10px 12px;
+  margin: -4px 10px 4px;
   padding: 5px 10px;
   display: flex;
   align-items: center;
@@ -49,4 +49,10 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* A second row directly under the first (the Premiere panels line under sync). */
+.stacked {
+  margin-top: 0;
+  margin-bottom: 12px;
 }

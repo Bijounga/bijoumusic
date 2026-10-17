@@ -21,6 +21,24 @@ export interface MoveRootResult {
   backupPath: string
 }
 
+/** Whether the Premiere panels that ship with the app are installed and current. */
+export type PremiereExtState =
+  | 'unknown'
+  | 'dev'
+  | 'not-installed'
+  | 'up-to-date'
+  | 'updating'
+  | 'restart'
+  | 'manual'
+  | 'error'
+
+export interface PremiereExtStatus {
+  state: PremiereExtState
+  /** The panel version this app carries. */
+  version?: string
+  message?: string
+}
+
 /** Where syncing tags etc. between machines (through a cloud folder) stands. */
 export type SyncState = 'off' | 'unavailable' | 'syncing' | 'ok' | 'error'
 

@@ -56,10 +56,15 @@ jobs:
         run: |
           mkdir dist-extensions
           zip -r dist-extensions/BijouMusic-Premiere-Panel.zip premiere-extension
+          # Installable package (double-click it): the panel's own version follows the
+          # release, so Creative Cloud sees each one as an update to the last.
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" premiere-extension/manifest.json
+          (cd premiere-extension && zip -r ../dist-extensions/BijouMusic-Premiere-Panel.ccx . -x 'README.md' -x '*.backup-*')
           cp -r premiere-cep-extension com.bijoumusic.cutsilence
           zip -r dist-extensions/BijouMusic-Premiere-CutSilence.zip com.bijoumusic.cutsilence
 
       - name: Attach to the release
-        run: gh release upload "${{ github.ref_name }}" dist-extensions/*.zip --clobber
+        run: gh release upload "${{ github.ref_name }}" dist-extensions/* --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

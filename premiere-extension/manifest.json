@@ -2,7 +2,7 @@
   "id": "com.bijoumusic.premiere-bridge",
   "name": "BijouMusic Bridge",
   "shortname": "bijoumusic",
-  "version": "0.1.0",
+  "version": "0.2.4",
   "main": "index.html",
   "host": {
     "app": "premierepro",

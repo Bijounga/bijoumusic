@@ -26,6 +26,7 @@ import type {
   MiniPlayerCommand,
   UpdateStatus,
   SyncStatus,
+  PremiereExtStatus,
   MoveRootReport,
   MoveRootResult
 } from '@shared/types'
@@ -189,6 +190,13 @@ const api = {
   },
   /** 'darwin' on a Mac, 'win32' on Windows — for the few places the look differs. */
   platform: process.platform,
+  premiereExtGetStatus: (): Promise<PremiereExtStatus> => ipcRenderer.invoke(IpcChannels.premiereExtGetStatus),
+  premiereExtInstall: (): Promise<PremiereExtStatus> => ipcRenderer.invoke(IpcChannels.premiereExtInstall),
+  onPremiereExtStatus: (callback: (status: PremiereExtStatus) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, status: PremiereExtStatus): void => callback(status)
+    ipcRenderer.on(IpcChannels.premiereExtStatus, listener)
+    return () => ipcRenderer.removeListener(IpcChannels.premiereExtStatus, listener)
+  },
   syncGetStatus: (): Promise<SyncStatus> => ipcRenderer.invoke(IpcChannels.syncGetStatus),
   syncSetup: (): Promise<SyncStatus> => ipcRenderer.invoke(IpcChannels.syncSetup),
   syncNow: (): Promise<SyncStatus> => ipcRenderer.invoke(IpcChannels.syncNow),

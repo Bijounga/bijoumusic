@@ -22,6 +22,7 @@ import { perfLog, startPerfWatchdog } from './perfLog'
 import { registerUpdaterIpc, startUpdater } from './updater'
 import { registerLibraryMoveIpc } from './ipc/libraryMove.ipc'
 import { exportSyncOnQuit, registerSyncIpc, startSync } from './sync/syncService'
+import { registerPremiereExtIpc, startPremiereExtensions } from './premiereExtensions'
 import { registerAudioProtocolScheme, registerAudioProtocolHandler } from './protocol'
 import { getAppIconPath } from './iconPath'
 import { startPremiereBridge, stopPremiereBridge } from './premiereBridge'
@@ -90,6 +91,7 @@ function createWindow(): void {
   registerMiniPlayer(window)
   startUpdater(window)
   startSync(window)
+  startPremiereExtensions(window)
 
   window.on('maximize', () => window.webContents.send(IpcChannels.windowMaximizedChanged, true))
   window.on('unmaximize', () => window.webContents.send(IpcChannels.windowMaximizedChanged, false))
@@ -150,6 +152,7 @@ if (gotSingleInstanceLock) {
     registerUpdaterIpc()
     registerLibraryMoveIpc()
     registerSyncIpc()
+    registerPremiereExtIpc()
     startPerfWatchdog()
     startPremiereBridge()
 

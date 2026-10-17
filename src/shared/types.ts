@@ -21,6 +21,23 @@ export interface MoveRootResult {
   backupPath: string
 }
 
+/** One tag the AI tagger proposes for a song. */
+export interface AutoTagSuggestion {
+  name: string
+  /** 0-1-ish model score and the level at which the model trusts the tag. */
+  score: number
+  threshold: number
+  /** The model is sure enough to apply this one by itself; the rest are offers. */
+  confident: boolean
+  /** 'game' = the game the filename seems to belong to, offered as a tag if you have one by that name. */
+  kind: 'tag' | 'game'
+}
+
+export interface AutoTagInfo {
+  /** The Music Tagger folder in use, or null when none has been found yet. */
+  folder: string | null
+}
+
 /** Whether the Premiere panels that ship with the app are installed and current. */
 export type PremiereExtState =
   | 'unknown'

@@ -23,6 +23,7 @@ import { registerUpdaterIpc, startUpdater } from './updater'
 import { registerLibraryMoveIpc } from './ipc/libraryMove.ipc'
 import { exportSyncOnQuit, registerSyncIpc, startSync } from './sync/syncService'
 import { registerPremiereExtIpc, startPremiereExtensions } from './premiereExtensions'
+import { registerAutoTagIpc } from './autoTagger'
 import { registerAudioProtocolScheme, registerAudioProtocolHandler } from './protocol'
 import { getAppIconPath } from './iconPath'
 import { startPremiereBridge, stopPremiereBridge } from './premiereBridge'
@@ -153,6 +154,7 @@ if (gotSingleInstanceLock) {
     registerLibraryMoveIpc()
     registerSyncIpc()
     registerPremiereExtIpc()
+    registerAutoTagIpc()
     startPerfWatchdog()
     startPremiereBridge()
 

@@ -8,6 +8,7 @@ import TagEditorPopover from '../tags/TagEditorPopover'
 import FavoriteSelector from '../favorites/FavoriteSelector'
 import EnergySelector from '../favorites/EnergySelector'
 import AliasEditorPopover from '../aliases/AliasEditorPopover'
+import AutoTagPanel from './AutoTagPanel'
 import styles from './DownloadModal.module.css'
 
 interface DownloadModalProps {
@@ -233,6 +234,8 @@ function DownloadModal({ folderTree, onClose }: DownloadModalProps): React.JSX.E
                     <TagEditorPopover track={downloadedTrack} />
                   </div>
                 </div>
+
+                <AutoTagPanel track={downloadedTrack} />
               </>
             )}
 

@@ -26,6 +26,8 @@ import type {
   MiniPlayerCommand,
   UpdateStatus,
   SyncStatus,
+  AutoTagInfo,
+  AutoTagSuggestion,
   PremiereExtStatus,
   MoveRootReport,
   MoveRootResult
@@ -196,6 +198,17 @@ const api = {
     const listener = (_event: Electron.IpcRendererEvent, status: PremiereExtStatus): void => callback(status)
     ipcRenderer.on(IpcChannels.premiereExtStatus, listener)
     return () => ipcRenderer.removeListener(IpcChannels.premiereExtStatus, listener)
+  },
+  autoTagInfo: (): Promise<AutoTagInfo> => ipcRenderer.invoke(IpcChannels.autoTagInfo),
+  autoTagPickFolder: (): Promise<AutoTagInfo> => ipcRenderer.invoke(IpcChannels.autoTagPickFolder),
+  autoTagSuggest: (trackId: number): Promise<AutoTagSuggestion[]> =>
+    ipcRenderer.invoke(IpcChannels.autoTagSuggest, trackId),
+  autoTagApply: (trackId: number, names: string[]): Promise<void> =>
+    ipcRenderer.invoke(IpcChannels.autoTagApply, trackId, names),
+  onAutoTagProgress: (callback: (detail: string) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, detail: string): void => callback(detail)
+    ipcRenderer.on(IpcChannels.autoTagProgress, listener)
+    return () => ipcRenderer.removeListener(IpcChannels.autoTagProgress, listener)
   },
   syncGetStatus: (): Promise<SyncStatus> => ipcRenderer.invoke(IpcChannels.syncGetStatus),
   syncSetup: (): Promise<SyncStatus> => ipcRenderer.invoke(IpcChannels.syncSetup),

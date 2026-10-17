@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'fs/promises'
 import { join, dirname } from 'path'
 import { findTrackByPath } from '../db/repositories/tracksRepo'
-import { findTagByName, createTag, addTrackTag } from '../db/repositories/tagsRepo'
+import { findTagByName, createTag, addTrackTag, type TagRow } from '../db/repositories/tagsRepo'
 import { listTagGroups, createTagGroup } from '../db/repositories/tagGroupsRepo'
 
 const SIDECAR_FOLDER_NAME = '.ts'
@@ -51,6 +51,16 @@ const SOUND_TAG_NAMES = new Set([
   'wintery',
   'weird'
 ])
+
+/** The tag with this title — created, in its Mood/Sound group when it is one of the
+ *  known auto-tagger tags, if it doesn't exist yet. Used by anything that applies
+ *  tags by name (the sidecar import above, and the in-app auto-tagger). */
+export function ensureTagByTitle(title: string): { tag: TagRow; created: boolean } {
+  groupIdByLowercaseName = null
+  const existing = findTagByName(title)
+  if (existing) return { tag: existing, created: false }
+  return { tag: createTag(title, resolveGroupIdForNewTag(title.toLowerCase())), created: true }
+}
 
 interface SidecarTag {
   title?: unknown

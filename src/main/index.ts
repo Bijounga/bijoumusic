@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, Menu } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { IpcChannels } from '@shared/ipcChannels'
@@ -94,6 +94,17 @@ function createWindow(): void {
   startSync(window)
   startPremiereExtensions(window)
 
+  // Mac: Cmd+Q quits. The menu below carries it too; this makes sure it works even
+  // when some other key handler or a focused text box would have swallowed it.
+  if (isMac) {
+    window.webContents.on('before-input-event', (event, input) => {
+      if (input.type === 'keyDown' && input.meta && !input.control && !input.alt && !input.shift && input.key.toLowerCase() === 'q') {
+        event.preventDefault()
+        app.quit()
+      }
+    })
+  }
+
   window.on('maximize', () => window.webContents.send(IpcChannels.windowMaximizedChanged, true))
   window.on('unmaximize', () => window.webContents.send(IpcChannels.windowMaximizedChanged, false))
 
@@ -128,6 +139,13 @@ function createWindow(): void {
 if (gotSingleInstanceLock) {
   app.whenReady().then(async () => {
     electronApp.setAppUserModelId('com.ibrahim.bijoumusic')
+
+    // Mac: a menu bar with the standard App menu (About, Hide, Quit with Cmd+Q), Edit
+    // (so Cmd+C / V / A work in text boxes) and Window. The window controls and every
+    // other shortcut are the app's own, so nothing else is added here.
+    if (process.platform === 'darwin') {
+      Menu.setApplicationMenu(Menu.buildFromTemplate([{ role: 'appMenu' }, { role: 'editMenu' }, { role: 'windowMenu' }]))
+    }
 
     await initDatabase()
     registerAudioProtocolHandler()

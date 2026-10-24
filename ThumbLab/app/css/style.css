@@ -233,3 +233,19 @@ label.field .text { margin-top: 4px; color: var(--text); }
 .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--pink)); transition: width .2s; }
 .settings h1 { margin-bottom: 18px; }
 .steps { color: var(--muted); line-height: 1.6; padding-left: 20px; }
+
+/* ---------- folder gallery ---------- */
+.fgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-top: 12px; }
+.ftile { position: relative; cursor: pointer; background: var(--panel2); border: 2px solid transparent; border-radius: 12px; padding: 6px; }
+.ftile:hover { border-color: var(--accent); }
+.ftile.added { cursor: default; opacity: .75; }
+.ftile.added:hover { border-color: var(--good); }
+.ftile .thumb { background: repeating-linear-gradient(45deg, #151522, #151522 10px, #1a1a2a 10px, #1a1a2a 20px); }
+.ftile:not(.ready):not(.failed) .thumb::after { content: "Loading…"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 12px; }
+.ftile.failed .thumb::after { content: "Can't preview"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--warn); font-size: 12px; }
+.fstate { position: absolute; right: 6px; top: 6px; background: var(--accent); color: #fff; font-weight: 700; font-size: 12px; padding: 2px 8px; border-radius: 7px; opacity: 0; transition: opacity .1s; }
+.ftile:hover .fstate, .ftile.added .fstate { opacity: 1; }
+.ftile.added .fstate { background: var(--good); color: #04120a; }
+.fname { margin: 6px 2px 2px; font-weight: 600; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fmeta { margin: 0 2px; font-size: 11.5px; color: var(--muted); display: flex; align-items: center; }
+.fmeta .badge { margin: 0 6px 0 0; }

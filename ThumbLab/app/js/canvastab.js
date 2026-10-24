@@ -70,8 +70,138 @@
     }
   };
 
+  // ---- folder gallery ------------------------------------------------------------------------------
+
+  const gallery = { q: "", hideAdded: false };
+  const thumbQueue = [];
+  let thumbActive = 0;
+
+  const hashKey = (str) => {
+    let h1 = 5381, h2 = 52711;
+    for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h1 = (h1 * 33) ^ c; h2 = (h2 * 31) ^ c; }
+    return ((h1 >>> 0).toString(16) + (h2 >>> 0).toString(16)).padStart(16, "0");
+  };
+
+  /** Small cached preview for a file in the watched folder (generated once per file version). */
+  async function folderThumb(file) {
+    const key = hashKey(`${file.path}|${file.mtimeMs}|${file.size}`);
+    const rel = `cache/folder/${key}.jpg`;
+    const abs = `${TL.state.dataDir.replace(/\\/g, "/")}/${rel}`;
+    if (await window.host.stat(abs)) return abs;
+    const prev = await window.host.preview(file.path);
+    const canvas = await TL.previewToCanvas(prev);
+    const small = TL.fitCanvas(canvas, 480, 480, true);
+    return window.host.writeFile(rel, await TL.canvasToBytes(small, "image/jpeg", 0.85));
+  }
+
+  function pumpThumbs() {
+    while (thumbActive < 2 && thumbQueue.length) {
+      const job = thumbQueue.shift();
+      if (!job.img.isConnected) continue;
+      thumbActive++;
+      folderThumb(job.file)
+        .then((abs) => { job.img.src = TL.imgUrl(abs); job.tile.classList.add("ready"); })
+        .catch(() => { job.tile.classList.add("failed"); })
+        .finally(() => { thumbActive--; pumpThumbs(); });
+    }
+  }
+
+  // Only generate previews for tiles that scroll into view.
+  const lazy = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      lazy.unobserve(e.target);
+      thumbQueue.push({ file: e.target._file, img: e.target.querySelector("img"), tile: e.target });
+    }
+    pumpThumbs();
+  }, { rootMargin: "300px" });
+
   TL.canvasView = (project, nav) => {
     const root = h("div.canvas-tab");
+
+    function folderPanel() {
+      const panel = h("div.panel");
+      panel.append(
+        h("div.panel-head", h("h3", "Folder"),
+          h("span.muted", "Pick a folder and every thumbnail in it shows up here. Click one to add it as a version.")),
+        h("div.row.wrap",
+          h("code.path", project.watchFolder || "No folder chosen"),
+          h("button.btn.small.primary", {
+            onclick: async () => {
+              const dir = await window.host.pickFolder("Choose the folder with your thumbnails");
+              if (!dir) return;
+              project.watchFolder = dir;
+              project.watchSince = Date.now();
+              TL.saveProject(project);
+              TL.inbox = { dir, files: [] };
+              TL.syncWatchers(project);
+              render();
+            },
+          }, project.watchFolder ? "Change…" : "Choose folder…"),
+          project.watchFolder ? h("button.btn.small", { onclick: () => window.host.reveal(project.watchFolder) }, "Open") : null,
+          project.watchFolder ? h("button.btn.small.ghost", {
+            onclick: () => { project.watchFolder = ""; TL.saveProject(project); TL.syncWatchers(project); TL.inbox.files = []; render(); },
+          }, "Stop watching") : null));
+      if (!project.watchFolder) return panel;
+
+      const opt = (label, checked, onchange) => h("label.check.inline", h("input", { type: "checkbox", checked, onchange }), h("span", label));
+      panel.append(h("div.row.wrap",
+        opt("Include subfolders", !!project.watchRecursive, (e) => {
+          project.watchRecursive = e.target.checked; TL.saveProject(project); TL.syncWatchers(project); TL.inbox.files = []; render();
+        }),
+        opt("Add new files automatically (only files saved from now on)", !!project.autoAdd, (e) => {
+          project.autoAdd = e.target.checked;
+          if (project.autoAdd) project.watchSince = Date.now();
+          TL.saveProject(project);
+        })));
+
+      const files = TL.inbox.files;
+      const bySource = new Map(project.variants.filter((v) => v.source).map((v) => [v.source, v]));
+      const fresh = files.filter((f) => !bySource.has(f.path));
+      const grid = h("div.fgrid");
+
+      const draw = () => {
+        TL.clear(grid);
+        const q = gallery.q.trim().toLowerCase();
+        const shown = files.filter((f) => (!q || f.name.toLowerCase().includes(q)) && !(gallery.hideAdded && bySource.has(f.path)));
+        if (!files.length) { grid.append(h("div.muted", "No art files in this folder yet (PSD, CSP, Procreate, PNG, JPG…).")); return; }
+        if (!shown.length) { grid.append(h("div.muted", "Nothing matches.")); return; }
+        for (const f of shown) {
+          const v = bySource.get(f.path);
+          const img = h("img.fx", { alt: "", draggable: false });
+          const tile = h("div.ftile", {
+            class: v ? "added" : "", title: v ? `In this project as version ${v.label}` : "Click to add as a version",
+            onclick: () => { if (!v) TL.importPaths(project, [f.path]); },
+          },
+            h("div.thumb", img, h("span.fstate", v ? `✓ ${v.label}` : "+ Add")),
+            h("div.fname", { title: f.path }, f.name),
+            h("div.fmeta", h("span.badge", TL.extOf(f.path).toUpperCase()), new Date(f.mtimeMs).toLocaleDateString()));
+          tile._file = f;
+          grid.append(tile);
+          lazy.observe(tile);
+        }
+      };
+
+      panel.append(h("div.row.wrap",
+        h("strong", `${files.length} file${files.length === 1 ? "" : "s"}`),
+        h("span.muted", `${fresh.length} not in this project yet`),
+        h("input.text.small.lib-search", {
+          placeholder: "Filter by name…", value: gallery.q,
+          oninput: (e) => { gallery.q = e.target.value; draw(); },
+        }),
+        opt("Hide ones already added", gallery.hideAdded, (e) => { gallery.hideAdded = e.target.checked; draw(); }),
+        h("button.btn.small", {
+          disabled: !fresh.length,
+          onclick: async () => {
+            if (fresh.length > 8 && !(await TL.confirm(`Add all ${fresh.length} files as versions?`, "Add all"))) return;
+            const added = await TL.importPaths(project, fresh.map((f) => f.path));
+            if (added.length) TL.toast(`Added ${added.length}`);
+          },
+        }, `Add all new (${fresh.length})`)));
+      panel.append(grid);
+      draw();
+      return panel;
+    }
 
     const doImport = async () => {
       const paths = await window.host.pickFiles({ title: "Link art files", multi: true });
@@ -96,51 +226,7 @@
         if (paths.length) await TL.importPaths(project, paths);
       });
 
-      // --- Inbox folder
-      const linked = new Set(project.variants.map((v) => v.source));
-      const incoming = project.watchFolder
-        ? TL.inbox.files.filter((f) => !linked.has(f.path) && !project.dismissed.includes(f.path)).slice(0, 12)
-        : [];
-      const inbox = h("div.panel",
-        h("div.panel-head", h("h3", "Inbox folder"),
-          h("span.muted", "Point this at the folder you export or save into. New art shows up here.")),
-        h("div.row",
-          h("code.path", project.watchFolder || "No folder chosen"),
-          h("button.btn.small", {
-            onclick: async () => {
-              const dir = await window.host.pickFolder("Choose the folder to watch");
-              if (!dir) return;
-              project.watchFolder = dir;
-              project.watchSince = Date.now();
-              TL.saveProject(project);
-              TL.syncWatchers(project);
-              render();
-            },
-          }, project.watchFolder ? "Change…" : "Choose folder…"),
-          project.watchFolder ? h("button.btn.small.ghost", {
-            onclick: () => { project.watchFolder = ""; TL.saveProject(project); TL.syncWatchers(project); TL.inbox.files = []; render(); },
-          }, "Stop watching") : null),
-        project.watchFolder ? h("label.check.inline",
-          h("input", {
-            type: "checkbox", checked: !!project.autoAdd,
-            onchange: (e) => {
-              project.autoAdd = e.target.checked;
-              if (project.autoAdd) project.watchSince = Date.now();
-              TL.saveProject(project);
-              render();
-            },
-          }),
-          h("span", "Add new files automatically (only files saved from now on)")) : null,
-        project.watchFolder
-          ? (incoming.length
-            ? h("div.inbox-list", incoming.map((f) => h("div.inbox-row",
-              h("span.badge", TL.extOf(f.path).toUpperCase()),
-              h("span.grow", f.name),
-              h("span.muted", new Date(f.mtimeMs).toLocaleString()),
-              h("button.btn.small.primary", { onclick: () => TL.importPaths(project, [f.path]) }, "Add"),
-              h("button.icon-btn.tiny", { title: "Hide", onclick: () => { project.dismissed.push(f.path); TL.saveProject(project); render(); } }, "✕"))))
-            : h("div.muted", "Nothing new in the folder."))
-          : null);
+      const inbox = folderPanel();
 
       // --- Linked sources
       const sources = project.variants.filter((v) => v.source || v.kind === "sketch");

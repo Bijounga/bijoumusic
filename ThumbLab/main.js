@@ -339,25 +339,34 @@ function pollWatchers() {
   if (folderWatch) pollFolder();
 }
 
-function listFolder(dir) {
+function listFolder(dir, recursive) {
   const out = [];
-  let names = [];
-  try { names = fs.readdirSync(dir); } catch (e) { return out; }
   const now = Date.now();
-  for (const name of names) {
-    const full = path.join(dir, name);
-    if (!files.ALL_EXT.has(path.extname(name).toLowerCase())) continue;
-    let st;
-    try { st = fs.statSync(full); } catch (e) { continue; }
-    if (!st.isFile() || now - st.mtimeMs < 1500) continue;
-    out.push({ path: full, name, mtimeMs: st.mtimeMs, size: st.size });
-  }
+  const walk = (d, depth) => {
+    let entries = [];
+    try { entries = fs.readdirSync(d, { withFileTypes: true }); } catch (e) { return; }
+    for (const ent of entries) {
+      if (out.length >= 2000) return;
+      const full = path.join(d, ent.name);
+      if (ent.isDirectory()) {
+        if (recursive && depth < 3 && !ent.name.startsWith(".") && ent.name !== "node_modules") walk(full, depth + 1);
+        continue;
+      }
+      if (!files.ALL_EXT.has(path.extname(ent.name).toLowerCase())) continue;
+      let st;
+      try { st = fs.statSync(full); } catch (e) { continue; }
+      // Skip files still being written.
+      if (!st.isFile() || now - st.mtimeMs < 1500) continue;
+      out.push({ path: full, name: ent.name, mtimeMs: st.mtimeMs, size: st.size });
+    }
+  };
+  walk(dir, 0);
   out.sort((a, b) => b.mtimeMs - a.mtimeMs);
   return out;
 }
 
 function pollFolder() {
-  const list = listFolder(folderWatch.dir);
+  const list = listFolder(folderWatch.dir, folderWatch.recursive);
   const sig = list.map((f) => `${f.path}|${f.mtimeMs}|${f.size}`).join("\n");
   if (sig !== folderWatch.sig) {
     folderWatch.sig = sig;
@@ -380,8 +389,8 @@ ipcMain.handle("watch:files", (_e, list) => {
   return true;
 });
 
-ipcMain.handle("watch:folder", (_e, dir) => {
-  folderWatch = dir ? { dir, sig: null } : null;
+ipcMain.handle("watch:folder", (_e, opts) => {
+  folderWatch = opts && opts.dir ? { dir: opts.dir, recursive: !!opts.recursive, sig: null } : null;
   if (folderWatch) { startPolling(); pollFolder(); }
   return true;
 });

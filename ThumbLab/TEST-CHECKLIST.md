@@ -1,7 +1,7 @@
 # Thumb Lab: tester's checklist
 
 Tick items off as you try them. The same list is in the app under **Test checklist**, where ticks are remembered.
-119 things to check.
+123 things to check.
 
 
 ## Getting started
@@ -35,10 +35,14 @@ Tick items off as you try them. The same list is in the app under **Test checkli
 - [ ] Save the linked file in Photoshop / CSP: the preview here updates within a few seconds
 - [ ] Open in app opens the original file in its program
 - [ ] Refresh re-reads the file; Show reveals it in Explorer
-- [ ] Inbox folder: choose a folder, then save a new PSD/CSP file into it and it appears as "new"
-- [ ] Inbox: Add turns it into a version; the ✕ hides it
-- [ ] Inbox: "Add new files automatically" adds files saved afterwards (not old ones)
-- [ ] Stop watching removes the folder
+- [ ] Folder: choose a folder and every thumbnail in it appears as a tile with a preview
+- [ ] Folder tiles show PSD, CSP, Procreate and image files; a big folder fills in as you scroll
+- [ ] Click a tile to add it as a version; it then shows a green check with its letter
+- [ ] Filter by name, "Hide ones already added", and "Add all new" work
+- [ ] Include subfolders also shows art in folders inside it
+- [ ] Save a new file into the folder and its tile appears within a few seconds
+- [ ] "Add new files automatically" adds files saved afterwards (not old ones)
+- [ ] Stop watching clears the folder; Open shows it in Explorer
 
 ## Variants (A / B / C)
 

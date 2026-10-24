@@ -217,7 +217,7 @@
       return;
     }
     window.host.watchFiles(project.variants.filter((v) => v.source).map((v) => ({ key: `${project.id}:${v.id}`, path: v.source })));
-    window.host.watchFolder(project.watchFolder || null);
+    window.host.watchFolder(project.watchFolder ? { dir: project.watchFolder, recursive: !!project.watchRecursive } : null);
   };
 
   // ---- libraries -----------------------------------------------------------------------

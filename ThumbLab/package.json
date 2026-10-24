@@ -1,0 +1,36 @@
+{
+  "name": "thumblab",
+  "productName": "Thumb Lab",
+  "version": "0.1.0",
+  "description": "Sketch, compare and stress-test YouTube thumbnails per video",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win dir"
+  },
+  "build": {
+    "appId": "com.bijou.thumblab",
+    "productName": "Thumb Lab",
+    "files": [
+      "main.js",
+      "preload.js",
+      "lib/**/*",
+      "app/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "dir"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "ag-psd": "^33.0.0",
+    "sql.js": "^1.15.1"
+  }
+}

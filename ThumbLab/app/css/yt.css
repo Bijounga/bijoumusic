@@ -1,7 +1,5 @@
 /* Test tab: a stand-in for a YouTube page. Plain shapes only, no real logos. */
 .testview { display: flex; flex-direction: column; gap: 10px; }
-.test-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); min-height: 18px; }
-.test-status.bad { color: var(--warn); }
 .test-holder { overflow: auto; padding: 4px 0 30px; }
 
 .yt-frame { margin: 0 auto; border-radius: 14px; overflow: hidden; font-family: Roboto, "Segoe UI", Arial, sans-serif; border: 1px solid #0006; padding-bottom: 24px; }

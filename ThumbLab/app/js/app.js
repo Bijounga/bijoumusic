@@ -110,9 +110,7 @@
       }),
       h("div.tabs", TABS.map(([key, label, icon]) => h("button.tab", {
         class: route.tab === key ? "on" : "", onclick: () => nav.setTab(key),
-      }, TL.icon(icon, 16), label))),
-      h("div.niche", { title: "Niche: what the Test tab searches for" }, TL.icon("tag", 16),
-        TL.nicheBox({ value: project.niche, group: project.id, onCommit: (v) => { project.niche = v; TL.saveProject(project); render(); } })));
+      }, TL.icon(icon, 16), label))));
 
     let body;
     if (route.tab === "concepts") body = TL.conceptsView(project, nav);

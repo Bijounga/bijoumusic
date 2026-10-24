@@ -81,6 +81,7 @@
     sparkle: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>',
     drag: '<path d="M5 9h14M5 15h14"/>',
     channel: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
     menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
     play: '<path d="M7 4v16l13-8z"/>',
   };

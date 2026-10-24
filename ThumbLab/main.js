@@ -17,6 +17,8 @@ const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
 const files = require("./lib/files");
+const yt = require("./lib/yt");
+const { isoDuration } = yt;
 
 const DATA = path.join(app.getPath("userData"), "data");
 const dirs = {
@@ -440,15 +442,6 @@ async function ytGet(endpoint, params) {
   return json;
 }
 
-function isoDuration(iso) {
-  const m = /^P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso || "");
-  if (!m) return "";
-  const [d, h, mi, s] = [m[1], m[2], m[3], m[4]].map((n) => parseInt(n || "0", 10));
-  const hours = h + d * 24;
-  const pad = (n) => String(n).padStart(2, "0");
-  return hours ? `${hours}:${pad(mi)}:${pad(s)}` : `${mi}:${pad(s)}`;
-}
-
 ipcMain.handle("yt:test", async () => {
   await ytGet("videos", { part: "id", chart: "mostPopular", maxResults: "1" });
   return true;
@@ -500,52 +493,29 @@ ipcMain.handle("yt:channel", async (_e, { handle, force }) => {
   return { ...out, cached: false };
 });
 
-ipcMain.handle("yt:niche", async (_e, { query, order, force, pages }) => {
+/**
+ * Real videos for a niche. `want` is how many must qualify (not Shorts, when hideShorts is on); more result
+ * pages are fetched until that many are found. range: { key, after, before } limits publish dates.
+ */
+ipcMain.handle("yt:niche", async (_e, { query, order, force, want, hideShorts, range }) => {
   const q = String(query || "").trim();
   if (!q) throw new Error("Pick a niche or type a search first.");
-  const wantPages = Math.min(3, Math.max(1, parseInt(pages, 10) || 1));
-  const hash = crypto.createHash("sha1").update(`${q}|${order}`).digest("hex").slice(0, 16);
+  const need = Math.max(1, parseInt(want, 10) || 24);
+  const rangeKey = (range && range.key) || "all";
+  const hash = crypto.createHash("sha1").update(`${q}|${order}|${rangeKey}`).digest("hex").slice(0, 16);
   const cacheFile = path.join(dirs.cache, `yt-${hash}.json`);
   const cached = readJson(cacheFile, null);
-  // A saved copy only counts if it already holds enough result pages.
-  if (cached && !force && (cached.pages || 1) >= wantPages && Date.now() - cached.at < 24 * 3600 * 1000) {
+  // A saved copy counts when it is fresh and already holds enough usable videos (or has everything there is).
+  if (cached && !force && Date.now() - cached.at < 24 * 3600 * 1000 &&
+      (cached.exhausted || (cached.pages || 1) >= 5 || yt.countQualified(cached.videos, !!hideShorts) >= need)) {
     return { videos: cached.videos, cached: true, at: cached.at };
   }
 
-  // Each search page is up to 50 videos (100 quota units each).
-  const found = [];
-  let pageToken;
-  for (let n = 0; n < wantPages; n++) {
-    const page = await ytGet("search", {
-      part: "snippet", type: "video", maxResults: "50", q, order: order || "relevance", videoEmbeddable: "any",
-      ...(pageToken ? { pageToken } : {}),
-    });
-    found.push(...(page.items || []));
-    pageToken = page.nextPageToken;
-    if (!pageToken) break;
-  }
-  const seen = new Set();
-  const search = { items: found.filter((i) => i.id && i.id.videoId && !seen.has(i.id.videoId) && seen.add(i.id.videoId)) };
-  const ids = search.items.map((i) => i.id.videoId);
-  const detailItems = [];
-  for (let i = 0; i < ids.length; i += 50) {
-    const d = await ytGet("videos", { part: "statistics,contentDetails", id: ids.slice(i, i + 50).join(",") });
-    detailItems.push(...(d.items || []));
-  }
-  const byId = new Map(detailItems.map((v) => [v.id, v]));
-  const videos = (search.items || []).filter((i) => i.id && i.id.videoId).map((i) => {
-    const d = byId.get(i.id.videoId);
-    return {
-      id: i.id.videoId,
-      title: i.snippet.title.replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"'),
-      channel: i.snippet.channelTitle,
-      thumb: `https://i.ytimg.com/vi/${i.id.videoId}/mqdefault.jpg`,
-      published: i.snippet.publishedAt,
-      views: d && d.statistics ? parseInt(d.statistics.viewCount || "0", 10) : 0,
-      duration: d && d.contentDetails ? isoDuration(d.contentDetails.duration) : "",
-    };
+  const r = await yt.searchVideos(ytGet, {
+    q, order: order || "relevance", want: need, hideShorts: !!hideShorts,
+    after: range && range.after, before: range && range.before,
   });
   ensure(dirs.cache);
-  writeJson(cacheFile, { at: Date.now(), query: q, order, pages: wantPages, videos });
-  return { videos, cached: false, at: Date.now() };
+  writeJson(cacheFile, { at: Date.now(), query: q, order, range: rangeKey, pages: r.pages, exhausted: r.exhausted, videos: r.videos });
+  return { videos: r.videos, cached: false, at: Date.now() };
 });

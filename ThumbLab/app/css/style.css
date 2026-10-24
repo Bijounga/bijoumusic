@@ -329,3 +329,6 @@ details.more summary { cursor: pointer; }
 .lib-grid > .empty, .fgrid > .muted { grid-column: 1 / -1; }
 
 .chan-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex: none; }
+
+.warnicon { color: var(--warn); }
+.warn-slot { display: inline-flex; }

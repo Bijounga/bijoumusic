@@ -1,7 +1,7 @@
 /**
  * The niche field. Click it and type: whatever you type is the niche (or the search terms for the
- * Test tab). Presets you saved show as suggestions, filtered as you type. ☆ saves what's typed as a
- * preset (★ removes it); × on a suggestion removes that preset. Nothing is built in: the list is yours.
+ * Test tab). Presets you saved show as suggestions, filtered as you type. The star saves what's typed
+ * as a preset (filled = already saved, click to remove); the x on a suggestion removes that preset. Nothing is built in: the list is yours.
  */
 (function (TL) {
   const { h } = TL;
@@ -20,7 +20,7 @@
     let pop = null;
 
     const input = h("input.text", { value: current, placeholder, spellcheck: false, autocomplete: "off", title: "Click and type; Enter to apply" });
-    const star = h("button.icon-btn.nstar", { type: "button", onmousedown: (e) => e.preventDefault(), onclick: toggleStar });
+    const star = h("button.ib.nstar", { type: "button", onmousedown: (e) => e.preventDefault(), onclick: toggleStar });
     const root = h("div.nichebox", input, star);
     root.getValue = () => input.value.trim();
     root.follow = (v) => { current = v; if (document.activeElement !== input) input.value = v; refreshStar(); };
@@ -37,7 +37,7 @@
     function refreshStar() {
       const t = text();
       star.disabled = !t;
-      star.textContent = t && isPreset(t) ? "★" : "☆";
+      if (!star.firstChild) star.append(TL.icon("star", 16));
       star.title = !t ? "Type a niche to save it as a preset" : isPreset(t) ? "Remove this preset" : "Save as a preset";
       star.classList.toggle("on", !!t && isPreset(t));
     }
@@ -90,7 +90,7 @@
           onmouseenter: () => { active = i; [...pop.children].forEach((c, k) => c.classList.toggle("on", k === i)); },
         }, r.kind === "typed"
           ? [h("span", "Use "), h("strong", `“${r.value}”`), h("span.muted.small", "  ↵")]
-          : [h("span.ntext", r.value), h("button.icon-btn.nx", {
+          : [h("span.ntext", r.value), h("button.ib.small", {
               type: "button", title: "Remove this preset",
               onmousedown: (e) => e.preventDefault(),
               onclick: (e) => {
@@ -98,10 +98,10 @@
                 TL.state.settings.niches = presets().filter((p) => !same(p, r.value));
                 TL.saveSettings(); refreshStar(); renderPop();
               },
-            }, "×")]);
+            }, TL.icon("x", 14))]);
         pop.append(row);
       });
-      if (!presets().length) pop.append(h("div.nhint", "No presets yet. Type a niche and press ☆ to keep it here."));
+      if (!presets().length) pop.append(h("div.nhint", "No presets yet. Type a niche and click the star to keep it here."));
       else if (!list.length) pop.append(h("div.nhint", "No preset matches. Press Enter to use what you typed."));
       place();
     }

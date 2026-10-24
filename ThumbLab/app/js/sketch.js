@@ -14,16 +14,16 @@
   const { h, clamp } = TL;
 
   const TOOL_DEFS = {
-    pen: { label: "Pen", glyph: "✒", key: "p", erase: false, tip: "Crisp line. Pressure changes the width.",
+    pen: { label: "Pen", glyph: "pen", key: "p", erase: false, tip: "Crisp line. Pressure changes the width.",
       defaults: { size: 8, opacity: 1, hardness: 1, pSize: 0.7, pOpacity: 0, smooth: 0.35 } },
-    brush: { label: "Pressure brush", glyph: "🖌", key: "b", erase: false, tip: "Soft paint. Pressure changes both width and how much paint lands.",
+    brush: { label: "Pressure brush", glyph: "brush", key: "b", erase: false, tip: "Soft paint. Pressure changes both width and how much paint lands.",
       defaults: { size: 60, opacity: 1, hardness: 0.45, pSize: 0.5, pOpacity: 0.9, smooth: 0.2 } },
-    eraser: { label: "Eraser", glyph: "⌫", key: "e", erase: true, tip: "Hard eraser. Pressure changes the width.",
+    eraser: { label: "Eraser", glyph: "eraser", key: "e", erase: true, tip: "Hard eraser. Pressure changes the width.",
       defaults: { size: 30, opacity: 1, hardness: 1, pSize: 0.5, pOpacity: 0, smooth: 0.2 } },
-    softEraser: { label: "Pressure eraser", glyph: "◌", key: "k", erase: true, tip: "Soft eraser. Pressure changes both width and how much it removes.",
+    softEraser: { label: "Pressure eraser", glyph: "eraserSoft", key: "k", erase: true, tip: "Soft eraser. Pressure changes both width and how much it removes.",
       defaults: { size: 70, opacity: 1, hardness: 0.4, pSize: 0.5, pOpacity: 0.9, smooth: 0.2 } },
-    picker: { label: "Eyedropper", glyph: "💧", key: "i", tip: "Pick a colour from the picture (or Alt+click with any tool)." },
-    move: { label: "Move layer", glyph: "✥", key: "v", tip: "Drag to move the active layer." },
+    picker: { label: "Eyedropper", glyph: "pipette", key: "i", tip: "Pick a colour from the picture (or Alt+click with any tool)." },
+    move: { label: "Move layer", glyph: "move", key: "v", tip: "Drag to move the active layer." },
   };
   const PAINT_TOOLS = ["pen", "brush", "eraser", "softEraser"];
   const SPACING = 0.1; // dab spacing as a fraction of brush width
@@ -508,8 +508,8 @@
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (k === "[") { adjustSize(-1); return; }
       if (k === "]") { adjustSize(1); return; }
-      if (k === "m") { view.mirror = !view.mirror; applyView(); renderOptions(); return; }
-      if (k === "g") { view.guides = !view.guides; syncStack(); renderOptions(); return; }
+      if (k === "m") { view.mirror = !view.mirror; applyView(); renderTop(); return; }
+      if (k === "g") { view.guides = !view.guides; syncStack(); renderTop(); return; }
       const hit = Object.entries(TOOL_DEFS).find(([, d]) => d.key === k);
       if (hit) setTool(hit[0]);
     };
@@ -548,31 +548,31 @@
     function renderLayers() {
       TL.clear(layersPanel);
       const active = activeLayer();
+      const registerAdd = (layer) => {
+        const at = doc.layers.indexOf(layer);
+        pushOps(() => { removeLayer(doc.layers.indexOf(layer)); renderLayers(); }, () => { doc.layers.splice(at, 0, layer); doc.active = at; syncStack(); renderLayers(); });
+      };
       layersPanel.append(h("div.sk-sect-head", h("strong", "Layers"),
         h("span.spacer"),
-        h("button.icon-btn.tiny", { title: "New layer", onclick: () => {
+        TL.iconBtn("plus", "New layer", () => {
           const layer = addLayer(); if (!layer) return;
-          const at = doc.layers.indexOf(layer);
-          pushOps(() => { removeLayer(doc.layers.indexOf(layer)); renderLayers(); }, () => { doc.layers.splice(at, 0, layer); doc.active = at; syncStack(); renderLayers(); });
-          renderLayers(); touch();
-        } }, "＋"),
-        h("button.icon-btn.tiny", { title: "Duplicate layer", onclick: () => {
+          registerAdd(layer); renderLayers(); touch();
+        }, { class: "small" }),
+        TL.iconBtn("copy", "Duplicate layer", () => {
           const src = activeLayer();
           const layer = addLayer(`${src.name} copy`, copyCanvas(src.canvas)); if (!layer) return;
           layer.opacity = src.opacity;
-          const at = doc.layers.indexOf(layer);
-          pushOps(() => { removeLayer(doc.layers.indexOf(layer)); renderLayers(); }, () => { doc.layers.splice(at, 0, layer); doc.active = at; syncStack(); renderLayers(); });
-          syncStack(); renderLayers(); touch();
-        } }, "⧉"),
-        h("button.icon-btn.tiny", { title: "Delete layer", onclick: () => {
+          registerAdd(layer); syncStack(); renderLayers(); touch();
+        }, { class: "small" }),
+        TL.iconBtn("up", "Move layer up", () => reorder(1), { class: "small" }),
+        TL.iconBtn("down", "Move layer down", () => reorder(-1), { class: "small" }),
+        TL.iconBtn("trash", "Delete layer", () => {
           if (doc.layers.length < 2) { TL.toast("A sketch needs at least one layer."); return; }
           const at = doc.active;
           const layer = removeLayer(at);
           pushOps(() => { doc.layers.splice(at, 0, layer); doc.active = at; syncStack(); renderLayers(); }, () => { removeLayer(doc.layers.indexOf(layer)); renderLayers(); });
           renderLayers(); touch();
-        } }, "🗑"),
-        h("button.icon-btn.tiny", { title: "Move layer up", onclick: () => reorder(1) }, "▲"),
-        h("button.icon-btn.tiny", { title: "Move layer down", onclick: () => reorder(-1) }, "▼")));
+        }, { class: "small danger" })));
 
       const list = h("div.sk-layer-list");
       for (let i = doc.layers.length - 1; i >= 0; i--) {
@@ -584,10 +584,7 @@
           class: i === doc.active ? "active" : "",
           onclick: () => { doc.active = i; syncStack(); renderLayers(); },
         },
-          h("button.icon-btn.tiny", {
-            title: l.visible ? "Hide" : "Show", class: l.visible ? "" : "off",
-            onclick: (e) => { e.stopPropagation(); l.visible = !l.visible; syncStack(); renderLayers(); touch(); },
-          }, l.visible ? "👁" : "—"),
+          TL.iconBtn(l.visible ? "eye" : "eyeOff", l.visible ? "Hide layer" : "Show layer", (e) => { e.stopPropagation(); l.visible = !l.visible; syncStack(); renderLayers(); touch(); }, { class: `small ${l.visible ? "" : "dim"}` }),
           h("div.sk-layer-thumb", th),
           h("span.sk-layer-name", {
             title: "Double-click to rename",
@@ -595,17 +592,20 @@
           }, l.name)));
       }
       layersPanel.append(list);
-      layersPanel.append(h("label.sk-field", "Layer opacity",
+      layersPanel.append(h("label.sk-field", h("span.sk-field-top", "Layer opacity", h("span.val", `${Math.round(active.opacity * 100)}%`)),
         h("input", {
           type: "range", min: "0", max: "100", value: String(Math.round(active.opacity * 100)),
-          oninput: (e) => { active.opacity = e.target.value / 100; active.el.style.opacity = active.visible ? String(active.opacity) : "0"; },
+          oninput: (e) => { active.opacity = e.target.value / 100; active.el.style.opacity = active.visible ? String(active.opacity) : "0"; TL.$(".val", e.target.closest("label")).textContent = `${e.target.value}%`; },
           onchange: () => touch(),
         })));
-      layersPanel.append(h("div.row.wrap",
-        h("button.btn.small", { title: "Put a picture from your libraries on its own layer", onclick: openLibraryPicker }, "＋ From library"),
-        h("button.btn.small", { onclick: pickImageFile }, "＋ Image file"),
-        h("button.btn.small", { title: "Make the active layer bigger or smaller (around the canvas centre)", onclick: () => scaleLayer(1 / 1.1) }, "−"),
-        h("button.btn.small", { onclick: () => scaleLayer(1.1) }, "＋ Scale")));
+      layersPanel.append(h("div.sk-sect-head", h("strong", "Add picture")),
+        h("div.row.wrap",
+          TL.iconBtn("library", "From a library", openLibraryPicker, { class: "solid" }),
+          TL.iconBtn("imagePlus", "From an image file", pickImageFile, { class: "solid" }),
+          TL.iconBtn("paste", "From the clipboard (Ctrl+V)", pasteLayer, { class: "solid" }),
+          h("span.spacer"),
+          TL.iconBtn("minus", "Shrink the layer's picture", () => scaleLayer(1 / 1.1), { class: "solid" }),
+          TL.iconBtn("plus", "Enlarge the layer's picture", () => scaleLayer(1.1), { class: "solid" })));
     }
 
     function reorder(dir) {
@@ -672,7 +672,7 @@
         },
       });
       const p = TL.modal({ title: "Pick from a library", body: browser, wide: true, buttons: [{ label: "Close", value: null }] });
-      closeFn = () => TL.$("#modal-root .modal-head .icon-btn") && TL.$("#modal-root .modal-head .icon-btn").click();
+      closeFn = () => TL.$("#modal-root .modal-head .ib") && TL.$("#modal-root .modal-head .ib").click();
       await p;
     }
 
@@ -711,17 +711,19 @@
       try { localStorage.setItem("thumblab.tools", JSON.stringify(settings)); localStorage.setItem("thumblab.feel", String(feel)); } catch (e) { /* ignore */ }
     }
 
+    let advOpen = false;
+
     function renderTools() {
       TL.clear(toolsPanel);
       toolsPanel.append(
         h("div.sk-tool-grid", Object.entries(TOOL_DEFS).map(([key, def]) => h("button.sk-tool", {
-          class: tool === key ? "on" : "", title: `${def.label} (${def.key.toUpperCase()}): ${def.tip}`,
+          class: tool === key ? "on" : "", "data-tip": `${def.label} (${def.key.toUpperCase()}): ${def.tip}`, "aria-label": def.label,
           onclick: () => setTool(key),
-        }, h("span.glyph", def.glyph), h("span.tl", def.label)))),
+        }, TL.icon(def.glyph, 22)))),
         h("div.sk-color",
           h("input", { type: "color", value: color, title: "Colour", oninput: (e) => setColor(e.target.value) }),
           h("div.sk-swatches", [...recent, ...SWATCHES.filter((s) => !recent.includes(s))].slice(0, 12).map((s) =>
-            h("button.sk-swatch", { style: { background: s }, class: s === color ? "on" : "", title: s, onclick: () => setColor(s) })))));
+            h("button.sk-swatch", { style: { background: s }, class: s === color ? "on" : "", "aria-label": s, "data-tip": s, onclick: () => setColor(s) })))));
     }
 
     function slider(label, get, set, min, max, step, fmt) {
@@ -739,28 +741,25 @@
       if (PAINT_TOOLS.includes(tool)) {
         const s = settings[tool];
         const pct = (v) => `${Math.round(v * 100)}%`;
-        optionsPanel.append(...[
+        const more = h("details.more", { open: advOpen, ontoggle: () => { advOpen = more.open; } },
+          h("summary", "Pressure and feel"),
+          ...[
+            tool === "pen" || tool === "eraser" ? null : slider("Softness", () => 1 - s.hardness, (v) => { s.hardness = 1 - v; }, 0, 1, 0.05, pct),
+            slider("Pressure changes size", () => s.pSize, (v) => { s.pSize = v; }, 0, 1, 0.05, pct),
+            slider("Pressure changes opacity", () => s.pOpacity, (v) => { s.pOpacity = v; }, 0, 1, 0.05, pct),
+            slider("Smoothing", () => s.smooth, (v) => { s.smooth = v; }, 0, 1, 0.05, pct),
+            h("label.sk-field", h("span.sk-field-top", "Pressure curve", h("span.val", "soft to firm")),
+              h("input", { type: "range", min: "0", max: "100", value: String(feel), oninput: (e) => { feel = parseFloat(e.target.value); persistTools(); } })),
+            h("div.row", TL.iconBtn("refresh", "Reset this tool to its defaults", () => { Object.assign(s, TOOL_DEFS[tool].defaults); persistTools(); renderOptions(); }, { class: "small", label: "Reset" })),
+          ].filter(Boolean));
+        optionsPanel.append(
           h("div.sk-sect-head", h("strong", def.label)),
           slider("Size", () => s.size, (v) => { s.size = v; }, 1, 400, 1, (v) => `${v}px`),
           slider("Opacity", () => s.opacity, (v) => { s.opacity = v; }, 0.05, 1, 0.05, pct),
-          tool === "pen" || tool === "eraser" ? null : slider("Softness", () => 1 - s.hardness, (v) => { s.hardness = 1 - v; }, 0, 1, 0.05, pct),
-          slider("Pressure → size", () => s.pSize, (v) => { s.pSize = v; }, 0, 1, 0.05, pct),
-          slider("Pressure → opacity", () => s.pOpacity, (v) => { s.pOpacity = v; }, 0, 1, 0.05, pct),
-          slider("Smoothing", () => s.smooth, (v) => { s.smooth = v; }, 0, 1, 0.05, pct),
-          h("label.sk-field", h("span.sk-field-top", "Pressure feel", h("span.val", "soft ↔ firm")),
-            h("input", { type: "range", min: "0", max: "100", value: String(feel), oninput: (e) => { feel = parseFloat(e.target.value); persistTools(); } })),
-          h("button.btn.small.ghost", { onclick: () => { Object.assign(s, TOOL_DEFS[tool].defaults); persistTools(); renderOptions(); } }, "Reset this tool"),
-        ].filter(Boolean));
+          more);
       } else {
-        optionsPanel.append(h("div.sk-sect-head", h("strong", def.label)), h("p.muted", def.tip));
+        optionsPanel.append(h("div.sk-sect-head", h("strong", def.label)), h("p.muted.small", def.tip));
       }
-      optionsPanel.append(
-        h("div.sk-sect-head", h("strong", "View")),
-        h("div.row.wrap",
-          h("button.btn.small", { onclick: fitView, title: "Fit (Ctrl+0)" }, "Fit"),
-          h("button.btn.small", { onclick: () => setZoomAt(viewport.clientWidth / 2, viewport.clientHeight / 2, 1), title: "100% (Ctrl+1)" }, "100%"),
-          h("button.btn.small", { class: view.mirror ? "on" : "", title: "Flip the view to spot drawing mistakes (M)", onclick: () => { view.mirror = !view.mirror; applyView(); renderOptions(); } }, "Mirror"),
-          h("button.btn.small", { class: view.guides ? "on" : "", title: "Thirds, safe margin and the duration-badge zone (G)", onclick: () => { view.guides = !view.guides; syncStack(); renderOptions(); } }, "Guides")));
     }
 
     // ---- status ---------------------------------------------------------------------------------------
@@ -801,15 +800,15 @@
 
     function handoffMenu(anchor) {
       const items = [
-        ["Open in default app (layered PSD)", async () => { await flush(); const err = await window.host.openPath(variant.source); if (err) TL.toast(err, "bad"); }],
-        ["Save PSD as… (keeps layers)", savePsdAs],
-        ["Save PNG as…", async () => { const p = await window.host.saveAs(await pngBytes(), nameSafe(), "png"); if (p) TL.toast(`Saved ${TL.fileName(p)}`); }],
-        ["Copy flattened image", async () => { await window.host.copyImage(await pngBytes()); TL.toast("Copied. Paste it into any app."); }],
-        ["Send PSD + PNG to handoff folder", handoffFolder],
-        ["Change handoff folder…", async () => { const d = await window.host.pickFolder("Choose your handoff folder"); if (d) { TL.state.settings.handoffFolder = d; TL.saveSettings(); TL.toast("Handoff folder set"); } }],
-        ["Show the PSD in its folder", () => window.host.reveal(variant.source)],
+        ["external", "Open in its default app (layered PSD)", async () => { await flush(); const err = await window.host.openPath(variant.source); if (err) TL.toast(err, "bad"); }],
+        ["layers", "Save PSD as… (keeps layers)", savePsdAs],
+        ["image", "Save PNG as…", async () => { const p = await window.host.saveAs(await pngBytes(), nameSafe(), "png"); if (p) TL.toast(`Saved ${TL.fileName(p)}`); }],
+        ["copy", "Copy flattened image", async () => { await window.host.copyImage(await pngBytes()); TL.toast("Copied. Paste it into any app."); }],
+        ["send", "Send PSD + PNG to handoff folder", handoffFolder],
+        ["folderOpen", "Change handoff folder…", async () => { const d = await window.host.pickFolder("Choose your handoff folder"); if (d) { TL.state.settings.handoffFolder = d; TL.saveSettings(); TL.toast("Handoff folder set"); } }],
+        ["folder", "Show the PSD in its folder", () => window.host.reveal(variant.source)],
       ];
-      const menu = h("div.popmenu", items.map(([label, fn]) => h("button", { onclick: async () => { menu.remove(); try { await fn(); } catch (e) { TL.toast(e.message, "bad"); } } }, label)));
+      const menu = h("div.popmenu", items.map(([icon, label, fn]) => h("button", { onclick: async () => { menu.remove(); try { await fn(); } catch (e) { TL.toast(e.message, "bad"); } } }, TL.icon(icon, 16), label)));
       const r = anchor.getBoundingClientRect();
       menu.style.top = `${r.bottom + 4}px`;
       menu.style.right = `${window.innerWidth - r.right}px`;
@@ -821,7 +820,7 @@
     /** Drag-out chip: prepares the file on pointerdown so the OS drag can start immediately. */
     function dragChip(label, ext) {
       let file = null;
-      const chip = h("div.drag-chip", { draggable: true, title: `Drag this into Photoshop, CSP or any folder (${ext.toUpperCase()})` }, `⠿ ${label}`);
+      const chip = h("div.drag-chip", { draggable: true, "data-tip": `Drag the ${ext.toUpperCase()} into Photoshop, CSP or a folder` }, TL.icon(ext === "png" ? "image" : "layers", 15), label);
       chip.addEventListener("pointerdown", async () => {
         file = null;
         if (ext === "png") file = await window.host.writeTemp(`${nameSafe()}.png`, await pngBytes());
@@ -833,14 +832,20 @@
 
     // ---- top bar -------------------------------------------------------------------------------------------------
     const topbar = h("div.sk-top");
-    const sendBtn = h("button.btn.primary", { onclick: (e) => handoffMenu(e.currentTarget) }, "Send to… ▾");
     function renderTop() {
       TL.clear(topbar);
+      const sendBtn = TL.iconBtn("send", "Send this sketch to another app", (e) => handoffMenu(e.currentTarget), { kind: "primary", label: "Send" });
       topbar.append(
-        h("button.btn", { onclick: async () => { await close(); } }, "← Back"),
-        h("span.sk-title", h("span.label-pill", variant.label), " ", variant.name),
-        h("button.icon-btn", { title: "Undo (Ctrl+Z)", onclick: undo }, "↶"),
-        h("button.icon-btn", { title: "Redo (Ctrl+Y)", onclick: redo }, "↷"),
+        TL.iconBtn("back", "Back to the project", async () => { await close(); }),
+        h("span.sk-title", h("span.label-pill", variant.label), variant.name),
+        TL.iconBtn("undo", "Undo (Ctrl+Z)", undo),
+        TL.iconBtn("redo", "Redo (Ctrl+Y)", redo),
+        h("span.sk-sep"),
+        TL.iconBtn("fit", "Fit to window (Ctrl+0)", fitView),
+        TL.iconBtn("zoom100", "100% (Ctrl+1)", () => setZoomAt(viewport.clientWidth / 2, viewport.clientHeight / 2, 1)),
+        TL.iconBtn("mirror", "Mirror the view to spot mistakes (M)", () => { view.mirror = !view.mirror; applyView(); renderTop(); }, { on: view.mirror, toggle: true }),
+        TL.iconBtn("grid", "Guides: thirds, safe margin, duration badge zone (G)", () => { view.guides = !view.guides; syncStack(); renderTop(); }, { on: view.guides, toggle: true }),
+        h("span.sk-sep"),
         TL.fxBar(),
         h("span.spacer"),
         dragChip("PNG", "png"), dragChip("PSD", "psd"),

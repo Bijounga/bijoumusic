@@ -1,6 +1,6 @@
 /**
- * Variants: A/B/C versions of the thumbnail side by side. Shrink them, blur them, squint
- * at them, star the winner, and work through the checklist for the selected one.
+ * Variants: A/B/C versions of the thumbnail side by side. Shrink them, blur them, squint at
+ * them, star the winner, and work through the checklist for the selected one.
  */
 (function (TL) {
   const { h } = TL;
@@ -36,51 +36,52 @@
 
     const card = (v) => {
       const prog = TL.checklistProgress(v);
-      const sel = selected() === v;
-      return h("div.vcard", { class: `${sel ? "selected" : ""} ${v.pick ? "picked" : ""}`, style: { width: `${cardWidth}px` } },
-        h("div.vthumb", { onclick: () => select(v) }, TL.thumbEl(v),
-          h("span.label-pill.big", v.label),
-          v.kind === "sketch" ? h("span.badge.corner", "SKETCH") : null),
+      const done = prog.total > 0 && prog.done === prog.total;
+      const stop = (fn) => (e) => { e.stopPropagation(); fn(); };
+      return h("div.vcard", { class: `${selected() === v ? "selected" : ""} ${v.pick ? "picked" : ""}`, style: { width: `${cardWidth}px` } },
+        h("div.vthumb", { onclick: () => select(v) },
+          TL.thumbEl(v),
+          h("span.vlabel", v.label),
+          h("div.vover", { class: v.pick ? "has-pick" : "" },
+            v.kind === "sketch" ? TL.iconBtn("sketch", "Edit sketch", stop(() => nav.openSketch(project, v)), { class: "floating small" }) : null,
+            TL.iconBtn("monitor", "See it in the feed", stop(() => { select(v); nav.setTab("test"); }), { class: "floating small" }),
+            TL.iconBtn("star", v.pick ? "Your pick (click to clear)" : "Mark as your pick", stop(() => {
+              for (const o of project.variants) o.pick = o === v ? !v.pick : false;
+              TL.saveProject(project); render();
+            }), { class: "floating small", on: v.pick, toggle: true }))),
         h("div.vmeta",
-          h("button.star", {
-            class: v.pick ? "on" : "", title: v.pick ? "This is your pick" : "Mark as my pick",
-            onclick: () => { for (const o of project.variants) o.pick = o === v ? !v.pick : false; TL.saveProject(project); render(); },
-          }, v.pick ? "★" : "☆"),
           h("span.vname", { title: v.name }, v.name),
-          h("span.muted", { title: "Checklist progress" }, prog.total ? `${prog.done}/${prog.total}` : "")),
-        h("div.vtools",
-          h("button.icon-btn.tiny", { title: "Move earlier", onclick: () => move(v, -1) }, "◀"),
-          h("button.icon-btn.tiny", { title: "Move later", onclick: () => move(v, 1) }, "▶"),
-          v.kind === "sketch" ? h("button.btn.small", { onclick: () => nav.openSketch(project, v) }, "✎ Edit") : null,
-          h("span.spacer"),
-          h("button.btn.small", { onclick: () => { select(v); nav.setTab("test"); } }, "Test")));
+          prog.total ? h("span.vprog", { class: done ? "done" : "", title: "Checklist progress" }, done ? TL.icon("check", 14) : `${prog.done}/${prog.total}`) : null));
     };
 
     const renderStage = () => {
       TL.clear(stage);
       stage.append(h("div.toolbar",
         TL.fxBar(),
-        h("label.fxamount", { title: "Make the thumbnails bigger or smaller to judge them at feed size" },
-          "Size",
-          h("input", {
+        h("span.spacer"),
+        h("div.sizer", { title: "Thumbnail size: shrink them to judge at feed size" },
+          TL.icon("image", 13),
+          h("input.mini", {
             type: "range", min: "110", max: "560", step: "10", value: String(cardWidth),
-            oninput: (e) => { cardWidth = parseInt(e.target.value, 10); localStorage.setItem("thumblab.cardWidth", cardWidth); TL.$$(".vcard", stage).forEach((c) => { c.style.width = `${cardWidth}px`; }); },
-          })),
-        h("div.chips",
-          h("button.chip", { onclick: () => { cardWidth = 168; localStorage.setItem("thumblab.cardWidth", 168); render(); }, title: "Sidebar size on YouTube" }, "Sidebar"),
-          h("button.chip", { onclick: () => { cardWidth = 210; localStorage.setItem("thumblab.cardWidth", 210); render(); }, title: "Roughly home-feed size" }, "Feed"),
-          h("button.chip", { onclick: () => { cardWidth = 360; localStorage.setItem("thumblab.cardWidth", 360); render(); } }, "Large"))));
+            oninput: (e) => {
+              cardWidth = parseInt(e.target.value, 10);
+              localStorage.setItem("thumblab.cardWidth", cardWidth);
+              TL.$$(".vcard", stage).forEach((c) => { c.style.width = `${cardWidth}px`; });
+            },
+          }),
+          TL.icon("image", 20)),
+        TL.iconBtn("tray", "Bring in art", () => nav.setTab("canvas"), { class: "solid" }),
+        TL.iconBtn("sketch", "New sketch", () => TL.newSketchDialog(project, nav), { class: "solid" })));
 
       if (!project.variants.length) {
-        stage.append(h("div.empty.big",
+        stage.append(h("div.empty.big", TL.icon("compare", 32),
           h("strong", "No versions yet"),
-          h("p", "Add your rough sketches here and compare them tiny and blurred before you commit to rendering one."),
+          h("p", "Add rough sketches, then compare them tiny and blurred before you render one."),
           h("div.row.center",
-            h("button.btn.primary", { onclick: () => nav.setTab("canvas") }, "Bring art in"),
-            h("button.btn", { onclick: () => TL.newSketchDialog(project, nav) }, "✎ New sketch"))));
+            TL.iconBtn("tray", "Bring in art", () => nav.setTab("canvas"), { kind: "primary", label: "Bring in art" }),
+            TL.iconBtn("sketch", "New sketch", () => TL.newSketchDialog(project, nav), { class: "solid", label: "New sketch" }))));
       } else {
         stage.append(h("div.vgrid", project.variants.map(card)));
-        stage.append(h("div.muted.hint", "Click a version to open its checklist. Star the one you're going with."));
       }
     };
 
@@ -88,55 +89,54 @@
       TL.clear(inspector);
       const v = selected();
       if (!v) {
-        inspector.append(h("div.empty", h("strong", "Pick a version"), h("p", "Select one to see it large, add notes and work through its checklist.")));
+        inspector.append(h("div.empty", TL.icon("checklist", 26), h("strong", "Select a version"), h("p.small", "See it large, add notes, run its checklist.")));
         return;
       }
       const save = TL.debounce(() => TL.saveProject(project), 250);
+      const i = project.variants.indexOf(v);
       inspector.append(...[
         h("div.insp-preview", TL.thumbEl(v)),
         h("div.insp-head",
-          h("span.label-pill.big", v.label),
-          h("input.text.name", { value: v.name, title: "Name", oninput: (e) => { v.name = e.target.value; save(); }, onchange: render })),
-        h("label.field", "Video title for this thumbnail",
-          h("input.text", {
-            value: v.title || "", placeholder: project.title,
-            oninput: (e) => { v.title = e.target.value; save(); },
-          })),
-        h("label.field", "Notes",
-          h("textarea.text", { rows: 2, value: v.notes || "", placeholder: "What works, what doesn't…", oninput: (e) => { v.notes = e.target.value; save(); } })),
+          h("span.label-pill", v.label),
+          h("input.text.name", { value: v.name, title: "Name", spellcheck: false, oninput: (e) => { v.name = e.target.value; save(); }, onchange: render }),
+          TL.iconBtn("left", "Move earlier", () => move(v, -1), { class: "small", disabled: i === 0 }),
+          TL.iconBtn("right", "Move later", () => move(v, 1), { class: "small", disabled: i === project.variants.length - 1 })),
+        h("div.insp-fields",
+          h("input.text", { value: v.title || "", placeholder: `Video title (${project.title})`, title: "Video title shown with this thumbnail in the feed", oninput: (e) => { v.title = e.target.value; save(); } }),
+          h("textarea.text", { rows: 2, value: v.notes || "", placeholder: "Notes", oninput: (e) => { v.notes = e.target.value; save(); } })),
         v.warning ? h("div.warn", v.warning) : null,
         TL.checklistPanel(v, () => { TL.saveProject(project); renderStageCounts(); }),
         h("div.insp-actions",
-          v.kind === "sketch" ? h("button.btn.small.primary", { onclick: () => nav.openSketch(project, v) }, "✎ Edit sketch") : null,
-          v.source ? h("button.btn.small", { onclick: () => window.host.openPath(v.source) }, "Open in app") : null,
-          h("button.btn.small", {
-            title: "Save this image into this project's library",
-            onclick: async () => {
-              const img = await TL.loadBitmap(v.img);
-              const c = TL.canvas(img.width, img.height);
-              c.getContext("2d").drawImage(img, 0, 0);
-              await TL.addCanvasToLibrary({ lib: project.library, project }, c, v.name, "Other");
-              TL.toast("Saved to this project's library");
-            },
-          }, "Save to library"),
-          h("button.btn.small.danger", {
-            onclick: async () => {
-              if (!(await TL.confirm(`Remove version ${v.label}${v.kind === "sketch" ? " and its sketch file" : " (your original file isn't touched)"}?`, "Remove", true))) return;
-              if (v.kind === "sketch" && v.source) window.host.removePath(v.source);
-              TL.ui.selected[project.id] = null;
-              TL.removeVariant(project, v);
-            },
-          }, "Remove")),
+          v.kind === "sketch" ? TL.iconBtn("sketch", "Edit sketch", () => nav.openSketch(project, v)) : null,
+          v.source ? TL.iconBtn("external", "Open in its app", () => window.host.openPath(v.source)) : null,
+          TL.iconBtn("imagePlus", "Save to this project's library", async () => {
+            const img = await TL.loadBitmap(v.img);
+            const c = TL.canvas(img.width, img.height);
+            c.getContext("2d").drawImage(img, 0, 0);
+            await TL.addCanvasToLibrary({ lib: project.library, project }, c, v.name, "Other");
+            TL.toast("Saved to this project's library");
+          }),
+          h("span.spacer"),
+          TL.iconBtn("trash", "Remove this version", async () => {
+            if (!(await TL.confirm(`Remove version ${v.label}${v.kind === "sketch" ? " and its sketch file" : " (your original file isn't touched)"}?`, "Remove", true))) return;
+            if (v.kind === "sketch" && v.source) window.host.removePath(v.source);
+            TL.ui.selected[project.id] = null;
+            TL.removeVariant(project, v);
+          }, { class: "danger" })),
       ].filter(Boolean));
     };
 
-    // Ticking a check only changes the "3/11" counters; avoid rebuilding the inspector mid-click.
+    // Ticking a check only changes the counters; avoid rebuilding the inspector mid-click.
     const renderStageCounts = () => {
-      TL.$$(".vcard", stage).forEach((el, i) => {
-        const v = project.variants[i];
-        const m = TL.$(".vmeta .muted", el);
+      TL.$$(".vcard", stage).forEach((el, idx) => {
+        const v = project.variants[idx];
+        const m = TL.$(".vmeta .vprog", el);
         const p = TL.checklistProgress(v);
-        if (m) m.textContent = p.total ? `${p.done}/${p.total}` : "";
+        if (m) {
+          const done = p.total > 0 && p.done === p.total;
+          m.classList.toggle("done", done);
+          if (done) m.replaceChildren(TL.icon("check", 14)); else m.textContent = `${p.done}/${p.total}`;
+        }
       });
     };
 

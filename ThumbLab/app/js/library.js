@@ -54,118 +54,104 @@
       const items = current.lib.items.filter((it) =>
         (cat === "All" || it.cat === cat) && (!query || it.name.toLowerCase().includes(query)));
       if (!items.length) {
-        grid.append(h("div.empty", h("strong", current.lib.items.length ? "Nothing matches" : "This library is empty"),
-          h("p", current.lib.items.length ? "Try another category or search." : "Add images, paste from the clipboard, or drop files here. PSD, CSP and Procreate files work too.")));
+        grid.append(h("div.empty", TL.icon("library", 28), h("strong", current.lib.items.length ? "Nothing matches" : "Empty"),
+          h("p.small", current.lib.items.length ? "Try another category or search." : "Add images, paste, or drop files here.")));
         return;
       }
       for (const it of items) grid.append(tile(it));
     };
 
+    /** Name and category in one small dialog. */
+    const editItem = async (it) => {
+      const name = h("input.text", { value: it.name });
+      const catSel = h("select.select", CATS.map((c) => h("option", { value: c, selected: it.cat === c }, c)));
+      const ok = await TL.modal({
+        title: "Edit",
+        body: h("div.form", h("label", "Name", name), h("label", "Category", catSel)),
+        buttons: [{ label: "Cancel", value: false }, { label: "Save", kind: "primary", value: true }],
+      });
+      if (!ok) return;
+      it.name = name.value.trim() || it.name;
+      it.cat = catSel.value;
+      TL.saveLibrary(current.lib, current.project);
+      renderGrid();
+    };
+
     const tile = (it) => {
       const img = h("img", { src: TL.imgUrl(it.file), draggable: false, alt: it.name });
-      const el = h("div.lib-tile", {
-        title: opts.onPick ? "Click to use" : "Drag into Photoshop / CSP / Procreate. Double-click to rename.",
+      return h("div.lib-tile", {
+        title: opts.onPick ? "Click to use" : "Drag into Photoshop, CSP or Procreate",
         draggable: true,
         ondragstart: (e) => { e.preventDefault(); window.host.startDrag(it.file); },
         onclick: () => { if (opts.onPick) opts.onPick(it, current); },
-        ondblclick: async () => {
-          if (opts.onPick) return;
-          const name = await TL.prompt("Rename", it.name);
-          if (name) { it.name = name; TL.saveLibrary(current.lib, current.project); renderGrid(); }
-        },
       },
         h("div.lib-img", img),
-        h("div.lib-name", it.name),
-        h("select.select.tiny", {
-          title: "Category", onclick: (e) => e.stopPropagation(),
-          onchange: (e) => { it.cat = e.target.value; TL.saveLibrary(current.lib, current.project); renderGrid(); },
-        }, CATS.map((c) => h("option", { value: c, selected: it.cat === c }, c))),
+        h("div.lib-name", { title: `${it.name} (${it.cat})` }, it.name),
         opts.onPick ? null : h("div.lib-actions",
-          h("button.icon-btn.tiny", {
-            title: "Copy image", onclick: async (e) => {
-              e.stopPropagation();
-              await window.host.copyImage(await window.host.readFile(it.file)); TL.toast("Copied");
-            },
-          }, "⧉"),
-          h("button.icon-btn.tiny", { title: "Show in folder", onclick: (e) => { e.stopPropagation(); window.host.reveal(it.file); } }, "📂"),
-          opts.copyTo && current !== opts.copyTo ? h("button.icon-btn.tiny", {
-            title: `Copy to ${opts.copyTo.label}`,
-            onclick: async (e) => {
-              e.stopPropagation();
-              const img2 = await TL.loadBitmap(it.file);
-              const c = TL.canvas(img2.width, img2.height);
-              c.getContext("2d").drawImage(img2, 0, 0);
-              await addCanvas(opts.copyTo, c, it.name, it.cat);
-              TL.toast(`Copied to ${opts.copyTo.label}`);
-            },
-          }, "⇥") : null,
-          h("button.icon-btn.tiny", {
-            title: "Delete", onclick: async (e) => {
-              e.stopPropagation();
-              if (!(await TL.confirm(`Delete "${it.name}" from this library?`, "Delete", true))) return;
-              window.host.removePath(it.file);
-              current.lib.items = current.lib.items.filter((x) => x.id !== it.id);
-              TL.saveLibrary(current.lib, current.project); renderGrid();
-            },
-          }, "🗑")));
-      return el;
+          TL.iconBtn("copy", "Copy image", async (e) => {
+            e.stopPropagation();
+            await window.host.copyImage(await window.host.readFile(it.file)); TL.toast("Copied");
+          }, { class: "small" }),
+          TL.iconBtn("tag", "Rename or change category", (e) => { e.stopPropagation(); editItem(it); }, { class: "small" }),
+          opts.copyTo && current !== opts.copyTo ? TL.iconBtn("download", `Copy to ${opts.copyTo.label}`, async (e) => {
+            e.stopPropagation();
+            const img2 = await TL.loadBitmap(it.file);
+            const c = TL.canvas(img2.width, img2.height);
+            c.getContext("2d").drawImage(img2, 0, 0);
+            await addCanvas(opts.copyTo, c, it.name, it.cat);
+            TL.toast(`Copied to ${opts.copyTo.label}`);
+          }, { class: "small" }) : null,
+          TL.iconBtn("trash", "Delete", async (e) => {
+            e.stopPropagation();
+            if (!(await TL.confirm(`Delete "${it.name}" from this library?`, "Delete", true))) return;
+            window.host.removePath(it.file);
+            current.lib.items = current.lib.items.filter((x) => x.id !== it.id);
+            TL.saveLibrary(current.lib, current.project); renderGrid();
+          }, { class: "small danger" })));
     };
 
     const renderHead = () => {
       TL.clear(head);
       const isGlobal = !current.project;
+      const manage = isGlobal && opts.canCreate;
       head.append(
         h("div.row",
           sources.length > 1 || isGlobal ? h("select.select", {
             title: "Library",
             onchange: (e) => { current = sources.find((s) => s.key === e.target.value); renderHead(); renderGrid(); },
           }, sources.map((s) => h("option", { value: s.key, selected: s === current }, s.label))) : h("strong", current.label),
-          opts.canCreate ? h("button.btn.small", {
-            onclick: async () => {
-              const name = await TL.prompt("Name the new library", "", "e.g. Terraria");
-              if (!name) return;
-              const lib = await TL.createLibrary(name);
-              sources.push({ key: `g:${lib.id}`, label: lib.name, lib });
-              current = sources[sources.length - 1];
-              if (opts.onSourcesChanged) opts.onSourcesChanged();
-              renderHead(); renderGrid();
-            },
-          }, "+ New library") : null,
-          isGlobal && opts.canCreate ? h("button.btn.small.ghost", {
-            onclick: async () => {
-              const name = await TL.prompt("Rename library", current.lib.name);
-              if (!name) return;
-              current.lib.name = name; current.label = name; TL.saveLibrary(current.lib); renderHead();
-            },
-          }, "Rename") : null,
-          isGlobal && opts.canCreate ? h("button.btn.small.ghost.danger-text", {
-            onclick: async () => {
-              if (!(await TL.confirm(`Delete the library "${current.lib.name}" and all ${current.lib.items.length} images in it?`, "Delete library", true))) return;
-              await TL.deleteLibrary(current.lib);
-              const i = sources.indexOf(current);
-              sources.splice(i, 1);
-              current = sources[0];
-              if (opts.onSourcesChanged) opts.onSourcesChanged();
-              renderHead(); renderGrid();
-            },
-          }, "Delete") : null),
-        h("div.row",
-          h("button.btn.primary.small", {
-            onclick: async () => {
-              const paths = await window.host.pickFiles({ title: "Add to library", multi: true, images: true });
-              if (!paths.length) return;
-              const n = await addPaths(current, paths, cat === "All" ? "Other" : cat);
-              if (n) { TL.toast(`Added ${n}`); renderGrid(); }
-            },
-          }, "+ Add images"),
-          h("button.btn.small", {
-            title: "Paste an image from the clipboard (Ctrl+V)",
-            onclick: () => pasteClipboard(),
-          }, "Paste"),
-          h("input.text.small.lib-search", {
-            placeholder: "Search…", value: query,
-            oninput: (e) => { query = e.target.value.toLowerCase(); renderGrid(); },
-          })),
+          opts.canCreate ? TL.iconBtn("plus", "New library", async () => {
+            const name = await TL.prompt("Name the new library", "", "e.g. Terraria");
+            if (!name) return;
+            const lib = await TL.createLibrary(name);
+            sources.push({ key: `g:${lib.id}`, label: lib.name, lib });
+            current = sources[sources.length - 1];
+            if (opts.onSourcesChanged) opts.onSourcesChanged();
+            renderHead(); renderGrid();
+          }, { class: "solid" }) : null,
+          manage ? TL.iconBtn("sketch", "Rename this library", async () => {
+            const name = await TL.prompt("Rename library", current.lib.name);
+            if (!name) return;
+            current.lib.name = name; current.label = name; TL.saveLibrary(current.lib); renderHead();
+          }, { class: "small" }) : null,
+          manage ? TL.iconBtn("trash", "Delete this library", async () => {
+            if (!(await TL.confirm(`Delete the library "${current.lib.name}" and all ${current.lib.items.length} images in it?`, "Delete library", true))) return;
+            await TL.deleteLibrary(current.lib);
+            sources.splice(sources.indexOf(current), 1);
+            current = sources[0];
+            if (opts.onSourcesChanged) opts.onSourcesChanged();
+            renderHead(); renderGrid();
+          }, { class: "small danger" }) : null,
+          h("span.spacer"),
+          h("label.fld", TL.icon("search", 14),
+            h("input.text.small.lib-search", { placeholder: "Search", value: query, oninput: (e) => { query = e.target.value.toLowerCase(); renderGrid(); } })),
+          TL.iconBtn("paste", "Paste an image (Ctrl+V)", () => pasteClipboard(), { class: "solid" }),
+          TL.iconBtn("plus", "Add images, PSD, CSP or Procreate files", async () => {
+            const paths = await window.host.pickFiles({ title: "Add to library", multi: true, images: true });
+            if (!paths.length) return;
+            const n = await addPaths(current, paths, cat === "All" ? "Other" : cat);
+            if (n) { TL.toast(`Added ${n}`); renderGrid(); }
+          }, { kind: "primary", label: "Add" })),
         h("div.chips", ["All", ...CATS].map((c) => h("button.chip", {
           class: cat === c ? "on" : "", onclick: () => { cat = c; renderHead(); renderGrid(); },
         }, c))));

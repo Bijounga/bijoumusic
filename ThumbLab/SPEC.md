@@ -67,3 +67,11 @@ Shared groups (Readability, Story, Composition by default; editable) apply to ev
 ## Not in this version
 
 Version history of a thumbnail's revisions, analytics / click-through tracking, AI scoring, native .clip or .procreate export, Premiere integration.
+
+## Look and feel
+
+Matches the other Bijou apps (Doodle Pad, BijouMusic, BijouDocs): blue-black surfaces (`#0a0d12` / `#12161d` / `#191f28`), one cyan accent (`#45b8e6`, dark ink on it), Segoe UI at 13px, 4/8/12px corners, hairline borders.
+
+- Controls are drawn line icons (`app/js/icons.js`, one stroke weight on a 24px grid) with a quick tooltip on hover. Words are kept for headings, primary actions (e.g. New, Send, Add) and anything a tooltip can't carry.
+- The left bar is four icons with labels: Projects, Library, Tester, Settings. Inside a project one bar holds back, title, the five tabs and the niche.
+- Secondary options sit behind a disclosure (the sketch pad's "Pressure and feel", most checklist groups) so the first screen stays quiet.

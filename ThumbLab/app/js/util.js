@@ -114,7 +114,7 @@ window.TL = window.TL || {};
     const foot = TL.h("div.modal-foot", (buttons || []).map((b) =>
       TL.h("button.btn", { class: b.kind || "", onclick: () => { if (b.onclick) b.onclick(close); else close(b.value); } }, b.label)));
     const box = TL.h("div.modal", { class: wide ? "wide" : "", role: "dialog" },
-      TL.h("div.modal-head", TL.h("h2", title), TL.h("button.icon-btn", { title: "Close", onclick: () => close(undefined) }, "✕")),
+      TL.h("div.modal-head", TL.h("h2", title), TL.iconBtn("x", "Close", () => close(undefined), { class: "small" })),
       TL.h("div.modal-body", body),
       buttons && buttons.length ? foot : null);
     const overlay = TL.h("div.overlay", { onmousedown: (e) => { if (e.target === overlay) close(undefined); } }, box);

@@ -9,10 +9,10 @@
 
   const LAYOUTS = {
     // counts: how many videos the page shows at each "Videos" setting (rows of the feed)
-    home: { label: "Home feed", width: 1280, counts: [12, 24, 36, 48] },
-    search: { label: "Search results", width: 1100, counts: [6, 12, 18, 24] },
-    watch: { label: "Watch page sidebar", width: 1280, counts: [10, 20, 30, 40] },
-    mobile: { label: "Phone", width: 390, counts: [6, 12, 18, 24] },
+    home: { label: "Home feed", icon: "home", width: 1280, counts: [12, 24, 36, 48] },
+    search: { label: "Search results", icon: "results", width: 1100, counts: [6, 12, 18, 24] },
+    watch: { label: "Watch page sidebar", icon: "watch", width: 1280, counts: [10, 20, 30, 40] },
+    mobile: { label: "Phone", icon: "phone", width: 390, counts: [6, 12, 18, 24] },
   };
 
   const liveCache = new Map(); // "niche|order" -> { videos, at, cached }
@@ -173,10 +173,10 @@
       const chips = ["All", project.niche || "General", "Live", "Recently uploaded", "Watched"];
 
       const header = h("div.yt-header",
-        h("span.yt-burger", "☰"),
-        h("span.yt-brand", "▶ Feed preview"),
-        h("span.yt-search", h("span", "Search"), h("span.yt-mag", "🔍")),
-        h("span.yt-me", "◉"));
+        h("span.yt-burger", TL.icon("menu", 20)),
+        h("span.yt-brand", TL.icon("play", 18), "Feed preview"),
+        h("span.yt-search", h("span", "Search"), TL.icon("search", 16)),
+        h("span.yt-me", avatar(channelName())));
       const chipRow = h("div.yt-chips", chips.map((c, i) => h("span.yt-chip", { class: i === 0 ? "active" : "" }, c)));
 
       let body;
@@ -188,7 +188,7 @@
         const main = variantsToShow()[0];
         body = h("div.yt-watch",
           h("div.yt-player-col",
-            h("div.yt-player", h("span.yt-play", "▶")),
+            h("div.yt-player", h("span.yt-play", TL.icon("play", 64))),
             h("div.yt-title.big", (main && (main.title || project.title)) || project.title),
             h("div.yt-row", avatar(channelName()), h("div.yt-text", h("div.yt-title.small", channelName()), h("div.yt-sub", "12K subscribers")))),
           h("div.yt-side-col", items.map((it, i) => wrapMine(sideItem(it, opts), it, i))));
@@ -215,71 +215,74 @@
     function renderControls() {
       TL.clear(controls);
       const vs = project.variants.filter((v) => v.img);
-      const sel = (opts, value, on) => h("select.select", { onchange: (e) => on(e.target.value) },
+      const save = () => TL.saveProject(project);
+      const group = (...kids) => h("div.tgroup", kids.filter(Boolean));
+      const toggle = (icon, tip, on, fn, disabled) => TL.iconBtn(icon, tip, fn, { on, toggle: true, disabled });
+      const select = (opts, value, on) => h("select.select", { onchange: (e) => on(e.target.value) },
         opts.map(([v, l]) => h("option", { value: v, selected: v === value }, l)));
 
+      const versions = h("div.seg", [
+        ...vs.map((v) => h("button.seg-btn", {
+          class: !t.showAll && (variantsToShow()[0] === v) ? "on" : "",
+          title: `Test version ${v.label}`,
+          onclick: () => { t.showAll = false; t.variantId = v.id; save(); renderControls(); renderPage(); },
+        }, v.label)),
+        vs.length > 1 ? h("button.seg-btn", {
+          class: t.showAll ? "on" : "", title: "Every version in the feed, side by side",
+          onclick: () => { t.showAll = !t.showAll; save(); renderControls(); renderPage(); },
+        }, TL.icon("compare", 15)) : null,
+      ]);
+      const layouts = h("div.seg", Object.entries(LAYOUTS).map(([k, l]) => h("button.seg-btn", {
+        class: t.layout === k ? "on" : "", title: l.label,
+        onclick: () => { t.layout = k; save(); renderControls(); renderPage(); loadFeed(); },
+      }, TL.icon(l.icon, 16))));
+
       controls.append(
-        h("div.row.wrap",
-          h("div.seg", [
-            ...vs.map((v) => h("button.seg-btn", {
-              class: !t.showAll && (variantsToShow()[0] === v) ? "on" : "",
-              title: `Test version ${v.label}`,
-              onclick: () => { t.showAll = false; t.variantId = v.id; TL.saveProject(project); renderControls(); renderPage(); },
-            }, v.label)),
-            vs.length > 1 ? h("button.seg-btn", {
-              class: t.showAll ? "on" : "", title: "Put every version in the feed, side by side",
-              onclick: () => { t.showAll = !t.showAll; TL.saveProject(project); renderControls(); renderPage(); },
-            }, "All") : null,
-          ]),
-          sel(Object.entries(LAYOUTS).map(([k, l]) => [k, l.label]), t.layout, (v) => { t.layout = v; TL.saveProject(project); renderControls(); renderPage(); loadFeed(); }),
-          h("button.btn.small", { onclick: () => { t.dark = !t.dark; TL.saveProject(project); renderPage(); } }, t.dark ? "☾ Dark" : "☀ Light"),
-          h("label.inline", "Niche",
-            TL.nicheBox({ value: project.niche, group: project.id, onCommit: (val) => { project.niche = val; TL.saveProject(project); renderControls(); loadFeed(); } })),
-          h("label.inline", "Position",
-            h("input.text.tiny", {
-              type: "number", min: "1", max: String(countOf()), value: String(t.slot),
-              onchange: (e) => { t.slot = TL.clamp(parseInt(e.target.value, 10) || 1, 1, countOf()); TL.saveProject(project); renderPage(); },
-            })),
-          h("label.inline", { title: "How many videos are on the page around yours" }, "Videos",
-            h("select.select", {
-              onchange: (e) => { t.sample = parseInt(e.target.value, 10); t.slot = TL.clamp(t.slot, 1, countOf()); TL.saveProject(project); renderControls(); loadFeed(); },
-            }, LAYOUTS[t.layout].counts.map((n, i) => h("option", { value: i + 1, selected: (t.sample || 1) === i + 1 }, String(n))))),
-          h("button.btn.small", {
-            title: "A different set of videos around yours, and a different spot for yours",
-            onclick: () => {
+        h("div.tbar",
+          group(versions),
+          group(layouts,
+            TL.iconBtn(t.dark ? "moon" : "sun", t.dark ? "Dark page (click for light)" : "Light page (click for dark)", () => { t.dark = !t.dark; save(); renderControls(); renderPage(); })),
+          group(
+            h("label.fld", { title: "Order of the real videos" }, TL.icon("sort", 15),
+              select([["relevance", "Relevant"], ["viewCount", "Most viewed"], ["date", "Newest"]], t.order, (v) => { t.order = v; save(); loadFeed(); }))),
+          group(
+            h("label.fld", { title: "Where your thumbnail sits" }, TL.icon("hash", 15),
+              h("input.text.num", {
+                type: "number", min: "1", max: String(countOf()), value: String(t.slot),
+                onchange: (e) => { t.slot = TL.clamp(parseInt(e.target.value, 10) || 1, 1, countOf()); save(); renderPage(); },
+              })),
+            h("label.fld", { title: "How many videos are on the page around yours" }, TL.icon("gridView", 15),
+              h("select.select", {
+                onchange: (e) => { t.sample = parseInt(e.target.value, 10); t.slot = TL.clamp(t.slot, 1, countOf()); save(); renderControls(); loadFeed(); },
+              }, LAYOUTS[t.layout].counts.map((n, i) => h("option", { value: i + 1, selected: (t.sample || 1) === i + 1 }, String(n))))),
+            TL.iconBtn("shuffle", "New videos around yours, and a new spot for yours", () => {
               t.seed = Math.floor(Math.random() * 1e6);
               const room = Math.max(1, countOf() - variantsToShow().length + 1);
               t.slot = 1 + Math.floor(Math.random() * room);
-              TL.saveProject(project); renderControls(); loadFeed();
-            },
-          }, "⟳ Shuffle"),
-          h("button.btn.small", {
-            title: "Fetch fresh results from YouTube",
-            disabled: !TL.state.hasKey,
-            onclick: () => { liveCache.clear(); loadFeed(true); },
-          }, "Refresh live"),
-          sel([["relevance", "Relevant"], ["viewCount", "Most viewed"], ["date", "Newest"]], t.order, (v) => { t.order = v; TL.saveProject(project); loadFeed(); })),
-        h("div.row.wrap",
-          TL.fxBar(),
-          h("label.check.inline", { title: "Leave out videos of 3 minutes or less (Shorts) from the real feed" },
-            h("input", { type: "checkbox", checked: !!t.hideShorts, onchange: (e) => { t.hideShorts = e.target.checked; TL.saveProject(project); loadFeed(); } }), h("span", "Hide Shorts")),
-          h("label.check.inline", h("input", { type: "checkbox", checked: t.duration, onchange: (e) => { t.duration = e.target.checked; TL.saveProject(project); renderPage(); } }), h("span", "Duration badge")),
-          h("label.check.inline", h("input", { type: "checkbox", checked: !!t.highlight, onchange: (e) => { t.highlight = e.target.checked; TL.saveProject(project); renderPage(); } }), h("span", "Mark mine")),
-          sel([["fit", "Fit to window"], ["real", "Real size"]], t.zoom || "fit", (v) => { t.zoom = v; TL.saveProject(project); renderPage(); }),
-          h("label.inline", "Source",
-            sel([["auto", TL.state.hasKey ? "Live (YouTube)" : "Placeholder"], ["placeholder", "Always placeholder"]], t.source, (v) => { t.source = v; TL.saveProject(project); loadFeed(); }))),
+              save(); renderControls(); loadFeed();
+            }),
+            TL.iconBtn("refresh", "Fetch fresh videos from YouTube", () => { liveCache.clear(); loadFeed(true); }, { disabled: !TL.state.hasKey })),
+          group(
+            toggle("phoneOff", "Hide Shorts (videos of 3 minutes or less)", !!t.hideShorts, () => { t.hideShorts = !t.hideShorts; save(); renderControls(); loadFeed(); }),
+            toggle("clock", "Duration badge on thumbnails", !!t.duration, () => { t.duration = !t.duration; save(); renderControls(); renderPage(); }),
+            toggle("flag", "Mark mine: outline your thumbnail", !!t.highlight, () => { t.highlight = !t.highlight; save(); renderControls(); renderPage(); }),
+            toggle(t.zoom === "real" ? "zoom100" : "fit", t.zoom === "real" ? "Real size (click to fit the window)" : "Fit to window (click for real size)", t.zoom === "real", () => { t.zoom = t.zoom === "real" ? "fit" : "real"; save(); renderControls(); renderPage(); }),
+            toggle("globe", TL.state.hasKey ? "Real YouTube videos (off: placeholders)" : "Real videos need a YouTube API key in Settings", t.source !== "placeholder" && TL.state.hasKey,
+              () => { t.source = t.source === "placeholder" ? "auto" : "placeholder"; save(); renderControls(); loadFeed(); }, !TL.state.hasKey)),
+          h("span.spacer"),
+          group(TL.fxBar())),
         status);
     }
 
     if (!project.variants.some((v) => v.img)) {
-      root.append(h("div.empty.big", h("strong", "Nothing to test yet"),
-        h("p", "Bring in a sketch or a finished thumbnail first, then it appears here among the competition."),
-        h("button.btn.primary", { onclick: () => nav.setTab("canvas") }, "Bring art in")));
+      root.append(h("div.empty.big", TL.icon("monitor", 32), h("strong", "Nothing to test yet"),
+        h("p", "Bring in a sketch or a finished thumbnail, then see it among the competition."),
+        h("div.row.center", TL.iconBtn("tray", "Bring in art", () => nav.setTab("canvas"), { kind: "primary", label: "Bring in art" }))));
       return root;
     }
 
     renderControls();
-    status.textContent = "Loading the feed…";
+    status.textContent = "Loading…";
     loadFeed();
 
     // Keyboard: ← → cycle versions without touching the mouse.

@@ -3,7 +3,8 @@
   const { h } = TL;
 
   const TABS = [
-    ["concepts", "Concepts"], ["canvas", "Canvas"], ["variants", "Variants"], ["test", "Test"], ["library", "Library"],
+    ["concepts", "Concepts", "lightbulb"], ["canvas", "Canvas", "tray"], ["variants", "Variants", "compare"],
+    ["test", "Test", "monitor"], ["library", "Library", "library"],
   ];
 
   const route = { view: "home", projectId: null, tab: "variants", sketchVariant: null };
@@ -43,20 +44,16 @@
   // ---- rail -----------------------------------------------------------------------------------
 
   function rail() {
-    const item = (view, label, glyph) => h("button.rail-item", { class: route.view === view ? "on" : "", onclick: () => go(view) },
-      h("span.glyph", glyph), label);
+    const item = (view, label, icon) => h("button.rail-item", {
+      class: route.view === view ? "on" : "", onclick: () => go(view), "aria-label": label,
+    }, TL.icon(icon, 22), h("span", label));
     return h("nav.rail",
-      h("div.brand", h("img.brand-mark", { src: "assets/icon.png", alt: "" }), "Thumb Lab"),
-      item("home", "Projects", "🗂"),
-      item("libraries", "Libraries", "🖼"),
-      item("selftest", "Test checklist", "☑"),
-      item("settings", "Settings", "⚙"),
-      h("div.rail-sect", "Recent"),
-      h("div.rail-recent", TL.state.projects.slice(0, 8).map((p) => h("button.rail-proj", {
-        class: route.projectId === p.id && route.view === "project" ? "on" : "",
-        onclick: () => { if (pad) { pad.close().then(() => nav.openProject(p.id)); pad = null; } else nav.openProject(p.id); },
-        title: p.title,
-      }, p.title))));
+      h("div.rail-brand", h("img.brand-mark", { src: "assets/icon.png", alt: "Thumb Lab" })),
+      item("home", "Projects", "home"),
+      item("libraries", "Library", "library"),
+      item("selftest", "Tester", "checklist"),
+      h("span.spacer"),
+      item("settings", "Settings", "sliders"));
   }
 
   // ---- pages ----------------------------------------------------------------------------------
@@ -76,49 +73,46 @@
 
   function homePage() {
     const projects = TL.state.projects;
+    const count = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
     const cards = projects.map((p) => {
       const cover = p.variants.find((v) => v.pick && v.img) || p.variants.find((v) => v.img);
       return h("div.pcard", { onclick: () => nav.openProject(p.id, "variants") },
-        h("div.pcover", cover ? TL.thumbEl(cover) : h("div.pcover-empty", "No art yet")),
+        h("div.pcover", cover ? TL.thumbEl(cover) : h("div.pcover-empty", TL.icon("image", 28))),
         h("div.pbody",
           h("div.ptitle", p.title),
-          h("div.muted", `${p.niche ? p.niche + " · " : ""}${p.variants.length} version${p.variants.length === 1 ? "" : "s"} · ${p.concepts.length} idea${p.concepts.length === 1 ? "" : "s"}`),
-          h("div.muted.small", `Updated ${TL.timeAgo(new Date(p.updated).toISOString())}`)),
-        h("button.icon-btn.pdel", {
-          title: "Delete project",
-          onclick: async (e) => {
-            e.stopPropagation();
-            if (!(await TL.confirm(`Delete "${p.title}" and everything in it (ideas, sketches, project library)? Your original PSD/CSP files aren't touched.`, "Delete project", true))) return;
-            await TL.deleteProject(p.id); render();
-          },
-        }, "🗑"));
+          h("div.muted.small", [p.niche, count(p.variants.length, "version")].filter(Boolean).join(" · "))),
+        TL.iconBtn("trash", "Delete project", async (e) => {
+          e.stopPropagation();
+          if (!(await TL.confirm(`Delete "${p.title}" and everything in it (ideas, sketches, project library)? Your original PSD/CSP files aren't touched.`, "Delete project", true))) return;
+          await TL.deleteProject(p.id); render();
+        }, { class: "pdel floating danger" }));
     });
+    const create = TL.iconBtn("plus", "New project", newProjectDialog, { kind: "primary", label: "New" });
     return h("div.page",
-      h("div.page-head", h("h1", "Projects"), h("button.btn.primary", { onclick: newProjectDialog }, "+ New project")),
+      h("div.page-head", h("h1", "Projects"), create),
       projects.length
         ? h("div.pgrid", cards)
-        : h("div.empty.big", h("strong", "No projects yet"),
-          h("p", "A project is one video. It holds the ideas, sketches, versions and tests for its thumbnail."),
-          h("button.btn.primary", { onclick: newProjectDialog }, "+ New project")));
+        : h("div.empty.big", TL.icon("home", 32), h("strong", "No projects yet"),
+          h("p", "One project per video: ideas, sketches, versions and tests."),
+          h("div.row.center", TL.iconBtn("plus", "New project", newProjectDialog, { kind: "primary", label: "New project" }))));
   }
 
   function projectPage() {
     const project = TL.getProject(route.projectId);
     if (!project) { route.view = "home"; return homePage(); }
 
-    const head = h("div.proj-head",
-      h("button.btn.ghost", { onclick: () => go("home") }, "← Projects"),
-      h("input.text.title-input", {
-        value: project.title, title: "Video title",
+    const bar = h("div.proj-bar",
+      TL.iconBtn("back", "All projects", () => go("home")),
+      h("input.title-input", {
+        value: project.title, title: "Video title", spellcheck: false,
         oninput: (e) => { project.title = e.target.value; TL.saveProject(project); },
         onchange: () => render(),
       }),
-      h("label.inline", "Niche",
+      h("div.tabs", TABS.map(([key, label, icon]) => h("button.tab", {
+        class: route.tab === key ? "on" : "", onclick: () => nav.setTab(key),
+      }, TL.icon(icon, 16), label))),
+      h("div.niche", { title: "Niche: what the Test tab searches for" }, TL.icon("tag", 16),
         TL.nicheBox({ value: project.niche, group: project.id, onCommit: (v) => { project.niche = v; TL.saveProject(project); render(); } })));
-
-    const tabs = h("div.tabs", TABS.map(([key, label]) => h("button.tab", {
-      class: route.tab === key ? "on" : "", onclick: () => nav.setTab(key),
-    }, label)));
 
     let body;
     if (route.tab === "concepts") body = TL.conceptsView(project, nav);
@@ -129,26 +123,23 @@
       const sources = TL.librarySources(project);
       body = TL.libraryBrowser(sources, { copyTo: sources[0], startKey: "project" });
     }
-    return h("div.page.project", head, tabs, h("div.tab-body", body));
+    return h("div.page.project", bar, h("div.tab-body", body));
   }
 
   function librariesPage() {
     const holder = h("div.page");
     const draw = () => {
       TL.clear(holder);
-      holder.append(h("div.page-head", h("h1", "Libraries"),
-        h("span.muted", "Reusable faces, characters, logos, arrows, backgrounds and screenshots, shared by every project.")));
+      holder.append(h("div.page-head", h("h1", "Library")));
       const sources = TL.state.libraries.map((l) => ({ key: `g:${l.id}`, label: l.name, lib: l }));
       if (!sources.length) {
-        holder.append(h("div.empty.big", h("strong", "No libraries yet"),
-          h("p", "Make one per game or topic, e.g. \"Terraria\". Each project also has its own library for one-off assets."),
-          h("button.btn.primary", {
-            onclick: async () => {
-              const name = await TL.prompt("Name the library", "", "e.g. Terraria");
-              if (!name) return;
-              await TL.createLibrary(name); draw();
-            },
-          }, "+ Create a library")));
+        holder.append(h("div.empty.big", TL.icon("library", 32), h("strong", "No libraries yet"),
+          h("p", "Shared assets for every project. Make one per game or topic, like Terraria."),
+          h("div.row.center", TL.iconBtn("plus", "New library", async () => {
+            const name = await TL.prompt("Name the library", "", "e.g. Terraria");
+            if (!name) return;
+            await TL.createLibrary(name); draw();
+          }, { kind: "primary", label: "New library" }))));
         return;
       }
       holder.append(TL.libraryBrowser(sources, { canCreate: true, onSourcesChanged: () => { if (!TL.state.libraries.length) draw(); } }));

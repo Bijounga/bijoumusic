@@ -12,13 +12,11 @@
       for (const g of TL.TESTLIST) for (const it of g.items) { total++; if (ticks()[it.id]) done++; }
 
       root.append(h("div.selftest-head",
-        h("div", h("h1", "Test checklist"), h("p.muted", "Try each thing, tick it when it works. Your ticks are saved.")),
+        h("div", h("h1", "Tester"), h("p.muted.small", "Try each thing and tick it. Ticks are saved.")),
         h("div.progress-wrap",
           h("div.progress", h("div.progress-bar", { style: { width: `${total ? (done / total) * 100 : 0}%` } })),
           h("strong", `${done} / ${total}`),
-          h("button.btn.small.ghost", {
-            onclick: async () => { if (await TL.confirm("Clear every tick?", "Clear", true)) { TL.state.settings.selfTest = {}; TL.saveSettings(); render(); } },
-          }, "Reset"))));
+          TL.iconBtn("refresh", "Clear every tick", async () => { if (await TL.confirm("Clear every tick?", "Clear", true)) { TL.state.settings.selfTest = {}; TL.saveSettings(); render(); } }))));
 
       for (const g of TL.TESTLIST) {
         const gd = g.items.filter((it) => ticks()[it.id]).length;

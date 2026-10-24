@@ -38,9 +38,9 @@
   };
 
   const SIZES = [
-    ["1280×720 (YouTube standard)", 1280, 720],
+    ["1280×720 (YouTube)", 1280, 720],
     ["1920×1080", 1920, 1080],
-    ["2560×1440 (big, heavier files)", 2560, 1440],
+    ["2560×1440 (large file)", 2560, 1440],
   ];
 
   TL.newSketchDialog = async (project, nav) => {
@@ -119,41 +119,42 @@
   TL.canvasView = (project, nav) => {
     const root = h("div.canvas-tab");
 
+    const doImport = async () => {
+      const paths = await window.host.pickFiles({ title: "Link art files", multi: true });
+      if (paths.length) await TL.importPaths(project, paths);
+    };
+
     function folderPanel() {
       const panel = h("div.panel");
-      panel.append(
-        h("div.panel-head", h("h3", "Folder"),
-          h("span.muted", "Pick a folder and every thumbnail in it shows up here. Click one to add it as a version.")),
-        h("div.row.wrap",
-          h("code.path", project.watchFolder || "No folder chosen"),
-          h("button.btn.small.primary", {
-            onclick: async () => {
-              const dir = await window.host.pickFolder("Choose the folder with your thumbnails");
-              if (!dir) return;
-              project.watchFolder = dir;
-              project.watchSince = Date.now();
-              TL.saveProject(project);
-              TL.inbox = { dir, files: [] };
-              TL.syncWatchers(project);
-              render();
-            },
-          }, project.watchFolder ? "Change…" : "Choose folder…"),
-          project.watchFolder ? h("button.btn.small", { onclick: () => window.host.reveal(project.watchFolder) }, "Open") : null,
-          project.watchFolder ? h("button.btn.small.ghost", {
-            onclick: () => { project.watchFolder = ""; TL.saveProject(project); TL.syncWatchers(project); TL.inbox.files = []; render(); },
-          }, "Stop watching") : null));
+      const chooseFolder = async () => {
+        const dir = await window.host.pickFolder("Choose the folder with your thumbnails");
+        if (!dir) return;
+        project.watchFolder = dir;
+        project.watchSince = Date.now();
+        TL.saveProject(project);
+        TL.inbox = { dir, files: [] };
+        TL.syncWatchers(project);
+        render();
+      };
+      const head = h("div.folder-head",
+        TL.icon("folder", 18),
+        project.watchFolder ? h("code.path", { title: project.watchFolder }, project.watchFolder) : h("span.muted", "Show every thumbnail from a folder"),
+        TL.iconBtn("folderOpen", project.watchFolder ? "Change folder" : "Choose a folder", chooseFolder, project.watchFolder ? { class: "solid" } : { kind: "primary", label: "Choose folder" }));
+      panel.append(head);
       if (!project.watchFolder) return panel;
 
-      const opt = (label, checked, onchange) => h("label.check.inline", h("input", { type: "checkbox", checked, onchange }), h("span", label));
-      panel.append(h("div.row.wrap",
-        opt("Include subfolders", !!project.watchRecursive, (e) => {
-          project.watchRecursive = e.target.checked; TL.saveProject(project); TL.syncWatchers(project); TL.inbox.files = []; render();
-        }),
-        opt("Add new files automatically (only files saved from now on)", !!project.autoAdd, (e) => {
-          project.autoAdd = e.target.checked;
+      head.append(
+        TL.iconBtn("external", "Open the folder", () => window.host.reveal(project.watchFolder), { class: "small" }),
+        TL.iconBtn("x", "Stop watching this folder", () => { project.watchFolder = ""; TL.saveProject(project); TL.syncWatchers(project); TL.inbox.files = []; render(); }, { class: "small" }),
+        h("span.spacer"),
+        TL.iconBtn("tree", "Include subfolders", () => {
+          project.watchRecursive = !project.watchRecursive; TL.saveProject(project); TL.syncWatchers(project); TL.inbox.files = []; render();
+        }, { on: !!project.watchRecursive, toggle: true }),
+        TL.iconBtn("auto", "Add new files automatically (only files saved from now on)", () => {
+          project.autoAdd = !project.autoAdd;
           if (project.autoAdd) project.watchSince = Date.now();
-          TL.saveProject(project);
-        })));
+          TL.saveProject(project); render();
+        }, { on: !!project.autoAdd, toggle: true }));
 
       const files = TL.inbox.files;
       const bySource = new Map(project.variants.filter((v) => v.source).map((v) => [v.source, v]));
@@ -164,16 +165,16 @@
         TL.clear(grid);
         const q = gallery.q.trim().toLowerCase();
         const shown = files.filter((f) => (!q || f.name.toLowerCase().includes(q)) && !(gallery.hideAdded && bySource.has(f.path)));
-        if (!files.length) { grid.append(h("div.muted", "No art files in this folder yet (PSD, CSP, Procreate, PNG, JPG…).")); return; }
-        if (!shown.length) { grid.append(h("div.muted", "Nothing matches.")); return; }
+        if (!files.length) { grid.append(h("div.muted", "No art files here yet (PSD, CSP, Procreate, PNG, JPG)")); return; }
+        if (!shown.length) { grid.append(h("div.muted", "Nothing matches")); return; }
         for (const f of shown) {
           const v = bySource.get(f.path);
           const img = h("img.fx", { alt: "", draggable: false });
           const tile = h("div.ftile", {
-            class: v ? "added" : "", title: v ? `In this project as version ${v.label}` : "Click to add as a version",
+            class: v ? "added" : "", title: v ? `Already in this project as ${v.label}` : "Add as a version",
             onclick: () => { if (!v) TL.importPaths(project, [f.path]); },
           },
-            h("div.thumb", img, h("span.fstate", v ? `✓ ${v.label}` : "+ Add")),
+            h("div.thumb", img, h("span.fstate", v ? TL.icon("check", 14) : TL.icon("plus", 14))),
             h("div.fname", { title: f.path }, f.name),
             h("div.fmeta", h("span.badge", TL.extOf(f.path).toUpperCase()), new Date(f.mtimeMs).toLocaleDateString()));
           tile._file = f;
@@ -183,41 +184,32 @@
       };
 
       panel.append(h("div.row.wrap",
-        h("strong", `${files.length} file${files.length === 1 ? "" : "s"}`),
-        h("span.muted", `${fresh.length} not in this project yet`),
-        h("input.text.small.lib-search", {
-          placeholder: "Filter by name…", value: gallery.q,
-          oninput: (e) => { gallery.q = e.target.value; draw(); },
-        }),
-        opt("Hide ones already added", gallery.hideAdded, (e) => { gallery.hideAdded = e.target.checked; draw(); }),
-        h("button.btn.small", {
-          disabled: !fresh.length,
-          onclick: async () => {
-            if (fresh.length > 8 && !(await TL.confirm(`Add all ${fresh.length} files as versions?`, "Add all"))) return;
-            const added = await TL.importPaths(project, fresh.map((f) => f.path));
-            if (added.length) TL.toast(`Added ${added.length}`);
-          },
-        }, `Add all new (${fresh.length})`)));
+        h("span.muted", `${files.length} file${files.length === 1 ? "" : "s"}${fresh.length ? ` · ${fresh.length} new` : ""}`),
+        h("span.spacer"),
+        h("label.fld", TL.icon("search", 14),
+          h("input.text.small", { placeholder: "Filter", value: gallery.q, oninput: (e) => { gallery.q = e.target.value; draw(); } })),
+        TL.iconBtn("eyeOff", "Hide the ones already added", (e) => { gallery.hideAdded = !gallery.hideAdded; e.currentTarget.classList.toggle("on", gallery.hideAdded); draw(); }, { on: gallery.hideAdded, toggle: true }),
+        TL.iconBtn("plus", `Add all ${fresh.length} new files as versions`, async () => {
+          if (fresh.length > 8 && !(await TL.confirm(`Add all ${fresh.length} files as versions?`, "Add all"))) return;
+          const added = await TL.importPaths(project, fresh.map((f) => f.path));
+          if (added.length) TL.toast(`Added ${added.length}`);
+        }, { class: "solid", label: fresh.length ? `Add ${fresh.length}` : "", disabled: !fresh.length })));
       panel.append(grid);
       draw();
       return panel;
     }
 
-    const doImport = async () => {
-      const paths = await window.host.pickFiles({ title: "Link art files", multi: true });
-      if (paths.length) await TL.importPaths(project, paths);
-    };
-
     const render = () => {
       TL.clear(root);
 
       const drop = h("div.dropzone", { tabIndex: 0 },
-        h("div.drop-title", "Drop PSD, CSP, Procreate or image files here"),
-        h("div.muted", "They stay linked: save in the other app and the preview here updates by itself."),
+        TL.icon("tray", 28),
+        h("div.drop-title", "Drop art here"),
+        h("div.muted.small", "PSD, CSP, Procreate, PNG, JPG. Linked files update when you save them."),
         h("div.row.center",
-          h("button.btn.primary", { onclick: doImport }, "Link files…"),
-          h("button.btn", { onclick: () => TL.pasteImageAsVariant(project) }, "Paste image"),
-          h("button.btn", { onclick: () => TL.newSketchDialog(project, nav) }, "✎ New sketch")));
+          TL.iconBtn("link", "Link art files", doImport, { kind: "primary", label: "Link files" }),
+          TL.iconBtn("paste", "Paste an image from the clipboard", () => TL.pasteImageAsVariant(project), { class: "solid", label: "Paste" }),
+          TL.iconBtn("sketch", "Start a new sketch", () => TL.newSketchDialog(project, nav), { class: "solid", label: "Sketch" })));
       drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
       drop.addEventListener("dragleave", () => drop.classList.remove("over"));
       drop.addEventListener("drop", async (e) => {
@@ -228,11 +220,10 @@
 
       const inbox = folderPanel();
 
-      // --- Linked sources
       const sources = project.variants.filter((v) => v.source || v.kind === "sketch");
-      const list = h("div.panel",
-        h("div.panel-head", h("h3", "Linked art"), h("span.muted", `${sources.length} file${sources.length === 1 ? "" : "s"}`)),
-        sources.length ? h("div.source-list", sources.map((v) => sourceRow(v))) : h("div.muted", "Nothing linked yet."));
+      const list = sources.length ? h("div.panel",
+        h("div.panel-head", TL.icon("link", 16), h("h3", "Linked art"), h("span.muted", String(sources.length))),
+        h("div.source-list", sources.map((v) => sourceRow(v)))) : null;
 
       root.append(drop, inbox, list);
     };
@@ -242,14 +233,14 @@
       h("div.source-main",
         h("div.source-name", h("span.label-pill", v.label), " ", v.name,
           h("span.badge", v.kind === "sketch" ? "SKETCH" : (v.type || "").toUpperCase())),
-        h("code.path", v.source || "(pasted image)"),
+        h("code.path", { title: v.source }, v.source || "(pasted image)"),
         v.warning ? h("div.warn", v.warning) : null,
         v.error ? h("div.warn", v.error) : null),
       h("div.source-actions",
-        v.kind === "sketch" ? h("button.btn.small.primary", { onclick: () => nav.openSketch(project, v) }, "Open sketch pad") : null,
-        v.source ? h("button.btn.small", { onclick: async () => { const err = await window.host.openPath(v.source); if (err) TL.toast(err, "bad"); } }, "Open in app") : null,
-        v.source ? h("button.btn.small", { onclick: () => TL.refreshVariant(project, v).then(() => TL.toast("Refreshed")).catch((e) => TL.toast(e.message, "bad")) }, "Refresh") : null,
-        v.source ? h("button.btn.small.ghost", { onclick: () => window.host.reveal(v.source) }, "Show") : null));
+        v.kind === "sketch" ? TL.iconBtn("sketch", "Open the sketch pad", () => nav.openSketch(project, v), { kind: "primary" }) : null,
+        v.source ? TL.iconBtn("external", "Open in its app", async () => { const err = await window.host.openPath(v.source); if (err) TL.toast(err, "bad"); }) : null,
+        v.source ? TL.iconBtn("refresh", "Re-read the file now", () => TL.refreshVariant(project, v).then(() => TL.toast("Refreshed")).catch((e) => TL.toast(e.message, "bad"))) : null,
+        v.source ? TL.iconBtn("folder", "Show in its folder", () => window.host.reveal(v.source)) : null));
 
     render();
     const offs = ["variants-changed", "variant-updated", "inbox-changed"].map((n) => TL.on(n, () => {

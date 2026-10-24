@@ -29,35 +29,28 @@
 
   fx.toggle = (name) => { fx[name] = !fx[name]; fx.apply(); };
 
-  /** A toolbar with the three toggles and the strength slider. Stays in sync across views. */
+  /** Three icon toggles (blur, grayscale, squint) and a strength slider that shows only while one needs it. */
   TL.fxBar = () => {
     const bar = h("div.fxbar");
-    const render = () => {
-      TL.clear(bar);
-      const btn = (key, label, tip) => h("button.chip", {
-        class: fx[key] ? "on" : "", title: tip, "aria-pressed": fx[key],
-        onclick: () => fx.toggle(key),
-      }, label);
-      bar.append(
-        h("span.fxlabel", "Tests"),
-        btn("blur", "Blur", "Blur it heavily: do the big shapes still read? (Alt+B)"),
-        btn("gray", "Grayscale", "Drop the colour: is there still value separation? (Alt+G)"),
-        btn("squint", "Squint", "Less detail and contrast: does the focal point survive? (Alt+S)"),
-        h("label.fxamount", { title: "Blur strength" },
-          "Strength",
-          h("input", {
-            type: "range", min: "0.8", max: "6", step: "0.1", value: String(fx.amount),
-            oninput: (e) => { fx.amount = parseFloat(e.target.value); fx.apply(); },
-          })));
+    const keys = ["blur", "gray", "squint"];
+    const spec = {
+      blur: ["blur", "Blur: do the big shapes still read? (Alt+B)"],
+      gray: ["contrast", "Grayscale: is there still value separation? (Alt+G)"],
+      squint: ["squint", "Squint: less detail and contrast, does the focal point survive? (Alt+S)"],
     };
-    render();
-    const off = TL.on("fx-changed", () => {
-      if (!bar.isConnected) { off(); return; }
-      // Re-render only the pressed state; don't rebuild while dragging the slider.
-      TL.$$(".chip", bar).forEach((c, i) => c.classList.toggle("on", fx[["blur", "gray", "squint"][i]]));
-      const slider = TL.$("input", bar);
-      if (slider && document.activeElement !== slider) slider.value = String(fx.amount);
+    const btns = keys.map((k) => TL.iconBtn(spec[k][0], spec[k][1], () => fx.toggle(k), { toggle: true, on: fx[k] }));
+    const slider = h("input.mini", {
+      type: "range", min: "0.8", max: "6", step: "0.1", value: String(fx.amount), title: "Blur strength",
+      oninput: (e) => { fx.amount = parseFloat(e.target.value); fx.apply(); },
     });
+    bar.append(...btns, slider);
+    const sync = () => {
+      btns.forEach((b, i) => { b.classList.toggle("on", fx[keys[i]]); b.setAttribute("aria-pressed", String(fx[keys[i]])); });
+      slider.hidden = !(fx.blur || fx.squint);
+      if (document.activeElement !== slider) slider.value = String(fx.amount);
+    };
+    sync();
+    const off = TL.on("fx-changed", () => { if (!bar.isConnected) { off(); return; } sync(); });
     return bar;
   };
 

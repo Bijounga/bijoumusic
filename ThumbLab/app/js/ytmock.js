@@ -8,10 +8,11 @@
   const { h } = TL;
 
   const LAYOUTS = {
-    home: { label: "Home feed", width: 1280, count: 12 },
-    search: { label: "Search results", width: 1100, count: 6 },
-    watch: { label: "Watch page sidebar", width: 1280, count: 10 },
-    mobile: { label: "Phone", width: 390, count: 6 },
+    // counts: how many videos the page shows at each "Videos" setting (rows of the feed)
+    home: { label: "Home feed", width: 1280, counts: [12, 24, 36, 48] },
+    search: { label: "Search results", width: 1100, counts: [6, 12, 18, 24] },
+    watch: { label: "Watch page sidebar", width: 1280, counts: [10, 20, 30, 40] },
+    mobile: { label: "Phone", width: 390, counts: [6, 12, 18, 24] },
   };
 
   const liveCache = new Map(); // "niche|order" -> { videos, at, cached }
@@ -86,6 +87,7 @@
     let token = 0;
 
     const channelName = () => TL.state.settings.channelName || "Your Channel";
+    const countOf = () => LAYOUTS[t.layout].counts[TL.clamp((t.sample || 1) - 1, 0, 3)];
 
     const variantsToShow = () => {
       const all = project.variants.filter((v) => v.img);
@@ -96,17 +98,18 @@
     };
 
     // ---- competition source
-    async function loadFeed() {
+    async function loadFeed(force) {
       const my = ++token;
-      const lay = LAYOUTS[t.layout];
-      const need = lay.count + 6;
+      const need = countOf() + 6;
       let items = null, note = "", live = false;
       const wantLive = t.source !== "placeholder" && TL.state.hasKey;
       if (wantLive) {
         try {
-          const key = `${project.niche}|${t.order}`;
+          // One YouTube search page is 50 videos; big feeds fetch a second page.
+          const pages = need > 36 ? 2 : 1;
+          const key = `${project.niche}|${t.order}|${pages}`;
           let res = liveCache.get(key);
-          if (!res) { res = await window.host.ytNiche({ query: project.niche, order: t.order }); liveCache.set(key, res); }
+          if (!res) { res = await window.host.ytNiche({ query: project.niche, order: t.order, pages, force: !!force }); liveCache.set(key, res); }
           if (my !== token) return;
           const rnd = TL.rng(t.seed);
           // Shorts show as a narrow strip inside a 16:9 box and can run up to 3 minutes.
@@ -115,6 +118,7 @@
           items = pool.slice(0, need).map((v) => ({ ...v, ago: TL.timeAgo(v.published) }));
           live = true;
           note = `Real YouTube videos for "${project.niche}"${res.cached ? " (saved copy, under 24 hours old)" : ""}.`;
+          if (items.length < countOf()) note += ` Only ${items.length} real videos were available, so some repeat. Turn off Hide Shorts or pick a broader niche for more.`;
         } catch (e) {
           note = `${e.message} Showing placeholders instead.`;
         }
@@ -142,7 +146,7 @@
       for (let i = 0; i < count; i++) {
         const mi = i - start;
         if (mi >= 0 && mi < mine.length) slots.push(mine[mi]);
-        else slots.push(others[oi++] || others[0]);
+        else slots.push(others[oi++ % others.length]);
       }
       return slots;
     }
@@ -161,7 +165,7 @@
     function renderPage() {
       TL.clear(holder);
       const lay = LAYOUTS[t.layout];
-      const items = composeList(lay.count);
+      const items = composeList(countOf());
       const opts = { duration: t.duration };
       const chips = ["All", project.niche, "Live", "Recently uploaded", "Watched"];
 
@@ -225,7 +229,7 @@
               onclick: () => { t.showAll = !t.showAll; TL.saveProject(project); renderControls(); renderPage(); },
             }, "All") : null,
           ]),
-          sel(Object.entries(LAYOUTS).map(([k, l]) => [k, l.label]), t.layout, (v) => { t.layout = v; TL.saveProject(project); renderPage(); loadFeed(); }),
+          sel(Object.entries(LAYOUTS).map(([k, l]) => [k, l.label]), t.layout, (v) => { t.layout = v; TL.saveProject(project); renderControls(); renderPage(); loadFeed(); }),
           h("button.btn.small", { onclick: () => { t.dark = !t.dark; TL.saveProject(project); renderPage(); } }, t.dark ? "☾ Dark" : "☀ Light"),
           h("label.inline", "Niche",
             h("select.select", {
@@ -240,14 +244,26 @@
             }, [...niches.map((n) => h("option", { value: n, selected: n === project.niche }, n)), h("option", { value: "__custom" }, "Custom search…")])),
           h("label.inline", "Position",
             h("input.text.tiny", {
-              type: "number", min: "1", max: String(LAYOUTS[t.layout].count), value: String(t.slot),
-              onchange: (e) => { t.slot = TL.clamp(parseInt(e.target.value, 10) || 1, 1, LAYOUTS[t.layout].count); TL.saveProject(project); renderPage(); },
+              type: "number", min: "1", max: String(countOf()), value: String(t.slot),
+              onchange: (e) => { t.slot = TL.clamp(parseInt(e.target.value, 10) || 1, 1, countOf()); TL.saveProject(project); renderPage(); },
             })),
-          h("button.btn.small", { title: "Pull a different set of videos around yours", onclick: () => { t.seed = Math.floor(Math.random() * 1e6); TL.saveProject(project); loadFeed(); } }, "⟳ Shuffle"),
+          h("label.inline", { title: "How many videos are on the page around yours" }, "Videos",
+            h("select.select", {
+              onchange: (e) => { t.sample = parseInt(e.target.value, 10); t.slot = TL.clamp(t.slot, 1, countOf()); TL.saveProject(project); renderControls(); loadFeed(); },
+            }, LAYOUTS[t.layout].counts.map((n, i) => h("option", { value: i + 1, selected: (t.sample || 1) === i + 1 }, String(n))))),
+          h("button.btn.small", {
+            title: "A different set of videos around yours, and a different spot for yours",
+            onclick: () => {
+              t.seed = Math.floor(Math.random() * 1e6);
+              const room = Math.max(1, countOf() - variantsToShow().length + 1);
+              t.slot = 1 + Math.floor(Math.random() * room);
+              TL.saveProject(project); renderControls(); loadFeed();
+            },
+          }, "⟳ Shuffle"),
           h("button.btn.small", {
             title: "Fetch fresh results from YouTube",
             disabled: !TL.state.hasKey,
-            onclick: () => { liveCache.clear(); window.host.ytNiche({ query: project.niche, order: t.order, force: true }).then((r) => { liveCache.set(`${project.niche}|${t.order}`, r); loadFeed(); }).catch((e) => TL.toast(e.message, "bad")); },
+            onclick: () => { liveCache.clear(); loadFeed(true); },
           }, "Refresh live"),
           sel([["relevance", "Relevant"], ["viewCount", "Most viewed"], ["date", "Newest"]], t.order, (v) => { t.order = v; TL.saveProject(project); loadFeed(); })),
         h("div.row.wrap",

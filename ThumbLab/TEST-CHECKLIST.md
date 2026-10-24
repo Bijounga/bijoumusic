@@ -1,7 +1,7 @@
 # Thumb Lab: tester's checklist
 
 Tick items off as you try them. The same list is in the app under **Test checklist**, where ticks are remembered.
-124 things to check.
+126 things to check.
 
 
 ## Getting started
@@ -79,7 +79,9 @@ Tick items off as you try them. The same list is in the app under **Test checkli
 - [ ] Version buttons (A, B, C) swap which one is in the feed; ← → keys cycle them
 - [ ] "All" puts every version in the feed next to each other
 - [ ] Mark mine highlights yours so you can find it
-- [ ] Shuffle gives a different set of surrounding videos
+- [ ] Shuffle gives a different set of surrounding videos and moves your thumbnail to a random position
+- [ ] Videos box sets how many videos are on the page (e.g. 12 / 24 / 36 / 48 on the home feed); the options change per layout
+- [ ] With a big feed and an API key, the app fetches a second page of real results so the feed isn't full of repeats
 - [ ] Fit to window / Real size changes the page scale
 - [ ] Without an API key: loud placeholder thumbnails fill the feed and a note says so
 - [ ] Choose a different niche and the surrounding titles change

@@ -451,22 +451,39 @@ ipcMain.handle("yt:test", async () => {
   return true;
 });
 
-ipcMain.handle("yt:niche", async (_e, { query, order, force }) => {
+ipcMain.handle("yt:niche", async (_e, { query, order, force, pages }) => {
   const q = String(query || "").trim();
   if (!q) throw new Error("Pick a niche or type a search first.");
+  const wantPages = Math.min(3, Math.max(1, parseInt(pages, 10) || 1));
   const hash = crypto.createHash("sha1").update(`${q}|${order}`).digest("hex").slice(0, 16);
   const cacheFile = path.join(dirs.cache, `yt-${hash}.json`);
   const cached = readJson(cacheFile, null);
-  if (cached && !force && Date.now() - cached.at < 24 * 3600 * 1000) return { videos: cached.videos, cached: true, at: cached.at };
+  // A saved copy only counts if it already holds enough result pages.
+  if (cached && !force && (cached.pages || 1) >= wantPages && Date.now() - cached.at < 24 * 3600 * 1000) {
+    return { videos: cached.videos, cached: true, at: cached.at };
+  }
 
-  const search = await ytGet("search", {
-    part: "snippet", type: "video", maxResults: "50", q, order: order || "relevance", videoEmbeddable: "any",
-  });
-  const ids = (search.items || []).map((i) => i.id && i.id.videoId).filter(Boolean);
-  const details = ids.length
-    ? await ytGet("videos", { part: "statistics,contentDetails", id: ids.join(",") })
-    : { items: [] };
-  const byId = new Map((details.items || []).map((v) => [v.id, v]));
+  // Each search page is up to 50 videos (100 quota units each).
+  const found = [];
+  let pageToken;
+  for (let n = 0; n < wantPages; n++) {
+    const page = await ytGet("search", {
+      part: "snippet", type: "video", maxResults: "50", q, order: order || "relevance", videoEmbeddable: "any",
+      ...(pageToken ? { pageToken } : {}),
+    });
+    found.push(...(page.items || []));
+    pageToken = page.nextPageToken;
+    if (!pageToken) break;
+  }
+  const seen = new Set();
+  const search = { items: found.filter((i) => i.id && i.id.videoId && !seen.has(i.id.videoId) && seen.add(i.id.videoId)) };
+  const ids = search.items.map((i) => i.id.videoId);
+  const detailItems = [];
+  for (let i = 0; i < ids.length; i += 50) {
+    const d = await ytGet("videos", { part: "statistics,contentDetails", id: ids.slice(i, i + 50).join(",") });
+    detailItems.push(...(d.items || []));
+  }
+  const byId = new Map(detailItems.map((v) => [v.id, v]));
   const videos = (search.items || []).filter((i) => i.id && i.id.videoId).map((i) => {
     const d = byId.get(i.id.videoId);
     return {
@@ -480,6 +497,6 @@ ipcMain.handle("yt:niche", async (_e, { query, order, force }) => {
     };
   });
   ensure(dirs.cache);
-  writeJson(cacheFile, { at: Date.now(), query: q, order, videos });
+  writeJson(cacheFile, { at: Date.now(), query: q, order, pages: wantPages, videos });
   return { videos, cached: false, at: Date.now() };
 });

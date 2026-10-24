@@ -82,6 +82,13 @@
     drag: '<path d="M5 9h14M5 15h14"/>',
     channel: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    bucket: '<path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0z"/><path d="m5 2 5 5M2 13h15"/><path d="M22 20a2 2 0 1 1-4 0c0-1.6 1.7-2.4 2-4 .3 1.6 2 2.4 2 4z"/>',
+    select: '<rect x="4" y="4" width="16" height="16" rx="1" stroke-dasharray="3 3"/>',
+    lasso: '<path d="M7 20c-2.5-1-4-3-4-6 0-4.5 4.5-8 10-8s8 2.5 8 5.5-3.5 5-8 5c-1.2 0-2.3-.1-3.3-.4"/><path d="M7 20c.8 1.3.5 2.5-1 3"/>',
+    rotateView: '<path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/>',
+    transform: '<rect x="6" y="6" width="12" height="12"/><path d="M3 3h4v4H3zM17 3h4v4h-4zM3 17h4v4H3zM17 17h4v4h-4z"/>',
+    swap: '<path d="M3 7h14l-4-4M21 17H7l4 4"/>',
+    keys: '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
     menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
     play: '<path d="M7 4v16l13-8z"/>',
   };

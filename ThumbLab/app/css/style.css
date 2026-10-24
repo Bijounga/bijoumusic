@@ -332,3 +332,11 @@ details.more summary { cursor: pointer; }
 
 .warnicon { color: var(--warn); }
 .warn-slot { display: inline-flex; }
+
+/* The interface is not text to select (Ctrl+A or a stray drag used to highlight everything). Fields still are. */
+body { -webkit-user-select: none; user-select: none; }
+input, textarea, select, code.path, .selectable { -webkit-user-select: text; user-select: text; }
+.keylist { display: grid; grid-template-columns: 1fr; gap: 2px; }
+.keyrow { display: grid; grid-template-columns: 190px 1fr; gap: 12px; align-items: baseline; padding: 4px 0; border-bottom: 1px solid var(--line); }
+.keyrow:last-child { border-bottom: 0; }
+kbd { font-family: Consolas, monospace; font-size: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 1px 7px; color: var(--accent-hi); justify-self: start; }

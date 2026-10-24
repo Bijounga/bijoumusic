@@ -8,8 +8,8 @@
 .sk-side.right { border-left-width: 1px; width: 250px; }
 .sk-center { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .sk-viewport { position: relative; flex: 1; min-height: 0; overflow: hidden; background: #0e1218; touch-action: none; user-select: none; outline: none; }
-.sk-stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; container-type: inline-size; box-shadow: 0 8px 36px #000c; overflow: hidden; }
-.sk-fxlayer { position: absolute; inset: 0; filter: var(--fx-filter, none); }
+.sk-stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; container-type: inline-size; box-shadow: 0 8px 36px #000c; }
+.sk-fxlayer { position: absolute; inset: 0; filter: var(--fx-filter, none); clip-path: inset(0); }
 .sk-mirror { position: absolute; inset: 0; }
 .sk-paper { position: absolute; inset: 0; background: #fff; }
 .sk-layer, .sk-buffer { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -25,12 +25,11 @@
 .sk-sect-head { display: flex; align-items: center; gap: 2px; margin: 14px 0 6px; }
 .sk-sect-head:first-child { margin-top: 0; }
 .sk-sect-head strong { font-size: 12px; color: var(--muted); font-weight: 650; }
-.sk-tool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
-.sk-tool { display: grid; place-items: center; height: 44px; background: var(--raised); border: 1px solid transparent; border-radius: var(--r-md); color: var(--muted); transition: background .12s var(--ease), color .12s var(--ease); }
+.sk-tool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.sk-tool { display: grid; place-items: center; height: 38px; background: var(--raised); border: 1px solid transparent; border-radius: var(--r-md); color: var(--muted); transition: background .12s var(--ease), color .12s var(--ease); }
 .sk-tool:hover { color: var(--text); background: var(--hover); }
 .sk-tool.on { background: var(--accent); color: var(--accent-ink); }
 .sk-color { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; }
-.sk-color input[type="color"] { width: 40px; height: 40px; padding: 0; border: 1px solid var(--line); border-radius: var(--r-md); background: none; flex: none; }
 .sk-swatches { display: flex; flex-wrap: wrap; gap: 4px; }
 .sk-swatch { width: 18px; height: 18px; border-radius: 5px; border: 1px solid #ffffff33; padding: 0; }
 .sk-swatch.on { outline: 2px solid #fff; outline-offset: 1px; }
@@ -53,3 +52,22 @@
 .drag-chip:hover { border-color: var(--accent); color: var(--text); }
 
 .sk-options { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+
+/* selection outline + transform handles live in doc coordinates; --inv keeps them the same size on screen */
+.sk-overlay { position: absolute; inset: 0; pointer-events: none; }
+.sk-ants { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.sk-ants path { fill: none; vector-effect: non-scaling-stroke; }
+.sk-ants .a-under { stroke: #000; stroke-width: 1.5; }
+.sk-ants .a-over { stroke: #fff; stroke-width: 1.5; stroke-dasharray: 5 5; animation: ants .6s linear infinite; }
+@keyframes ants { to { stroke-dashoffset: -10; } }
+.sk-tf { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.tf-box { position: absolute; border: calc(1.5px * var(--inv, 1)) solid var(--accent); }
+.tf-h { position: absolute; width: calc(11px * var(--inv, 1)); height: calc(11px * var(--inv, 1)); transform: translate(-50%, -50%); background: #fff; border: calc(1.5px * var(--inv, 1)) solid var(--accent); border-radius: calc(2px * var(--inv, 1)); }
+.tf-rot { position: absolute; width: calc(13px * var(--inv, 1)); height: calc(13px * var(--inv, 1)); transform: translate(-50%, -50%); background: var(--accent); border: calc(1.5px * var(--inv, 1)) solid #fff; border-radius: 50%; }
+.tf-line { position: absolute; width: calc(1.5px * var(--inv, 1)); background: var(--accent); transform: translateX(-50%); }
+
+.sk-colorwell { position: relative; width: 50px; height: 50px; flex: none; }
+.sk-colorwell input[type="color"] { position: absolute; width: 32px; height: 32px; padding: 0; border: 2px solid var(--line); border-radius: var(--r-md); background: none; }
+.sk-colorwell .cw-fg { left: 0; top: 0; z-index: 2; }
+.sk-colorwell .cw-bg { right: 0; bottom: 0; }
+.sk-colorwell .cw-swap { position: absolute; right: -2px; top: -4px; z-index: 3; min-width: 20px; height: 20px; padding: 0; }

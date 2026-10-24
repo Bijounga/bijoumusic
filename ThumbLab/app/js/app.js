@@ -202,6 +202,10 @@
     TL.handleInbox(p);
   });
 
+  window.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a" && !["INPUT", "TEXTAREA"].includes(e.target.tagName)) e.preventDefault();
+  });
+
   // Ctrl+V on the Canvas / Variants tabs pastes a screenshot or copied image as a new version.
   window.addEventListener("keydown", (e) => {
     if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "v") return;

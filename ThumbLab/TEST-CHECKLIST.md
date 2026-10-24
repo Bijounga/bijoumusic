@@ -1,7 +1,7 @@
 # Thumb Lab: tester's checklist
 
 Tick items off as you try them. The same list is in the app under **Test checklist**, where ticks are remembered.
-135 things to check.
+148 things to check.
 
 
 ## Getting started
@@ -141,8 +141,24 @@ Tick items off as you try them. The same list is in the app under **Test checkli
 - [ ] Colour well, swatches and recent colours work
 - [ ] Ctrl+Z / Ctrl+Y undo and redo strokes (up to 40)
 - [ ] Space+drag and middle-drag pan; mouse wheel zooms; the Fit and 100% icons in the top bar
-- [ ] Mirror view flips the picture for checking; Guides shows thirds, margin and the time-stamp zone
+- [ ] Mirror view (H) flips the picture for checking; Guides shows thirds, margin and the time-stamp zone
 - [ ] Ctrl+Shift+D shows a pen debug readout (type, pressure) at the bottom
+
+## Sketch pad: selections, rotate and shortcuts
+
+- [ ] Ctrl+A in the pad selects the whole canvas (a marching outline appears) and never highlights the interface text; Delete clears it; Ctrl+Z brings it back
+- [ ] Rectangle select (M) and lasso (L) make a selection; clicking once without dragging deselects; Ctrl+D or Esc deselects
+- [ ] Painting, erasing and the bucket stay inside a selection
+- [ ] Ctrl+I inverts the selection; Delete then clears everything outside it
+- [ ] Hold R and drag around the canvas to rotate the view; Shift snaps to 15 degrees; letting go of R returns to your tool; drawing while rotated lands under the pen
+- [ ] Ctrl+0 fits the canvas and straightens the view; the Rotate view tool button does the same as holding R
+- [ ] Move (V) drags the selected pixels, or the whole layer when nothing is selected; arrow keys nudge 1px (Shift: 10px) and a run of nudges is one undo
+- [ ] Ctrl+T transform: drag corners to scale, side handles to stretch, the round handle to rotate; Enter applies, Esc cancels; clicking elsewhere does nothing
+- [ ] Ctrl+C, Ctrl+X and Ctrl+V work on a selection (pasting puts it back where it came from, on its own layer); with no selection Ctrl+C copies the whole picture
+- [ ] Paint bucket (F) fills an area; Tolerance and "Look at every layer" change what it fills; Alt+Backspace fills a selection with the colour, Ctrl+Backspace with the background colour
+- [ ] X swaps the colour and background colour; the swap arrows next to the colour squares do the same
+- [ ] The keyboard icon in the top bar (or ?) lists every shortcut
+- [ ] The window can be resized or maximized and the canvas stays fitted (until you zoom or pan by hand)
 
 ## Sketch pad: layers
 

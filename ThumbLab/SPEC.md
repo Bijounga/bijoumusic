@@ -75,3 +75,7 @@ Matches the other Bijou apps (Doodle Pad, BijouMusic, BijouDocs): blue-black sur
 - Controls are drawn line icons (`app/js/icons.js`, one stroke weight on a 24px grid) with a quick tooltip on hover. Words are kept for headings, primary actions (e.g. New, Send, Add) and anything a tooltip can't carry.
 - The left bar is four icons with labels: Projects, Library, Tester, Settings. Inside a project one bar holds back, title, the five tabs and the niche.
 - Secondary options sit behind a disclosure (the sketch pad's "Pressure and feel", most checklist groups) so the first screen stays quiet.
+
+## Sketch pad editing (from Doodle Pad)
+
+Rectangle and lasso selections (Ctrl+A, Ctrl+D, Ctrl+I, Delete), painting/erasing/bucket clipped to the selection, copy/cut/paste, Move and arrow-key nudging, Ctrl+T transform (scale, stretch, rotate), paint bucket (tolerance, optional all-layer sampling), a background colour with X to swap, and a rotatable view (hold R and drag, Shift snaps to 15°; Ctrl+0 straightens). Press ? in the pad for every shortcut. The interface text is not selectable.

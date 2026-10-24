@@ -73,6 +73,7 @@ function createWindow() {
     minHeight: 640,
     backgroundColor: "#12121a",
     title: "Thumb Lab",
+    icon: path.join(__dirname, "app", "assets", "icon.png"),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),

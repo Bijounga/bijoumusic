@@ -46,7 +46,7 @@
     const item = (view, label, glyph) => h("button.rail-item", { class: route.view === view ? "on" : "", onclick: () => go(view) },
       h("span.glyph", glyph), label);
     return h("nav.rail",
-      h("div.brand", h("span.brand-mark", "▣"), "Thumb Lab"),
+      h("div.brand", h("img.brand-mark", { src: "assets/icon.png", alt: "" }), "Thumb Lab"),
       item("home", "Projects", "🗂"),
       item("libraries", "Libraries", "🖼"),
       item("selftest", "Test checklist", "☑"),

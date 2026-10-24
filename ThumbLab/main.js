@@ -131,9 +131,11 @@ ipcMain.handle("store:load", () => {
   return { dataDir: DATA, settings: publicSettings, hasKey: !!ytKeyEnc, projects, libraries };
 });
 
-ipcMain.handle("store:saveSettings", (_e, patch) => {
+// The page always sends its whole settings object, so replace (a merge would bring back deleted keys,
+// like an unlinked channel). Only the encrypted key lives outside what the page sees.
+ipcMain.handle("store:saveSettings", (_e, settings) => {
   const cur = loadSettings();
-  writeJson(SETTINGS_FILE, { ...cur, ...patch, ytKeyEnc: cur.ytKeyEnc });
+  writeJson(SETTINGS_FILE, { ...settings, ytKeyEnc: cur.ytKeyEnc });
   return true;
 });
 
@@ -450,6 +452,52 @@ function isoDuration(iso) {
 ipcMain.handle("yt:test", async () => {
   await ytGet("videos", { part: "id", chart: "mostPopular", maxResults: "1" });
   return true;
+});
+
+/** A channel by handle (or channel URL): name, avatar and its latest uploads, all public data. */
+ipcMain.handle("yt:channel", async (_e, { handle, force }) => {
+  let h = String(handle || "").trim();
+  const fromUrl = /youtube\.com\/(@[^/?#\s]+)/i.exec(h);
+  if (fromUrl) h = fromUrl[1];
+  h = h.replace(/^@+/, "");
+  if (!h) throw new Error("Type your channel handle, like @yourname.");
+  const hash = crypto.createHash("sha1").update(`channel|${h.toLowerCase()}`).digest("hex").slice(0, 16);
+  const cacheFile = path.join(dirs.cache, `yt-ch-${hash}.json`);
+  const cached = readJson(cacheFile, null);
+  if (cached && !force && Date.now() - cached.at < 6 * 3600 * 1000) return { ...cached, cached: true };
+
+  const ch = await ytGet("channels", { part: "snippet,contentDetails", forHandle: `@${h}` });
+  const item = ch.items && ch.items[0];
+  if (!item) throw new Error(`No channel found for @${h}. Check the handle.`);
+  const thumbs = item.snippet.thumbnails || {};
+  const channel = {
+    id: item.id, handle: `@${h}`, title: item.snippet.title,
+    avatar: (thumbs.medium || thumbs.default || thumbs.high || {}).url || "",
+  };
+  const uploads = item.contentDetails && item.contentDetails.relatedPlaylists && item.contentDetails.relatedPlaylists.uploads;
+  let videos = [];
+  if (uploads) {
+    const list = await ytGet("playlistItems", { part: "snippet,contentDetails", playlistId: uploads, maxResults: "30" });
+    const entries = (list.items || []).filter((i) => i.contentDetails && i.contentDetails.videoId);
+    const ids = entries.map((i) => i.contentDetails.videoId);
+    const details = ids.length ? await ytGet("videos", { part: "statistics,contentDetails", id: ids.join(",") }) : { items: [] };
+    const byId = new Map((details.items || []).map((v) => [v.id, v]));
+    videos = entries.map((i) => {
+      const id = i.contentDetails.videoId;
+      const d = byId.get(id);
+      return {
+        id, title: i.snippet.title, channel: channel.title, own: true, avatar: channel.avatar,
+        thumb: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`,
+        published: i.contentDetails.videoPublishedAt || i.snippet.publishedAt,
+        views: d && d.statistics ? parseInt(d.statistics.viewCount || "0", 10) : 0,
+        duration: d && d.contentDetails ? isoDuration(d.contentDetails.duration) : "",
+      };
+    });
+  }
+  const out = { at: Date.now(), channel, videos };
+  ensure(dirs.cache);
+  writeJson(cacheFile, out);
+  return { ...out, cached: false };
 });
 
 ipcMain.handle("yt:niche", async (_e, { query, order, force, pages }) => {

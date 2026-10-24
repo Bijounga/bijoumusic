@@ -327,3 +327,5 @@ details.more summary { cursor: pointer; }
 .concept-input { min-height: 38px; }
 /* empty states span the whole grid */
 .lib-grid > .empty, .fgrid > .muted { grid-column: 1 / -1; }
+
+.chan-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex: none; }

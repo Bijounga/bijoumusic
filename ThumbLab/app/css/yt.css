@@ -60,3 +60,5 @@
 .yt-search { align-items: center; }
 .yt-play { display: inline-flex; color: rgba(255,255,255,.5); }
 .yt-play .ico { fill: currentColor; stroke: none; }
+
+img.yt-avatar { object-fit: cover; background: var(--yt-chip); }

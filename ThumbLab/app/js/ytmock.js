@@ -23,7 +23,8 @@
     return text.split(":").reduce((n, part) => n * 60 + (parseInt(part, 10) || 0), 0);
   }
 
-  function avatar(name) {
+  function avatar(name, url) {
+    if (url) return h("img.yt-avatar", { src: url, alt: "" });
     const hue = [...name].reduce((n, c) => n + c.charCodeAt(0) * 7, 0) % 360;
     return h("span.yt-avatar", { style: { background: `hsl(${hue} 55% 45%)` } }, name.trim()[0] || "?");
   }
@@ -46,7 +47,7 @@
   function homeItem(item, opts) {
     return h("div.yt-item.home",
       thumbBox(item, opts),
-      h("div.yt-row", avatar(item.channel),
+      h("div.yt-row", avatar(item.channel, item.avatar),
         h("div.yt-text", h("div.yt-title", item.title), h("div.yt-sub", item.channel), h("div.yt-sub", stats(item)))));
   }
 
@@ -56,7 +57,7 @@
       h("div.yt-text",
         h("div.yt-title.big", item.title),
         h("div.yt-sub", stats(item)),
-        h("div.yt-row.tight", avatar(item.channel), h("span.yt-sub", item.channel)),
+        h("div.yt-row.tight", avatar(item.channel, item.avatar), h("span.yt-sub", item.channel)),
         h("div.yt-sub.dim", "A short description of the video appears here, giving a little more context about what you'll watch…")));
   }
 
@@ -69,7 +70,7 @@
   function mobileItem(item, opts) {
     return h("div.yt-item.mobile",
       thumbBox(item, opts),
-      h("div.yt-row", avatar(item.channel),
+      h("div.yt-row", avatar(item.channel, item.avatar),
         h("div.yt-text", h("div.yt-title", item.title), h("div.yt-sub", `${item.channel} · ${TL.fmtViews(item.views)} views · ${item.ago}`))));
   }
 
@@ -86,7 +87,9 @@
     let feed = { items: [], live: false, note: "" };
     let token = 0;
 
-    const channelName = () => TL.state.settings.channelName || "Your Channel";
+    const linked = () => TL.state.settings.channel || null;
+    const channelName = () => (linked() && linked().title) || TL.state.settings.channelName || "Your Channel";
+    const channelAvatar = () => (linked() && linked().avatar) || "";
     const countOf = () => LAYOUTS[t.layout].counts[TL.clamp((t.sample || 1) - 1, 0, 3)];
 
     const variantsToShow = () => {
@@ -101,7 +104,7 @@
     async function loadFeed(force) {
       const my = ++token;
       const need = countOf() + 6;
-      let items = null, note = "", live = false;
+      let items = null, note = "", live = false, ownCount = 0, ownNote = "";
       const niche = (project.niche || "").trim();
       const wantLive = t.source !== "placeholder" && TL.state.hasKey && !!niche;
       if (wantLive) {
@@ -118,8 +121,29 @@
           for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
           items = pool.slice(0, need).map((v) => ({ ...v, ago: TL.timeAgo(v.published) }));
           live = true;
+          // Your own latest uploads, mixed in, so a new thumbnail is judged against your usual ones too.
+          if (linked() && t.mixMine !== false) {
+            try {
+              const ckey = `channel|${linked().handle}`;
+              let own = liveCache.get(ckey);
+              if (!own) { own = await window.host.ytChannel({ handle: linked().handle, force: !!force }); liveCache.set(ckey, own); }
+              if (my !== token) return;
+              const mineVideos = own.videos.filter((v) => !t.hideShorts || seconds(v.duration) > 180);
+              const n = Math.min(mineVideos.length, Math.max(3, Math.round(countOf() * 0.25)));
+              if (n) {
+                // Shuffle yours in among the videos that are actually on the page; the rest wait as spares.
+                const shown = Math.max(0, countOf() - n);
+                const visible = [...items.slice(0, shown), ...mineVideos.slice(0, n).map((v) => ({ ...v, ago: TL.timeAgo(v.published) }))];
+                for (let i = visible.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [visible[i], visible[j]] = [visible[j], visible[i]]; }
+                items = [...visible, ...items.slice(shown)];
+                ownCount = n;
+              }
+            } catch (e) { ownNote = ` Your uploads could not be added: ${e.message}`; }
+          }
           note = `Real YouTube videos for "${project.niche}"${res.cached ? " (saved copy, under 24 hours old)" : ""}.`;
+          if (ownCount) note += ` Includes your ${ownCount} latest upload${ownCount === 1 ? "" : "s"}.`;
           if (items.length < countOf()) note += ` Only ${items.length} real videos were available, so some repeat. Turn off Hide Shorts or pick a broader niche for more.`;
+          note += ownNote;
         } catch (e) {
           note = `${e.message} Showing placeholders instead.`;
         }
@@ -140,7 +164,7 @@
     function composeList(count) {
       const mine = variantsToShow().map((v) => ({
         id: `mine-${v.id}`, mine: true, label: v.label, thumb: TL.imgUrl(v.img, v.rev),
-        title: v.title || project.title, channel: channelName(), views: 1200, ago: "Just now", duration: t.durationText || "12:34",
+        title: v.title || project.title, channel: channelName(), avatar: channelAvatar(), views: 1200, ago: "Just now", duration: t.durationText || "12:34",
       }));
       const others = feed.items.slice();
       const slots = [];
@@ -176,7 +200,7 @@
         h("span.yt-burger", TL.icon("menu", 20)),
         h("span.yt-brand", TL.icon("play", 18), "Feed preview"),
         h("span.yt-search", h("span", "Search"), TL.icon("search", 16)),
-        h("span.yt-me", avatar(channelName())));
+        h("span.yt-me", avatar(channelName(), channelAvatar())));
       const chipRow = h("div.yt-chips", chips.map((c, i) => h("span.yt-chip", { class: i === 0 ? "active" : "" }, c)));
 
       let body;
@@ -190,7 +214,7 @@
           h("div.yt-player-col",
             h("div.yt-player", h("span.yt-play", TL.icon("play", 64))),
             h("div.yt-title.big", (main && (main.title || project.title)) || project.title),
-            h("div.yt-row", avatar(channelName()), h("div.yt-text", h("div.yt-title.small", channelName()), h("div.yt-sub", "12K subscribers")))),
+            h("div.yt-row", avatar(channelName(), channelAvatar()), h("div.yt-text", h("div.yt-title.small", channelName()), h("div.yt-sub", "12K subscribers")))),
           h("div.yt-side-col", items.map((it, i) => wrapMine(sideItem(it, opts), it, i))));
       } else {
         body = h("div.yt-mobile-list", items.map((it, i) => wrapMine(mobileItem(it, opts), it, i)));
@@ -267,6 +291,8 @@
             toggle("clock", "Duration badge on thumbnails", !!t.duration, () => { t.duration = !t.duration; save(); renderControls(); renderPage(); }),
             toggle("flag", "Mark mine: outline your thumbnail", !!t.highlight, () => { t.highlight = !t.highlight; save(); renderControls(); renderPage(); }),
             toggle(t.zoom === "real" ? "zoom100" : "fit", t.zoom === "real" ? "Real size (click to fit the window)" : "Fit to window (click for real size)", t.zoom === "real", () => { t.zoom = t.zoom === "real" ? "fit" : "real"; save(); renderControls(); renderPage(); }),
+            toggle("channel", linked() ? "Mix in your latest uploads" : "Link your channel in Settings to mix in your uploads", !!linked() && t.mixMine !== false,
+              () => { t.mixMine = t.mixMine === false; save(); renderControls(); loadFeed(); }, !linked()),
             toggle("globe", TL.state.hasKey ? "Real YouTube videos (off: placeholders)" : "Real videos need a YouTube API key in Settings", t.source !== "placeholder" && TL.state.hasKey,
               () => { t.source = t.source === "placeholder" ? "auto" : "placeholder"; save(); renderControls(); loadFeed(); }, !TL.state.hasKey)),
           h("span.spacer"),

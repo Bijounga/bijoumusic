@@ -41,7 +41,9 @@ The only tool that combines, per video: written ideas, sketches pulled live from
 - Global libraries (e.g. one per game) plus a per-project library; items drag out into other apps.
 - Shared checklists (Readability, Story, Composition, editable) plus per-thumbnail checks.
 - Constraints: Windows, local files only, no accounts or cloud. The YouTube API has a daily quota, so results are cached for a day. YouTube does not expose a person's personalised home feed, so "your own feed" cannot be shown.
-- Undecided: analytics or click-through tracking; linking the user's own channel by handle; signing in with Google for subscriptions.
+- Wanted: link the user's own channel by handle (public data through the same API key), so their name, avatar and recent uploads appear in the simulated feed.
+- Not wanted: click-through or performance tracking; YouTube Studio already does it.
+- Undecided, low priority: signing in with Google to bring in subscriptions.
 
 ## Brand Commitments
 
@@ -51,7 +53,7 @@ The only tool that combines, per video: written ideas, sketches pulled live from
 ## Evidence on Hand
 
 - Real PSD and CSP files from the user's own thumbnail work were used to verify previews.
-- No click-through or performance data exists in the product; do not invent any.
+- No click-through or performance data exists in the product, and none is planned; do not invent any.
 - No YouTube API key is stored in the repository; real competition data only appears when the user adds one in Settings.
 
 ## Product Principles

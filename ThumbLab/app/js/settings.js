@@ -9,6 +9,48 @@
     const section = (icon, title, ...kids) => h("div.panel",
       h("div.panel-head", TL.icon(icon, 16), h("h3", title)), kids);
 
+    /** Link by @handle (public data through the API key), or just set a display name. */
+    const channelBody = () => {
+      const note = h("div.muted.small");
+      if (s.channel) {
+        const c = s.channel;
+        const refresh = async () => {
+          try {
+            const r = await window.host.ytChannel({ handle: c.handle, force: true });
+            s.channel = { ...r.channel, uploads: r.videos.length };
+            TL.saveSettings(); TL.toast("Channel refreshed"); render();
+          } catch (e) { note.textContent = e.message; note.className = "warn"; }
+        };
+        return [
+          h("div.row",
+            c.avatar ? h("img.chan-avatar", { src: c.avatar, alt: "" }) : TL.icon("channel", 24),
+            h("div.grow", h("strong", c.title), " ", h("span.muted", c.handle),
+              h("div.muted.small", `${c.uploads || 0} recent uploads in the Test feed`)),
+            TL.iconBtn("refresh", "Re-read the channel from YouTube", refresh, { class: "solid", disabled: !TL.state.hasKey }),
+            TL.iconBtn("x", "Unlink this channel", () => { delete s.channel; TL.saveSettings(); render(); }, { class: "danger" })),
+          note,
+        ];
+      }
+      const handle = h("input.text", { placeholder: "@yourhandle", spellcheck: false });
+      const link = async () => {
+        note.className = "muted small"; note.textContent = "Looking it up…";
+        try {
+          const r = await window.host.ytChannel({ handle: handle.value });
+          s.channel = { ...r.channel, uploads: r.videos.length };
+          TL.saveSettings(); TL.toast(`Linked ${r.channel.title}`); render();
+        } catch (e) { note.textContent = e.message; note.className = "warn"; }
+      };
+      handle.addEventListener("keydown", (e) => { if (e.key === "Enter") link(); });
+      return [
+        h("div.row", handle,
+          TL.iconBtn("link", TL.state.hasKey ? "Link this channel" : "Add your YouTube API key first", link, { kind: "primary", label: "Link", disabled: !TL.state.hasKey })),
+        h("div.muted.small", "Your name, avatar and latest uploads then show in the Test feed. Public data only."),
+        note,
+        h("details.more", h("summary", "Or just set a name"),
+          h("input.text", { value: s.channelName || "", placeholder: "Channel name shown on your thumbnail", oninput: (e) => { s.channelName = e.target.value; TL.saveSettings(); } })),
+      ];
+    };
+
     const render = () => {
       TL.clear(root);
       const keyInput = h("input.text", { type: "password", placeholder: TL.state.hasKey ? "Key saved. Paste a new one to replace it" : "YouTube Data API key", autocomplete: "off" });
@@ -38,8 +80,7 @@
               h("li", "Enable YouTube Data API v3 (APIs & Services, Library)."),
               h("li", "Create an API key (Credentials, Create credentials). Restrict it to YouTube Data API v3."),
               h("li", "Paste it here. Searches are saved for a day, so the free quota lasts.")))),
-        section("monitor", "Your channel",
-          h("input.text", { value: s.channelName || "", placeholder: "Channel name shown on your thumbnail in the feed", oninput: (e) => { s.channelName = e.target.value; TL.saveSettings(); } })),
+        section("channel", "Your channel", channelBody()),
         section("send", "Handoff folder",
           h("div.row", h("code.path", s.handoffFolder || "Not set"),
             TL.iconBtn("folderOpen", "Choose the handoff folder", async () => { const d = await window.host.pickFolder("Choose the handoff folder"); if (d) { s.handoffFolder = d; TL.saveSettings(); render(); } }, { class: "solid" })),

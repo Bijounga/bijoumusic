@@ -1,7 +1,7 @@
 # Thumb Lab: tester's checklist
 
 Tick items off as you try them. The same list is in the app under **Test checklist**, where ticks are remembered.
-127 things to check.
+131 things to check.
 
 
 ## Getting started
@@ -165,7 +165,11 @@ Tick items off as you try them. The same list is in the app under **Test checkli
 
 ## Settings and misc
 
-- [ ] Settings: channel name appears in the Test feed on your thumbnail
+- [ ] Settings > Your channel: type your @handle and Link; your name, avatar and the number of recent uploads appear (needs the API key)
+- [ ] With a channel linked, your name and avatar show on your thumbnail in the Test feed, and your latest uploads are mixed in among the real videos
+- [ ] The person icon on the Test toolbar turns mixing in your uploads on and off
+- [ ] Unlink (x) removes the channel and it stays gone after restarting; the refresh icon re-reads it
+- [ ] Without linking, "Or just set a name" still puts your channel name on your thumbnail
 - [ ] Settings: Edit shared checklist opens the editor
 - [ ] This checklist page: ticking an item is remembered after restarting; the refresh icon clears them
 - [ ] No error toasts appear during normal use

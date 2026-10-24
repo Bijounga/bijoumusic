@@ -80,6 +80,7 @@
     save: '<path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',
     sparkle: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>',
     drag: '<path d="M5 9h14M5 15h14"/>',
+    channel: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
     play: '<path d="M7 4v16l13-8z"/>',
   };

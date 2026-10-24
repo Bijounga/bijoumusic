@@ -48,6 +48,7 @@ contextBridge.exposeInMainWorld("host", {
   ytSetKey: call("yt:setKey"),
   ytTest: call("yt:test"),
   ytNiche: call("yt:niche"),
+  ytChannel: call("yt:channel"),
 
   // Dropped File objects no longer carry a .path; this recovers it.
   pathForFile: (file) => webUtils.getPathForFile(file),

@@ -86,6 +86,7 @@
       "\"Test key\" reports success (or a clear error if the key is wrong)",
       "With a key, the Test tab shows real thumbnails, titles, channels and view counts for the niche",
       "Source and order (Relevant / Most viewed / Newest) change the results",
+      "Hide Shorts (on by default) removes videos of 3 minutes or less from the real feed",
       "Refresh live fetches fresh results; reopening within a day reuses the saved copy",
       "Remove key goes back to placeholders",
     ]],

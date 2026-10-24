@@ -59,7 +59,7 @@
     concepts: [], variants: [], library: { items: [] }, watchFolder: "", autoAdd: false, watchSince: 0, dismissed: [],
     test: {}, ...p,
     library: { items: [], ...(p.library || {}) },
-    test: { layout: "home", dark: true, slot: 2, seed: 1, source: "auto", order: "relevance", showAll: false, duration: true, ...(p.test || {}) },
+    test: { layout: "home", dark: true, slot: 2, seed: 1, source: "auto", order: "relevance", showAll: false, duration: true, hideShorts: true, ...(p.test || {}) },
   });
 
   // ---- settings ------------------------------------------------------------------

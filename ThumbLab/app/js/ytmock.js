@@ -16,6 +16,12 @@
 
   const liveCache = new Map(); // "niche|order" -> { videos, at, cached }
 
+  /** "12:34" or "1:02:03" -> seconds (0 if unknown). */
+  function seconds(text) {
+    if (!text) return 0;
+    return text.split(":").reduce((n, part) => n * 60 + (parseInt(part, 10) || 0), 0);
+  }
+
   function avatar(name) {
     const hue = [...name].reduce((n, c) => n + c.charCodeAt(0) * 7, 0) % 360;
     return h("span.yt-avatar", { style: { background: `hsl(${hue} 55% 45%)` } }, name.trim()[0] || "?");
@@ -103,7 +109,8 @@
           if (!res) { res = await window.host.ytNiche({ query: project.niche, order: t.order }); liveCache.set(key, res); }
           if (my !== token) return;
           const rnd = TL.rng(t.seed);
-          const pool = res.videos.slice();
+          // Shorts show as a narrow strip inside a 16:9 box and can run up to 3 minutes.
+          const pool = res.videos.filter((v) => !t.hideShorts || seconds(v.duration) > 180);
           for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
           items = pool.slice(0, need).map((v) => ({ ...v, ago: TL.timeAgo(v.published) }));
           live = true;
@@ -245,6 +252,8 @@
           sel([["relevance", "Relevant"], ["viewCount", "Most viewed"], ["date", "Newest"]], t.order, (v) => { t.order = v; TL.saveProject(project); loadFeed(); })),
         h("div.row.wrap",
           TL.fxBar(),
+          h("label.check.inline", { title: "Leave out videos of 3 minutes or less (Shorts) from the real feed" },
+            h("input", { type: "checkbox", checked: !!t.hideShorts, onchange: (e) => { t.hideShorts = e.target.checked; TL.saveProject(project); loadFeed(); } }), h("span", "Hide Shorts")),
           h("label.check.inline", h("input", { type: "checkbox", checked: t.duration, onchange: (e) => { t.duration = e.target.checked; TL.saveProject(project); renderPage(); } }), h("span", "Duration badge")),
           h("label.check.inline", h("input", { type: "checkbox", checked: !!t.highlight, onchange: (e) => { t.highlight = e.target.checked; TL.saveProject(project); renderPage(); } }), h("span", "Mark mine")),
           sel([["fit", "Fit to window"], ["real", "Real size"]], t.zoom || "fit", (v) => { t.zoom = v; TL.saveProject(project); renderPage(); }),

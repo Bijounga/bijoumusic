@@ -25,11 +25,6 @@
     ] },
   ].map((g) => ({ id: g.id, name: g.name, items: g.items.map((text, i) => ({ id: `${g.id}-${i}`, text })) }));
 
-  const NICHES = [
-    "Gaming", "Minecraft", "Terraria", "Tech reviews", "Commentary", "Vlog", "Animation",
-    "Drawing and art", "Video editing", "Education", "Music", "Cooking", "Fitness", "Horror stories",
-  ];
-
   const state = {
     dataDir: "",
     settings: {},
@@ -38,7 +33,6 @@
     libraries: [],
   };
   TL.state = state;
-  TL.NICHES = NICHES;
 
   // ---- loading -------------------------------------------------------------------
 
@@ -49,13 +43,14 @@
     state.settings = data.settings || {};
     if (!state.settings.checklists) state.settings.checklists = DEFAULT_CHECKLISTS;
     if (!state.settings.selfTest) state.settings.selfTest = {};
+    if (!state.settings.niches) state.settings.niches = []; // the niche presets: yours to add and remove
     state.projects = data.projects.map(TL.normalizeProject);
     state.libraries = data.libraries.map((l) => ({ ...l, items: l.items || [] }));
     state.projects.sort((a, b) => (b.updated || 0) - (a.updated || 0));
   };
 
   TL.normalizeProject = (p) => ({
-    title: "Untitled", niche: "Gaming", created: Date.now(), updated: Date.now(),
+    title: "Untitled", niche: "", created: Date.now(), updated: Date.now(),
     concepts: [], variants: [], library: { items: [] }, watchFolder: "", autoAdd: false, watchSince: 0, dismissed: [],
     test: {}, ...p,
     library: { items: [], ...(p.library || {}) },
@@ -87,7 +82,7 @@
   TL.getProject = (id) => state.projects.find((p) => p.id === id);
 
   TL.createProject = async (title, niche) => {
-    const p = TL.normalizeProject({ id: uid(), title: title || "Untitled video", niche: niche || "Gaming" });
+    const p = TL.normalizeProject({ id: uid(), title: title || "Untitled video", niche: niche || "" });
     p.test.seed = Math.floor(Math.random() * 1e6);
     state.projects.unshift(p);
     await TL.saveProjectNow(p);

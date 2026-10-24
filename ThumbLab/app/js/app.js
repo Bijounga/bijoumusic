@@ -63,14 +63,14 @@
 
   async function newProjectDialog() {
     const title = h("input.text", { placeholder: "Video title" });
-    const niche = h("select.select", TL.NICHES.map((n) => h("option", { value: n }, n)));
+    const niche = TL.nicheBox({ value: "" });
     const ok = await TL.modal({
       title: "New project",
       body: h("div.form", h("label", "What's the video called?", title), h("label", "Niche (used to pick similar videos for the Test tab)", niche)),
       buttons: [{ label: "Cancel", value: false }, { label: "Create", kind: "primary", value: true }],
     });
     if (!ok) return;
-    const p = await TL.createProject(title.value.trim() || "Untitled video", niche.value);
+    const p = await TL.createProject(title.value.trim() || "Untitled video", niche.getValue());
     nav.openProject(p.id, "concepts");
   }
 
@@ -82,7 +82,7 @@
         h("div.pcover", cover ? TL.thumbEl(cover) : h("div.pcover-empty", "No art yet")),
         h("div.pbody",
           h("div.ptitle", p.title),
-          h("div.muted", `${p.niche} · ${p.variants.length} version${p.variants.length === 1 ? "" : "s"} · ${p.concepts.length} idea${p.concepts.length === 1 ? "" : "s"}`),
+          h("div.muted", `${p.niche ? p.niche + " · " : ""}${p.variants.length} version${p.variants.length === 1 ? "" : "s"} · ${p.concepts.length} idea${p.concepts.length === 1 ? "" : "s"}`),
           h("div.muted.small", `Updated ${TL.timeAgo(new Date(p.updated).toISOString())}`)),
         h("button.icon-btn.pdel", {
           title: "Delete project",
@@ -106,7 +106,6 @@
     const project = TL.getProject(route.projectId);
     if (!project) { route.view = "home"; return homePage(); }
 
-    const niches = TL.NICHES.includes(project.niche) ? TL.NICHES : [project.niche, ...TL.NICHES];
     const head = h("div.proj-head",
       h("button.btn.ghost", { onclick: () => go("home") }, "← Projects"),
       h("input.text.title-input", {
@@ -115,16 +114,7 @@
         onchange: () => render(),
       }),
       h("label.inline", "Niche",
-        h("select.select", {
-          onchange: async (e) => {
-            let v = e.target.value;
-            if (v === "__custom") {
-              v = await TL.prompt("Search terms for the niche", project.niche, "e.g. terraria calamity boss guide");
-              if (!v) { render(); return; }
-            }
-            project.niche = v; TL.saveProject(project); render();
-          },
-        }, [...niches.map((n) => h("option", { value: n, selected: n === project.niche }, n)), h("option", { value: "__custom" }, "Custom search…")])));
+        TL.nicheBox({ value: project.niche, group: project.id, onCommit: (v) => { project.niche = v; TL.saveProject(project); render(); } })));
 
     const tabs = h("div.tabs", TABS.map(([key, label]) => h("button.tab", {
       class: route.tab === key ? "on" : "", onclick: () => nav.setTab(key),

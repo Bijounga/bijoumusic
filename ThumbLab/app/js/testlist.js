@@ -79,8 +79,8 @@
       "With a big feed and an API key, the app fetches a second page of real results so the feed isn't full of repeats",
       "Fit to window / Real size changes the page scale",
       "Without an API key: loud placeholder thumbnails fill the feed and a note says so",
-      "Choose a different niche and the surrounding titles change",
-      "Custom search… lets you type your own niche terms",
+      "Niche: click the box and type straight away; Enter applies it and the surrounding titles change",
+      "☆ next to the Niche box saves what you typed as a preset; saved presets show as suggestions while you type, and × on one removes it",
       "Blur / Grayscale / Squint apply to the whole page, including your thumbnail",
     ]],
     ["Test: real YouTube videos (needs an API key)", [

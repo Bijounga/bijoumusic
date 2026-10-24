@@ -102,7 +102,8 @@
       const my = ++token;
       const need = countOf() + 6;
       let items = null, note = "", live = false;
-      const wantLive = t.source !== "placeholder" && TL.state.hasKey;
+      const niche = (project.niche || "").trim();
+      const wantLive = t.source !== "placeholder" && TL.state.hasKey && !!niche;
       if (wantLive) {
         try {
           // One YouTube search page is 50 videos; big feeds fetch a second page.
@@ -122,12 +123,14 @@
         } catch (e) {
           note = `${e.message} Showing placeholders instead.`;
         }
+      } else if (t.source !== "placeholder" && TL.state.hasKey && !niche) {
+        note = "Placeholder feed. Type a niche above to compare against real videos for it.";
       } else if (t.source !== "placeholder") {
         note = "Placeholder feed. Add a YouTube API key in Settings to compare against real videos in this niche.";
       } else {
         note = "Placeholder feed (chosen).";
       }
-      if (!items) items = TL.fakeFeed(project.niche, t.seed, need);
+      if (!items) items = TL.fakeFeed(niche || "General", t.seed, need);
       if (my !== token) return;
       feed = { items, live, note };
       renderPage();
@@ -167,7 +170,7 @@
       const lay = LAYOUTS[t.layout];
       const items = composeList(countOf());
       const opts = { duration: t.duration };
-      const chips = ["All", project.niche, "Live", "Recently uploaded", "Watched"];
+      const chips = ["All", project.niche || "General", "Live", "Recently uploaded", "Watched"];
 
       const header = h("div.yt-header",
         h("span.yt-burger", "☰"),
@@ -214,7 +217,6 @@
       const vs = project.variants.filter((v) => v.img);
       const sel = (opts, value, on) => h("select.select", { onchange: (e) => on(e.target.value) },
         opts.map(([v, l]) => h("option", { value: v, selected: v === value }, l)));
-      const niches = TL.NICHES.includes(project.niche) ? TL.NICHES : [project.niche, ...TL.NICHES];
 
       controls.append(
         h("div.row.wrap",
@@ -232,16 +234,7 @@
           sel(Object.entries(LAYOUTS).map(([k, l]) => [k, l.label]), t.layout, (v) => { t.layout = v; TL.saveProject(project); renderControls(); renderPage(); loadFeed(); }),
           h("button.btn.small", { onclick: () => { t.dark = !t.dark; TL.saveProject(project); renderPage(); } }, t.dark ? "☾ Dark" : "☀ Light"),
           h("label.inline", "Niche",
-            h("select.select", {
-              onchange: async (e) => {
-                let val = e.target.value;
-                if (val === "__custom") {
-                  val = await TL.prompt("Search terms for the niche", project.niche, "e.g. terraria calamity boss guide");
-                  if (!val) { renderControls(); return; }
-                }
-                project.niche = val; TL.saveProject(project); renderControls(); loadFeed();
-              },
-            }, [...niches.map((n) => h("option", { value: n, selected: n === project.niche }, n)), h("option", { value: "__custom" }, "Custom search…")])),
+            TL.nicheBox({ value: project.niche, group: project.id, onCommit: (val) => { project.niche = val; TL.saveProject(project); renderControls(); loadFeed(); } })),
           h("label.inline", "Position",
             h("input.text.tiny", {
               type: "number", min: "1", max: String(countOf()), value: String(t.slot),

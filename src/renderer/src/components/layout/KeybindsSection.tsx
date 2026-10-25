@@ -3,6 +3,7 @@ import type { FolderNode } from '../../lib/folderTree'
 import { flattenFolderTree } from '../../lib/folderTree'
 import { useKeybindStore, type CustomKeybindAction } from '../../state/keybindStore'
 import { useTagStore } from '../../state/tagStore'
+import { useProjectStore } from '../../state/projectStore'
 import styles from './KeybindsSection.module.css'
 
 const FIXED_KEYBINDS: { label: string; keys: string[] }[] = [
@@ -28,12 +29,14 @@ const ACTION_LABELS: Record<CustomKeybindAction, string> = {
   openDownloadModal: 'Open download to library',
   setPreviewStart: 'Set in point (preview start)',
   setPreviewEnd: 'Set out point (preview end)',
-  toggleDrawRange: 'Toggle draw-range mode'
+  toggleDrawRange: 'Toggle draw-range mode',
+  addToProject: 'Add current track to a project…'
 }
 
 // Actions that need an extra picker step before capturing the key.
 const ACTIONS_NEEDING_FOLDER: CustomKeybindAction[] = ['jumpToFolder']
 const ACTIONS_NEEDING_TAG: CustomKeybindAction[] = ['applyTag']
+const ACTIONS_NEEDING_PROJECT: CustomKeybindAction[] = ['addToProject']
 
 function displayKey(code: string): string {
   // KeyboardEvent.code values like "Digit1"/"KeyH" aren't great to show as-is.
@@ -42,7 +45,7 @@ function displayKey(code: string): string {
   return code
 }
 
-type WizardStep = 'idle' | 'chooseAction' | 'chooseFolder' | 'chooseTag' | 'awaitingKey'
+type WizardStep = 'idle' | 'chooseAction' | 'chooseFolder' | 'chooseTag' | 'chooseProject' | 'awaitingKey'
 
 function KeybindsSection({ folderTree }: { folderTree: FolderNode[] }): React.JSX.Element {
   const binds = useKeybindStore((s) => s.binds)
@@ -51,6 +54,7 @@ function KeybindsSection({ folderTree }: { folderTree: FolderNode[] }): React.JS
   const rebindKey = useKeybindStore((s) => s.rebindKey)
   const setCapturingKeybind = useKeybindStore((s) => s.setCapturingKeybind)
   const tags = useTagStore((s) => s.tags)
+  const projects = useProjectStore((s) => s.projects)
 
   const [step, setStep] = useState<WizardStep>('idle')
   const [pendingAction, setPendingAction] = useState<CustomKeybindAction | null>(null)
@@ -60,6 +64,7 @@ function KeybindsSection({ folderTree }: { folderTree: FolderNode[] }): React.JS
     label: string
   } | null>(null)
   const [pendingTag, setPendingTag] = useState<{ id: number; name: string } | null>(null)
+  const [pendingProject, setPendingProject] = useState<{ id: number; name: string } | null>(null)
   const [folderQuery, setFolderQuery] = useState('')
   const [tagQuery, setTagQuery] = useState('')
   const [rebindingId, setRebindingId] = useState<string | null>(null)
@@ -115,7 +120,14 @@ function KeybindsSection({ folderTree }: { folderTree: FolderNode[] }): React.JS
           label: `Apply "${pendingTag.name}"`,
           tagId: pendingTag.id
         })
-      } else if (pendingAction && ACTIONS_NEEDING_FOLDER.indexOf(pendingAction) === -1 && ACTIONS_NEEDING_TAG.indexOf(pendingAction) === -1) {
+      } else if (pendingAction === 'addToProject' && pendingProject) {
+        addBind({
+          key: event.code,
+          action: 'addToProject',
+          label: `Add to "${pendingProject.name}"`,
+          projectId: pendingProject.id
+        })
+      } else if (pendingAction && ACTIONS_NEEDING_FOLDER.indexOf(pendingAction) === -1 && ACTIONS_NEEDING_TAG.indexOf(pendingAction) === -1 && ACTIONS_NEEDING_PROJECT.indexOf(pendingAction) === -1) {
         addBind({ key: event.code, action: pendingAction, label: ACTION_LABELS[pendingAction] })
       }
       resetWizard()
@@ -124,13 +136,14 @@ function KeybindsSection({ folderTree }: { folderTree: FolderNode[] }): React.JS
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [awaitingKey, rebindingId, pendingAction, pendingFolder, pendingTag])
+  }, [awaitingKey, rebindingId, pendingAction, pendingFolder, pendingTag, pendingProject])
 
   function resetWizard(): void {
     setStep('idle')
     setPendingAction(null)
     setPendingFolder(null)
     setPendingTag(null)
+    setPendingProject(null)
     setFolderQuery('')
     setTagQuery('')
     setRebindingId(null)
@@ -196,6 +209,7 @@ function KeybindsSection({ folderTree }: { folderTree: FolderNode[] }): React.JS
                   setPendingAction(action)
                   if (ACTIONS_NEEDING_FOLDER.indexOf(action) !== -1) setStep('chooseFolder')
                   else if (ACTIONS_NEEDING_TAG.indexOf(action) !== -1) setStep('chooseTag')
+                  else if (ACTIONS_NEEDING_PROJECT.indexOf(action) !== -1) setStep('chooseProject')
                   else setStep('awaitingKey')
                 }}
               >
@@ -272,12 +286,38 @@ function KeybindsSection({ folderTree }: { folderTree: FolderNode[] }): React.JS
         </div>
       )}
 
+      {step === 'chooseProject' && (
+        <div className={styles.wizard}>
+          <p className={styles.wizardStepLabel}>Which project?</p>
+          <div className={styles.folderResults}>
+            {projects.length === 0 && <p className={styles.wizardStepLabel}>No projects yet</p>}
+            {projects.map((p) => (
+              <div
+                key={p.id}
+                className={styles.folderOption}
+                title={p.name}
+                onClick={() => {
+                  setPendingProject({ id: p.id, name: p.name })
+                  setStep('awaitingKey')
+                }}
+              >
+                {p.name}
+              </div>
+            ))}
+          </div>
+          <button className={styles.cancelBtn} onClick={resetWizard}>
+            Cancel
+          </button>
+        </div>
+      )}
+
       {step === 'awaitingKey' && (
         <div className={styles.wizard}>
           <p className={styles.awaitingKeyPrompt}>
             Press a key to bind
             {pendingFolder ? ` → ${pendingFolder.label}` : ''}
-            {pendingTag ? ` → ${pendingTag.name}` : ''}…
+            {pendingTag ? ` → ${pendingTag.name}` : ''}
+            {pendingProject ? ` → ${pendingProject.name}` : ''}…
           </p>
           <button className={styles.cancelBtn} onClick={resetWizard}>
             Cancel

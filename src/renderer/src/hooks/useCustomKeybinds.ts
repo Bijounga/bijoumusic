@@ -9,6 +9,7 @@ import { useTagStore } from '../state/tagStore'
 import { usePreviewClipStore } from '../state/previewClipStore'
 import { useShuffleStore } from '../state/shuffleStore'
 import { useAutoplayStore } from '../state/autoplayStore'
+import { useProjectStore } from '../state/projectStore'
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false
@@ -43,6 +44,7 @@ export function useCustomKeybinds(visibleTracks: Track[]): void {
   const toggleDrawingRange = usePreviewClipStore((s) => s.toggleDrawingRange)
   const toggleShuffleMode = useShuffleStore((s) => s.toggle)
   const toggleAutoplay = useAutoplayStore((s) => s.toggle)
+  const addTrackToProject = useProjectStore((s) => s.addTrackToProject)
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent): void {
@@ -65,6 +67,11 @@ export function useCustomKeybinds(visibleTracks: Track[]): void {
         requestOpenAliasEditor()
       } else if (bind.action === 'applyTag' && bind.tagId !== undefined) {
         if (currentTrack) void addTrackTag(currentTrack.id, bind.tagId)
+      } else if (bind.action === 'addToProject' && bind.projectId !== undefined) {
+        // Adds (never removes), so pressing it twice is harmless.
+        if (currentTrack && useProjectStore.getState().projects.some((p) => p.id === bind.projectId)) {
+          void addTrackToProject(bind.projectId, currentTrack.id)
+        }
       } else if (bind.action === 'clearTrackTags') {
         if (currentTrack) {
           for (const tagId of trackTags.get(currentTrack.id) ?? []) void removeTrackTag(currentTrack.id, tagId)
@@ -119,6 +126,7 @@ export function useCustomKeybinds(visibleTracks: Track[]): void {
     removeTrackTag,
     toggleDrawingRange,
     toggleShuffleMode,
-    toggleAutoplay
+    toggleAutoplay,
+    addTrackToProject
   ])
 }

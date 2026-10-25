@@ -15,6 +15,7 @@ export type CustomKeybindAction =
   | 'setPreviewStart'
   | 'setPreviewEnd'
   | 'toggleDrawRange'
+  | 'addToProject'
 
 export interface CustomKeybind {
   id: string
@@ -24,6 +25,7 @@ export interface CustomKeybind {
   folderLibraryRootId?: number
   folderRelativePath?: string
   tagId?: number
+  projectId?: number
 }
 
 const STORAGE_KEY = 'bijoumusic:custom-keybinds'

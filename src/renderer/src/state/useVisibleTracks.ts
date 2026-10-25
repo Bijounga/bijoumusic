@@ -23,7 +23,7 @@ export function useVisibleTracks(): Track[] {
   const selectedFolder = useFilterStore((s) => s.selectedFolder)
   const selectedTagIds = useFilterStore((s) => s.selectedTagIds)
   const selectedFavoriteLevel = useFilterStore((s) => s.selectedFavoriteLevel)
-  const selectedEnergyLevel = useFilterStore((s) => s.selectedEnergyLevel)
+  const selectedEnergyLevels = useFilterStore((s) => s.selectedEnergyLevels)
   const searchQuery = useFilterStore((s) => s.searchQuery)
   const trackTags = useTagStore((s) => s.trackTags)
   const tagNamesById = useTagStore((s) => s.tags)
@@ -91,8 +91,11 @@ export function useVisibleTracks(): Track[] {
         result = result.filter((t) => ratings.get(t.id)?.favoriteLevel === selectedFavoriteLevel)
       }
 
-      if (selectedEnergyLevel !== null) {
-        result = result.filter((t) => ratings.get(t.id)?.energyLevel === selectedEnergyLevel)
+      if (selectedEnergyLevels.length > 0) {
+        result = result.filter((t) => {
+          const level = ratings.get(t.id)?.energyLevel
+          return level != null && selectedEnergyLevels.includes(level)
+        })
       }
 
       // Recently Played / Most Used / a Project already have their own meaningful
@@ -192,7 +195,7 @@ export function useVisibleTracks(): Track[] {
     selectedFolder,
     selectedTagIds,
     selectedFavoriteLevel,
-    selectedEnergyLevel,
+    selectedEnergyLevels,
     searchQuery,
     trackTags,
     tagById,

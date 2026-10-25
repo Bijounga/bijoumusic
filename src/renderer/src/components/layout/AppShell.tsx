@@ -26,6 +26,7 @@ import NowPlayingBar from '../player/NowPlayingBar'
 import WaveformPanel from '../player/WaveformPanel'
 import TagSidebarSection from '../tags/TagSidebarSection'
 import TagFilterSearch from '../tags/TagFilterSearch'
+import { useNoShiftTextSelect } from '../../hooks/useNoShiftTextSelect'
 import DurationFilterControl from './DurationFilterControl'
 import BpmFilterControl from './BpmFilterControl'
 import SearchBlacklistControl from './SearchBlacklistControl'
@@ -49,7 +50,7 @@ function hasAnyFilterActive(
   selectedFolder: unknown,
   selectedTagIds: unknown[],
   selectedFavoriteLevel: unknown,
-  selectedEnergyLevel: unknown,
+  selectedEnergyLevels: unknown[],
   searchQuery: string,
   activeView: string,
   minDurationSeconds: unknown,
@@ -61,7 +62,7 @@ function hasAnyFilterActive(
     selectedFolder !== null ||
     selectedTagIds.length > 0 ||
     selectedFavoriteLevel !== null ||
-    selectedEnergyLevel !== null ||
+    selectedEnergyLevels.length > 0 ||
     searchQuery.trim().length > 0 ||
     activeView !== 'library' ||
     minDurationSeconds !== null ||
@@ -101,7 +102,7 @@ function AppShell(): React.JSX.Element {
   const toggleTag = useFilterStore((s) => s.toggleTag)
   const clearTags = useFilterStore((s) => s.clearTags)
   const selectedFavoriteLevel = useFilterStore((s) => s.selectedFavoriteLevel)
-  const selectedEnergyLevel = useFilterStore((s) => s.selectedEnergyLevel)
+  const selectedEnergyLevels = useFilterStore((s) => s.selectedEnergyLevels)
   const clearAllFilters = useFilterStore((s) => s.clearAllFilters)
   const searchQuery = useFilterStore((s) => s.searchQuery)
   const setSearchQuery = useFilterStore((s) => s.setSearchQuery)
@@ -142,6 +143,7 @@ function AppShell(): React.JSX.Element {
   useMiniPlayerBridge(visibleTracks)
   useBackgroundWaveformGeneration(tracks)
   usePremiereAnalysisResponder()
+  useNoShiftTextSelect()
 
   useEffect(() => {
     // Rescan once on open so anything added since the app last ran shows up without
@@ -177,7 +179,7 @@ function AppShell(): React.JSX.Element {
     selectedFolder,
     selectedTagIds,
     selectedFavoriteLevel,
-    selectedEnergyLevel,
+    selectedEnergyLevels,
     searchQuery,
     activeView,
     minDurationSeconds,

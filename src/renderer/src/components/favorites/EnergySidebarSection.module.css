@@ -1,0 +1,43 @@
+.wrap {
+  padding: 2px 8px 4px;
+}
+
+.row {
+  display: flex;
+  gap: 4px;
+}
+
+.btn {
+  flex: 1;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--control-border);
+  background-color: var(--surface-1);
+  background-image: var(--control-bg);
+  box-shadow: var(--control-shadow);
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+
+.btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.btnActive {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
+}
+
+.hint {
+  margin: 4px 0 0;
+  color: var(--text-disabled);
+  font-size: 11px;
+}

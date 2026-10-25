@@ -3,6 +3,7 @@ import type { Track } from '@shared/types'
 import { generateWaveformPeaks } from './generateWaveformPeaks'
 import { useLibraryStore } from '../state/libraryStore'
 import { LruCache } from '../lib/lruCache'
+import { ensureBpm } from './ensureBpm'
 
 // In-memory cache on top of the on-disk one, keyed by content hash — reselecting a
 // track already viewed this session skips even the IPC round-trip.
@@ -25,6 +26,8 @@ export function useWaveformPeaks(track: Track | null): WaveformState {
       setState({ peaks: null, isLoading: false, failed: false })
       return
     }
+
+    void ensureBpm(track)
 
     const cached = memoryCache.get(track.contentHash)
     if (cached) {

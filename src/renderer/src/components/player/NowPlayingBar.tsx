@@ -112,7 +112,14 @@ function NowPlayingBar(): React.JSX.Element {
 
       {currentTrack && (
         <span className={styles.time}>
-          {formatDuration(currentTime)} / {formatDuration(duration)}
+          <span>
+            {formatDuration(currentTime)} / {formatDuration(duration)}
+          </span>
+          {currentBpm === null ? (
+            <span className={styles.bpmPending}>BPM …</span>
+          ) : (
+            formatBpm(currentBpm) && <span className={styles.bpm}>{formatBpm(currentBpm)}</span>
+          )}
         </span>
       )}
 
@@ -123,10 +130,7 @@ function NowPlayingBar(): React.JSX.Element {
           <span className={`${styles.trackName} ${styles.trackNameEmpty}`}>Nothing playing</span>
         )}
         {currentTrack && (
-          <span className={styles.trackFolder}>
-            {currentTrack.folderPath || '(root)'}
-            {formatBpm(currentBpm) && ` · ${formatBpm(currentBpm)}`}
-          </span>
+          <span className={styles.trackFolder}>{currentTrack.folderPath || '(root)'}</span>
         )}
       </div>
 

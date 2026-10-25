@@ -15,7 +15,8 @@ interface FilterState {
   selectedFolder: FolderSelection | null
   selectedTagIds: number[]
   selectedFavoriteLevel: number | null
-  selectedEnergyLevel: number | null
+  /** Empty = no energy filter; several levels match any of them (e.g. 3, 4, 5). */
+  selectedEnergyLevels: number[]
   searchQuery: string
   /** Both null = no duration filter. Either bound can be set independently
    *  (e.g. "under 2 minutes" is just a max with no min). */
@@ -31,7 +32,7 @@ interface FilterState {
   selectOnlyTag: (tagId: number) => void
   clearTags: () => void
   toggleFavoriteLevel: (level: number) => void
-  toggleEnergyLevel: (level: number) => void
+  setEnergyLevels: (levels: number[]) => void
   setSearchQuery: (query: string) => void
   setDurationRange: (min: number | null, max: number | null) => void
   setBpmRange: (min: number | null, max: number | null) => void
@@ -44,7 +45,7 @@ export const useFilterStore = create<FilterState>((set, get) => ({
   selectedFolder: null,
   selectedTagIds: [],
   selectedFavoriteLevel: null,
-  selectedEnergyLevel: null,
+  selectedEnergyLevels: [],
   searchQuery: '',
   minDurationSeconds: null,
   maxDurationSeconds: null,
@@ -73,9 +74,7 @@ export const useFilterStore = create<FilterState>((set, get) => ({
   toggleFavoriteLevel: (level) => {
     set({ selectedFavoriteLevel: get().selectedFavoriteLevel === level ? null : level })
   },
-  toggleEnergyLevel: (level) => {
-    set({ selectedEnergyLevel: get().selectedEnergyLevel === level ? null : level })
-  },
+  setEnergyLevels: (levels) => set({ selectedEnergyLevels: [...levels].sort((a, b) => a - b) }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setDurationRange: (min, max) => set({ minDurationSeconds: min, maxDurationSeconds: max }),
   setBpmRange: (min, max) => set({ minBpm: min, maxBpm: max }),
@@ -87,7 +86,7 @@ export const useFilterStore = create<FilterState>((set, get) => ({
       selectedFolder: null,
       selectedTagIds: [],
       selectedFavoriteLevel: null,
-      selectedEnergyLevel: null,
+      selectedEnergyLevels: [],
       searchQuery: '',
       minDurationSeconds: null,
       maxDurationSeconds: null,

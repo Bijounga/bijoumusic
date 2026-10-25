@@ -1,39 +1,52 @@
-import { useMemo } from 'react'
-import { useRatingStore } from '../../state/ratingStore'
+import { useRef } from 'react'
 import { useFilterStore } from '../../state/filterStore'
 import { ENERGY_LEVELS } from '../../lib/ratings'
-import styles from './RatingSidebarSections.module.css'
+import styles from './EnergySidebarSection.module.css'
 
+/** Energy filter as a row of buttons, like the one in the player bar. Click picks one
+ *  level (click it again to clear); Shift-click picks everything from the last clicked
+ *  level up to this one (3 then Shift 5 = 3-5); Ctrl-click adds or removes a single one. */
 function EnergySidebarSection(): React.JSX.Element {
-  const ratings = useRatingStore((s) => s.ratings)
-  const selectedEnergyLevel = useFilterStore((s) => s.selectedEnergyLevel)
-  const toggleEnergyLevel = useFilterStore((s) => s.toggleEnergyLevel)
+  const selected = useFilterStore((s) => s.selectedEnergyLevels)
+  const setEnergyLevels = useFilterStore((s) => s.setEnergyLevels)
+  const anchor = useRef<number | null>(null)
 
-  const counts = useMemo(() => {
-    const map = new Map<number, number>()
-    for (const rating of ratings.values()) {
-      if (rating.energyLevel === null) continue
-      map.set(rating.energyLevel, (map.get(rating.energyLevel) ?? 0) + 1)
+  function pick(level: number, event: React.MouseEvent): void {
+    if (event.shiftKey) {
+      const from = anchor.current ?? selected[0] ?? level
+      const lo = Math.min(from, level)
+      const hi = Math.max(from, level)
+      setEnergyLevels(ENERGY_LEVELS.filter((l) => l >= lo && l <= hi))
+      return
     }
-    return map
-  }, [ratings])
+    anchor.current = level
+    if (event.ctrlKey || event.metaKey) {
+      setEnergyLevels(selected.includes(level) ? selected.filter((l) => l !== level) : [...selected, level])
+    } else {
+      setEnergyLevels(selected.length === 1 && selected[0] === level ? [] : [level])
+    }
+  }
 
   return (
-    <div>
-      {ENERGY_LEVELS.map((level) => {
-        const isActive = selectedEnergyLevel === level
-        return (
-          <div
-            key={level}
-            className={`${styles.row} ${isActive ? styles.rowActive : ''}`}
-            onClick={() => toggleEnergyLevel(level)}
-          >
-            <span className={styles.glyph}>{level}</span>
-            <span className={styles.label}>Energy {level}</span>
-            <span className={styles.count}>{counts.get(level) ?? 0}</span>
-          </div>
-        )
-      })}
+    <div className={styles.wrap}>
+      <div className={styles.row}>
+        {ENERGY_LEVELS.map((level) => {
+          const isActive = selected.includes(level)
+          return (
+            <button
+              key={level}
+              className={`${styles.btn} ${isActive ? styles.btnActive : ''}`}
+              title={`Energy ${level} — Shift-click for a range (3 then Shift 5 = 3 to 5)`}
+              aria-label={`Energy ${level}`}
+              aria-pressed={isActive}
+              onClick={(e) => pick(level, e)}
+            >
+              {level}
+            </button>
+          )
+        })}
+      </div>
+      <p className={styles.hint}>Shift-click for a range</p>
     </div>
   )
 }

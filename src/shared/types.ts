@@ -21,6 +21,20 @@ export interface MoveRootResult {
   backupPath: string
 }
 
+/** What was dropped onto a project: song files (as the OS drag reports them) or a
+ *  library folder dragged from the sidebar. */
+export interface DroppedOnProject {
+  paths?: string[]
+  folder?: { libraryRootId: number; relativePath: string }
+}
+
+export interface DroppedOnProjectResult {
+  /** How many of the dropped songs were new to the project. */
+  added: number
+  /** How many songs the drop contained that the library knows. */
+  total: number
+}
+
 /** One tag the AI tagger proposes for a song. */
 export interface AutoTagSuggestion {
   name: string

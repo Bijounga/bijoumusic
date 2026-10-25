@@ -76,3 +76,21 @@ export function getMostUsedByProjectsTrackIds(): number[] {
     .all(MOST_USED_LIMIT) as { track_id: number }[]
   return rows.map((r) => r.track_id)
 }
+
+/** Adds many songs to a project in one go; returns how many were new to it. */
+export function addTracksToProject(projectId: number, trackIds: number[]): number {
+  const db = getDb()
+  const insert = db.prepare('INSERT OR IGNORE INTO project_tracks (project_id, track_id, added_at) VALUES (?, ?, ?)')
+  let added = 0
+  db.transaction(() => {
+    const now = Date.now()
+    for (const trackId of trackIds) {
+      if (insert.run(projectId, trackId, now).changes > 0) {
+        added++
+        logPlaybackEvent(trackId, 'added_to_project')
+      }
+    }
+    if (added > 0) db.prepare('UPDATE projects SET updated_at = ? WHERE id = ?').run(now, projectId)
+  })()
+  return added
+}

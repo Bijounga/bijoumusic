@@ -153,3 +153,32 @@ export function markMissingExceptInFolder(libraryRootId: number, folderPath: str
        AND id NOT IN (${placeholders})`
   ).run(libraryRootId, folderPath, `${folderPath}\\%`, ...seenIds)
 }
+
+/** Ids of the library songs at these exact paths (paths the library doesn't know are skipped). */
+export function listTrackIdsByPaths(paths: string[]): number[] {
+  const find = getDb().prepare('SELECT id FROM tracks WHERE current_path = ?')
+  const ids: number[] = []
+  for (const path of paths) {
+    const row = find.get(path) as { id: number } | undefined
+    if (row) ids.push(row.id)
+  }
+  return ids
+}
+
+/** Ids of every present song in a library folder and all folders under it ('' = the whole library folder). */
+export function listTrackIdsInFolder(libraryRootId: number, relativePath: string): number[] {
+  const rows =
+    relativePath === ''
+      ? (getDb().prepare('SELECT id FROM tracks WHERE library_root_id = ? AND is_missing = 0').all(libraryRootId) as { id: number }[])
+      : (getDb()
+          .prepare(
+            "SELECT id FROM tracks WHERE library_root_id = ? AND is_missing = 0 AND (folder_path = ? OR folder_path LIKE ? ESCAPE '!')"
+          )
+          .all(
+            libraryRootId,
+            relativePath,
+            // The folder's own name followed by either kind of separator, with LIKE's wildcards made literal.
+            relativePath.replace(/[!%_]/g, '!$&') + '_%'
+          ) as { id: number }[])
+  return rows.map((r) => r.id)
+}

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { Project } from '@shared/types'
 import { useProjectStore } from '../../state/projectStore'
 import { useFilterStore } from '../../state/filterStore'
+import { useRecentActivityStore } from '../../state/recentActivityStore'
+import { DRAG_FOLDER_MIME } from '../../lib/dragMimes'
 import RenameContextMenu from '../common/RenameContextMenu'
 import styles from './ProjectsSidebarSection.module.css'
 
@@ -20,6 +22,10 @@ function ProjectRow({ project, isActive }: { project: Project; isActive: boolean
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [isRenaming, setIsRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState(project.name)
+  // Something is being dragged over this project / what the last drop added.
+  const [dropHover, setDropHover] = useState(false)
+  const [dropNote, setDropNote] = useState<string | null>(null)
+  const loadAllProjects = useProjectStore((s) => s.loadAll)
 
   function startRename(): void {
     setRenameValue(project.name)
@@ -31,6 +37,36 @@ function ProjectRow({ project, isActive }: { project: Project; isActive: boolean
     const trimmed = renameValue.trim()
     if (!trimmed || trimmed === project.name) return
     void renameProject(project.id, trimmed)
+  }
+
+  // Song rows are dragged with the native file drag (the one that drops into
+  // Premiere), which reaches the page as files; a folder from the folder tree
+  // carries its own marker. Anything else is ignored.
+  function isProjectDrop(e: React.DragEvent): boolean {
+    const types = Array.from(e.dataTransfer.types)
+    return types.includes('Files') || types.includes(DRAG_FOLDER_MIME)
+  }
+
+  async function handleDrop(e: React.DragEvent): Promise<void> {
+    e.preventDefault()
+    setDropHover(false)
+    const folderJson = e.dataTransfer.getData(DRAG_FOLDER_MIME)
+    const dropped = folderJson
+      ? { folder: JSON.parse(folderJson) as { libraryRootId: number; relativePath: string } }
+      : { paths: Array.from(e.dataTransfer.files).map((f) => window.api.getPathForFile(f)).filter(Boolean) }
+    const result = await window.api.addDroppedToProject(project.id, dropped)
+    await loadAllProjects()
+    void useRecentActivityStore.getState().loadMostUsed()
+    // If this project is the one being browsed, show the new songs.
+    if (useFilterStore.getState().selectedProjectId === project.id) void loadProjectTrackIds(project.id)
+    setDropNote(
+      result.total === 0
+        ? 'nothing to add'
+        : result.added === 0
+          ? 'already in'
+          : `+${result.added}`
+    )
+    setTimeout(() => setDropNote(null), 2200)
   }
 
   if (isRenaming) {
@@ -53,7 +89,22 @@ function ProjectRow({ project, isActive }: { project: Project; isActive: boolean
 
   return (
     <div
-      className={`${styles.row} ${isActive ? styles.rowActive : ''}`}
+      className={`${styles.row} ${isActive ? styles.rowActive : ''} ${dropHover ? styles.rowDrop : ''}`}
+      onDragEnter={(e) => {
+        if (isProjectDrop(e)) setDropHover(true)
+      }}
+      onDragOver={(e) => {
+        if (!isProjectDrop(e)) return
+        e.preventDefault()
+        e.dataTransfer.dropEffect = 'copy'
+      }}
+      onDragLeave={(e) => {
+        // Moving onto a child of the row also fires this; only a real exit counts.
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropHover(false)
+      }}
+      onDrop={(e) => {
+        if (isProjectDrop(e)) void handleDrop(e)
+      }}
       onClick={() => {
         setActiveProject(project.id)
         void loadProjectTrackIds(project.id)
@@ -68,7 +119,7 @@ function ProjectRow({ project, isActive }: { project: Project; isActive: boolean
       }}
     >
       <span className={styles.name}>{project.name}</span>
-      <span className={styles.count}>{projectTracks.get(project.id)?.size ?? 0}</span>
+      <span className={styles.count}>{dropNote ?? projectTracks.get(project.id)?.size ?? 0}</span>
       <span
         className={styles.deleteBtn}
         onClick={(e) => {

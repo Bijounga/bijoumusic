@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { IpcChannels } from '@shared/ipcChannels'
 import type {
@@ -26,6 +26,8 @@ import type {
   MiniPlayerCommand,
   UpdateStatus,
   SyncStatus,
+  DroppedOnProject,
+  DroppedOnProjectResult,
   AutoTagInfo,
   AutoTagSuggestion,
   PremiereExtStatus,
@@ -210,6 +212,10 @@ const api = {
     ipcRenderer.on(IpcChannels.autoTagProgress, listener)
     return () => ipcRenderer.removeListener(IpcChannels.autoTagProgress, listener)
   },
+  /** The real file path of a File from a drop (the page can't read it itself). */
+  getPathForFile: (file: File): string => webUtils.getPathForFile(file),
+  addDroppedToProject: (projectId: number, dropped: DroppedOnProject): Promise<DroppedOnProjectResult> =>
+    ipcRenderer.invoke(IpcChannels.addDroppedToProject, projectId, dropped),
   syncGetStatus: (): Promise<SyncStatus> => ipcRenderer.invoke(IpcChannels.syncGetStatus),
   syncSetup: (): Promise<SyncStatus> => ipcRenderer.invoke(IpcChannels.syncSetup),
   syncNow: (): Promise<SyncStatus> => ipcRenderer.invoke(IpcChannels.syncNow),

@@ -81,6 +81,7 @@ export const IpcChannels = {
   premiereExtStatus: 'premiere-ext:status',
   premiereExtGetStatus: 'premiere-ext:get-status',
   premiereExtInstall: 'premiere-ext:install',
+  addDroppedToProject: 'projects:add-dropped',
   autoTagInfo: 'autotag:info',
   autoTagPickFolder: 'autotag:pick-folder',
   autoTagSuggest: 'autotag:suggest',

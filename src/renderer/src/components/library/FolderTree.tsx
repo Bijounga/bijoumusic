@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FolderNode } from '../../lib/folderTree'
 import { useFilterStore } from '../../state/filterStore'
 import { useLibraryStore } from '../../state/libraryStore'
+import { DRAG_FOLDER_MIME } from '../../lib/dragMimes'
 import FolderIcon from './FolderIcon'
 import styles from './FolderTree.module.css'
 
@@ -86,6 +87,12 @@ function FolderRow({ node, depth }: { node: FolderNode; depth: number }): React.
         onContextMenu={(e) => {
           e.preventDefault()
           setContextMenu({ x: e.clientX, y: e.clientY })
+        }}
+        // Drag the folder onto a project in the sidebar to add every song in it.
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.setData(DRAG_FOLDER_MIME, JSON.stringify({ libraryRootId: node.libraryRootId, relativePath: node.relativePath }))
+          e.dataTransfer.effectAllowed = 'copy'
         }}
       >
         {hasChildren ? (

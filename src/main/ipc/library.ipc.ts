@@ -7,6 +7,7 @@ import {
   listTracks,
   findDuplicateGroups,
   updateTrackLoudness,
+  updateTrackBpm,
   updateTrackPreviewRange,
   findTrackById,
   markTrackMissing,
@@ -47,7 +48,8 @@ function toTrack(row: TrackRow): Track {
     isMissing: row.is_missing === 1,
     previewStartSeconds: row.preview_start_seconds,
     previewEndSeconds: row.preview_end_seconds,
-    loudnessRms: row.loudness_rms
+    loudnessRms: row.loudness_rms,
+    bpm: row.bpm
   }
 }
 
@@ -72,6 +74,10 @@ export function registerLibraryIpc(): void {
 
   ipcMain.handle(IpcChannels.updateTrackLoudness, (_event, trackId: number, rms: number): void => {
     updateTrackLoudness(trackId, rms)
+  })
+
+  ipcMain.handle(IpcChannels.updateTrackBpm, (_event, trackId: number, bpm: number): void => {
+    updateTrackBpm(trackId, bpm)
   })
 
   ipcMain.handle(

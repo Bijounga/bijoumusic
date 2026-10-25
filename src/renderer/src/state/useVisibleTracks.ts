@@ -38,6 +38,8 @@ export function useVisibleTracks(): Track[] {
   const sortDirection = useSortStore((s) => s.sortDirection)
   const minDurationSeconds = useFilterStore((s) => s.minDurationSeconds)
   const maxDurationSeconds = useFilterStore((s) => s.maxDurationSeconds)
+  const minBpm = useFilterStore((s) => s.minBpm)
+  const maxBpm = useFilterStore((s) => s.maxBpm)
   const blacklistedWords = useSearchBlacklistStore((s) => s.words)
   const blacklistedFolders = useSearchBlacklistStore((s) => s.folders)
 
@@ -98,6 +100,16 @@ export function useVisibleTracks(): Track[] {
       // applies to plain library browsing, where "folder order" would otherwise be
       // the only option.
       const sorted = [...result].sort((a, b) => {
+        // Songs without a known tempo go last whichever way the BPM sort runs.
+        if (sortBy === 'bpm') {
+          const aBpm = a.bpm ?? 0
+          const bBpm = b.bpm ?? 0
+          if (aBpm <= 0 || bBpm <= 0) {
+            if (aBpm <= 0 && bBpm <= 0) return a.folderPath.localeCompare(b.folderPath) || a.filename.localeCompare(b.filename)
+            return aBpm <= 0 ? 1 : -1
+          }
+          return sortDirection === 'asc' ? aBpm - bBpm : bBpm - aBpm
+        }
         let cmp: number
         if (sortBy === 'name') cmp = a.filename.localeCompare(b.filename)
         else if (sortBy === 'recentlyAdded') cmp = a.addedAt - b.addedAt
@@ -158,6 +170,15 @@ export function useVisibleTracks(): Track[] {
       })
     }
 
+    if (minBpm !== null || maxBpm !== null) {
+      result = result.filter((t) => {
+        if (t.bpm === null || t.bpm <= 0) return false
+        if (minBpm !== null && t.bpm < minBpm) return false
+        if (maxBpm !== null && t.bpm > maxBpm) return false
+        return true
+      })
+    }
+
     return result
   }, [
     tracks,
@@ -182,6 +203,8 @@ export function useVisibleTracks(): Track[] {
     sortBy,
     sortDirection,
     minDurationSeconds,
-    maxDurationSeconds
+    maxDurationSeconds,
+    minBpm,
+    maxBpm
   ])
 }

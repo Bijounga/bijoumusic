@@ -67,6 +67,7 @@ function TrackContextMenu({ tracks, x, y, onClose }: TrackContextMenuProps): Rea
 
   const allTracks = useLibraryStore((s) => s.tracks)
   const removeTracksLocally = useLibraryStore((s) => s.removeTracksLocally)
+  const setTrackBpm = useLibraryStore((s) => s.setTrackBpm)
   const setActiveView = useFilterStore((s) => s.setActiveView)
   const findSimilar = useSimilarityStore((s) => s.findSimilar)
 
@@ -89,6 +90,15 @@ function TrackContextMenu({ tracks, x, y, onClose }: TrackContextMenuProps): Rea
     }
     if (succeededIds.length > 0) removeTracksLocally(succeededIds)
     if (failures.length > 0) alert(`Couldn't delete:\n${failures.join('\n')}`)
+    onClose()
+  }
+
+  // Tempo is ambiguous by a factor of two (a 160 song can be felt as 80), so a result
+  // that landed on the wrong side can be flipped, or cleared if there's no real beat.
+  const liveBpm = !isBulk ? (allTracks.find((t) => t.id === primaryTrack.id)?.bpm ?? null) : null
+  function changeBpm(next: number): void {
+    void window.api.updateTrackBpm(primaryTrack.id, next)
+    setTrackBpm(primaryTrack.id, next)
     onClose()
   }
 
@@ -206,6 +216,25 @@ function TrackContextMenu({ tracks, x, y, onClose }: TrackContextMenuProps): Rea
       <div className={`${styles.playRow} ${styles.dangerRow}`} onClick={() => void deleteFromDisk()}>
         Delete from disk{isBulk ? ` (${tracks.length})` : ''}
       </div>
+
+      {!isBulk && liveBpm !== null && liveBpm > 0 && (
+        <>
+          <p className={styles.sectionHeading}>Tempo · {Math.round(liveBpm)} BPM</p>
+          {liveBpm / 2 >= 40 && (
+            <div className={styles.playRow} onClick={() => changeBpm(liveBpm / 2)}>
+              Half it ({Math.round(liveBpm / 2)} BPM)
+            </div>
+          )}
+          {liveBpm * 2 <= 260 && (
+            <div className={styles.playRow} onClick={() => changeBpm(liveBpm * 2)}>
+              Double it ({Math.round(liveBpm * 2)} BPM)
+            </div>
+          )}
+          <div className={styles.playRow} onClick={() => changeBpm(0)}>
+            No BPM for this song
+          </div>
+        </>
+      )}
 
       <p className={styles.sectionHeading}>Favorite</p>
       <div className={styles.inlineRow}>

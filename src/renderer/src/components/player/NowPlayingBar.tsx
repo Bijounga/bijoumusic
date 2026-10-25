@@ -8,7 +8,8 @@ import { useAuditionStore } from '../../state/auditionStore'
 import { useAutoplayStore } from '../../state/autoplayStore'
 import { useShuffleStore } from '../../state/shuffleStore'
 import { usePreviewClipStore } from '../../state/previewClipStore'
-import { formatDuration } from '../../lib/format'
+import { formatBpm, formatDuration } from '../../lib/format'
+import { useLibraryStore } from '../../state/libraryStore'
 import TagEditorPopover from '../tags/TagEditorPopover'
 import AliasEditorPopover from '../aliases/AliasEditorPopover'
 import BookmarksPopover from './BookmarksPopover'
@@ -27,6 +28,8 @@ import styles from './NowPlayingBar.module.css'
 
 function NowPlayingBar(): React.JSX.Element {
   const currentTrack = usePlaybackStore((s) => s.currentTrack)
+  // The playing track is a copy from when it started; the tempo may be worked out after that.
+  const currentBpm = useLibraryStore((s) => (currentTrack ? (s.tracks.find((t) => t.id === currentTrack.id)?.bpm ?? null) : null))
   const isPlaying = usePlaybackStore((s) => s.isPlaying)
   const currentTime = usePlaybackStore((s) => s.currentTime)
   const duration = usePlaybackStore((s) => s.duration)
@@ -119,7 +122,12 @@ function NowPlayingBar(): React.JSX.Element {
         ) : (
           <span className={`${styles.trackName} ${styles.trackNameEmpty}`}>Nothing playing</span>
         )}
-        {currentTrack && <span className={styles.trackFolder}>{currentTrack.folderPath || '(root)'}</span>}
+        {currentTrack && (
+          <span className={styles.trackFolder}>
+            {currentTrack.folderPath || '(root)'}
+            {formatBpm(currentBpm) && ` · ${formatBpm(currentBpm)}`}
+          </span>
+        )}
       </div>
 
       <div className={styles.controls}>

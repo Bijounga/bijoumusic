@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import type { Track } from '@shared/types'
-import { formatDuration } from '../../lib/format'
+import { formatBpm, formatDuration } from '../../lib/format'
 import { useRatingStore } from '../../state/ratingStore'
 import { FAVORITE_LEVELS } from '../../lib/ratings'
 import ScrollingText from '../common/ScrollingText'
@@ -67,6 +67,7 @@ function TrackRow({
       </div>
       <TrackTagPills trackId={track.id} />
       <RowWaveform track={track} />
+      <span className={styles.bpm}>{formatBpm(track.bpm)}</span>
       <span className={styles.duration}>{formatDuration(track.durationSeconds)}</span>
     </div>
   )

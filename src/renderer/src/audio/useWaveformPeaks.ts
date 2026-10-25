@@ -17,6 +17,7 @@ interface WaveformState {
 export function useWaveformPeaks(track: Track | null): WaveformState {
   const setTrackDuration = useLibraryStore((s) => s.setTrackDuration)
   const setTrackLoudness = useLibraryStore((s) => s.setTrackLoudness)
+  const setTrackBpm = useLibraryStore((s) => s.setTrackBpm)
   const [state, setState] = useState<WaveformState>({ peaks: null, isLoading: false, failed: false })
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export function useWaveformPeaks(track: Track | null): WaveformState {
       }
 
       try {
-        const { peaks, durationSeconds, rms } = await generateWaveformPeaks(track!.id)
+        const { peaks, durationSeconds, rms, bpm } = await generateWaveformPeaks(track!.id)
         if (cancelled) return
 
         memoryCache.set(track!.contentHash, peaks)
@@ -57,6 +58,10 @@ export function useWaveformPeaks(track: Track | null): WaveformState {
         }
         void window.api.updateTrackLoudness(track!.id, rms)
         setTrackLoudness(track!.id, rms)
+        if (bpm !== null) {
+          void window.api.updateTrackBpm(track!.id, bpm)
+          setTrackBpm(track!.id, bpm)
+        }
       } catch {
         // A corrupt or unsupported file shouldn't leave the panel spinning forever.
         if (!cancelled) setState({ peaks: null, isLoading: false, failed: true })
@@ -67,7 +72,7 @@ export function useWaveformPeaks(track: Track | null): WaveformState {
     return () => {
       cancelled = true
     }
-  }, [track, setTrackDuration, setTrackLoudness])
+  }, [track, setTrackDuration, setTrackLoudness, setTrackBpm])
 
   return state
 }

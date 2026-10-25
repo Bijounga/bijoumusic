@@ -3,6 +3,7 @@ import { sql as migration002 } from './002_tag_groups'
 import { sql as migration003 } from './003_bookmarks_preview_loudness'
 import { sql as migration004 } from './004_settings'
 import { sql as migration005 } from './005_tag_order'
+import { sql as migration006 } from './006_bpm'
 
 export interface Migration {
   version: number
@@ -15,5 +16,6 @@ export const migrations: Migration[] = [
   { version: 2, name: 'tag_groups', sql: migration002 },
   { version: 3, name: 'bookmarks_preview_loudness', sql: migration003 },
   { version: 4, name: 'settings', sql: migration004 },
-  { version: 5, name: 'tag_order', sql: migration005 }
+  { version: 5, name: 'tag_order', sql: migration005 },
+  { version: 6, name: 'bpm', sql: migration006 }
 ]

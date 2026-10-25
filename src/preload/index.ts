@@ -108,6 +108,8 @@ const api = {
   showInExplorer: (filePath: string): Promise<void> => ipcRenderer.invoke(IpcChannels.showInExplorer, filePath),
   updateTrackLoudness: (trackId: number, rms: number): Promise<void> =>
     ipcRenderer.invoke(IpcChannels.updateTrackLoudness, trackId, rms),
+  updateTrackBpm: (trackId: number, bpm: number): Promise<void> =>
+    ipcRenderer.invoke(IpcChannels.updateTrackBpm, trackId, bpm),
   updateTrackPreviewRange: (trackId: number, start: number | null, end: number | null): Promise<void> =>
     ipcRenderer.invoke(IpcChannels.updateTrackPreviewRange, trackId, start, end),
   listDuplicateGroups: (): Promise<Track[][]> => ipcRenderer.invoke(IpcChannels.listDuplicateGroups),

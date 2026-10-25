@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { setSetting } from '../lib/settingsSync'
 
-export type SortBy = 'folder' | 'name' | 'recentlyAdded'
+export type SortBy = 'folder' | 'name' | 'recentlyAdded' | 'bpm'
 export type SortDirection = 'asc' | 'desc'
 
 const STORAGE_KEY = 'bijoumusic:sort'

@@ -27,6 +27,7 @@ import WaveformPanel from '../player/WaveformPanel'
 import TagSidebarSection from '../tags/TagSidebarSection'
 import TagFilterSearch from '../tags/TagFilterSearch'
 import DurationFilterControl from './DurationFilterControl'
+import BpmFilterControl from './BpmFilterControl'
 import SearchBlacklistControl from './SearchBlacklistControl'
 import FavoritesSidebarSection from '../favorites/FavoritesSidebarSection'
 import EnergySidebarSection from '../favorites/EnergySidebarSection'
@@ -52,7 +53,9 @@ function hasAnyFilterActive(
   searchQuery: string,
   activeView: string,
   minDurationSeconds: unknown,
-  maxDurationSeconds: unknown
+  maxDurationSeconds: unknown,
+  minBpm: unknown,
+  maxBpm: unknown
 ): boolean {
   return (
     selectedFolder !== null ||
@@ -62,7 +65,9 @@ function hasAnyFilterActive(
     searchQuery.trim().length > 0 ||
     activeView !== 'library' ||
     minDurationSeconds !== null ||
-    maxDurationSeconds !== null
+    maxDurationSeconds !== null ||
+    minBpm !== null ||
+    maxBpm !== null
   )
 }
 
@@ -102,6 +107,8 @@ function AppShell(): React.JSX.Element {
   const setSearchQuery = useFilterStore((s) => s.setSearchQuery)
   const minDurationSeconds = useFilterStore((s) => s.minDurationSeconds)
   const maxDurationSeconds = useFilterStore((s) => s.maxDurationSeconds)
+  const minBpm = useFilterStore((s) => s.minBpm)
+  const maxBpm = useFilterStore((s) => s.maxBpm)
 
   const sortBy = useSortStore((s) => s.sortBy)
   const setSortBy = useSortStore((s) => s.setSortBy)
@@ -174,7 +181,9 @@ function AppShell(): React.JSX.Element {
     searchQuery,
     activeView,
     minDurationSeconds,
-    maxDurationSeconds
+    maxDurationSeconds,
+    minBpm,
+    maxBpm
   )
 
   return (
@@ -293,6 +302,7 @@ function AppShell(): React.JSX.Element {
         />
         <TagFilterSearch />
         <DurationFilterControl />
+        <BpmFilterControl />
         <SearchBlacklistControl folderTree={folderTree} />
         {selectedTagIds.length > 0 && (
           <div className={styles.activeTagChips}>
@@ -334,6 +344,7 @@ function AppShell(): React.JSX.Element {
             <option value="folder">Folder</option>
             <option value="name">Name</option>
             <option value="recentlyAdded">Recently added</option>
+            <option value="bpm">BPM</option>
           </select>
           <button
             className={styles.sortDirectionBtn}

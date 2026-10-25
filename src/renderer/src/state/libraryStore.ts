@@ -21,6 +21,7 @@ interface LibraryState {
   rescanFolder: (libraryRootId: number, relativePath: string) => Promise<void>
   setTrackDuration: (trackId: number, durationSeconds: number) => void
   setTrackLoudness: (trackId: number, loudnessRms: number) => void
+  setTrackBpm: (trackId: number, bpm: number) => void
   setTrackPreviewRange: (trackId: number, start: number | null, end: number | null) => void
   removeTracksLocally: (trackIds: number[]) => void
 }
@@ -131,6 +132,12 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   setTrackLoudness: (trackId: number, loudnessRms: number) => {
     set({
       tracks: get().tracks.map((t) => (t.id === trackId ? { ...t, loudnessRms } : t))
+    })
+  },
+
+  setTrackBpm: (trackId: number, bpm: number) => {
+    set({
+      tracks: get().tracks.map((t) => (t.id === trackId ? { ...t, bpm } : t))
     })
   },
 

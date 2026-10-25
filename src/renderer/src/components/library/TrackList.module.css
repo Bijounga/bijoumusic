@@ -181,6 +181,15 @@
   white-space: nowrap;
 }
 
+.bpm {
+  color: var(--text-disabled);
+  font-size: 12.5px;
+  width: 64px;
+  text-align: right;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .duration {
   color: var(--text-disabled);
   font-size: 12.5px;

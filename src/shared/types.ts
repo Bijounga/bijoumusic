@@ -146,6 +146,9 @@ export interface Track {
   /** Overall RMS level (0-1) from the same decode pass as the waveform peaks, used
    *  for volume normalization. Null until that track's waveform has been generated. */
   loudnessRms: number | null
+  /** Tempo in beats per minute. Null until worked out; 0 when the song has no steady
+   *  beat (or is too short for one, like a sound effect). */
+  bpm: number | null
 }
 
 export interface SendToPremierePayload {

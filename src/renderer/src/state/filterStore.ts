@@ -21,6 +21,9 @@ interface FilterState {
    *  (e.g. "under 2 minutes" is just a max with no min). */
   minDurationSeconds: number | null
   maxDurationSeconds: number | null
+  /** Both null = no tempo filter. Songs without a known tempo don't match while one is set. */
+  minBpm: number | null
+  maxBpm: number | null
   setActiveView: (view: ActiveView) => void
   setActiveProject: (projectId: number) => void
   setSelectedFolder: (folder: FolderSelection | null) => void
@@ -31,6 +34,7 @@ interface FilterState {
   toggleEnergyLevel: (level: number) => void
   setSearchQuery: (query: string) => void
   setDurationRange: (min: number | null, max: number | null) => void
+  setBpmRange: (min: number | null, max: number | null) => void
   clearAllFilters: () => void
 }
 
@@ -44,6 +48,8 @@ export const useFilterStore = create<FilterState>((set, get) => ({
   searchQuery: '',
   minDurationSeconds: null,
   maxDurationSeconds: null,
+  minBpm: null,
+  maxBpm: null,
   // Recently Played / Most Used / a Project are each a distinct "view" of the whole
   // library, not a filter combinable with a folder — picking one clears the others,
   // same as clicking a folder while a view is active switches back to normal browsing.
@@ -72,6 +78,7 @@ export const useFilterStore = create<FilterState>((set, get) => ({
   },
   setSearchQuery: (query) => set({ searchQuery: query }),
   setDurationRange: (min, max) => set({ minDurationSeconds: min, maxDurationSeconds: max }),
+  setBpmRange: (min, max) => set({ minBpm: min, maxBpm: max }),
   clearAllFilters: () => {
     useSearchBlacklistStore.getState().clearAll()
     set({
@@ -83,7 +90,9 @@ export const useFilterStore = create<FilterState>((set, get) => ({
       selectedEnergyLevel: null,
       searchQuery: '',
       minDurationSeconds: null,
-      maxDurationSeconds: null
+      maxDurationSeconds: null,
+      minBpm: null,
+      maxBpm: null
     })
   }
 }))

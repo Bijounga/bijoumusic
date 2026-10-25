@@ -43,6 +43,7 @@ export const IpcChannels = {
   getAlbumArt: 'library:get-album-art',
   showInExplorer: 'library:show-in-explorer',
   updateTrackLoudness: 'library:update-track-loudness',
+  updateTrackBpm: 'library:update-track-bpm',
   updateTrackPreviewRange: 'library:update-track-preview-range',
   listDuplicateGroups: 'library:list-duplicate-groups',
   findSimilarTracks: 'library:find-similar-tracks',

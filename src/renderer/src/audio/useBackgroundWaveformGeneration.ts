@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
 import type { Track } from '@shared/types'
-import { generateWaveformPeaks } from './generateWaveformPeaks'
+import { detectTrackBpm, generateWaveformPeaks } from './generateWaveformPeaks'
 import { useLibraryStore } from '../state/libraryStore'
 
 const DELAY_BETWEEN_TRACKS_MS = 350
+const MIN_SECONDS_FOR_BPM = 12
 
 /** Walks the whole library in the background, one track at a time, generating and
  *  caching a waveform for anything that doesn't have one yet — so per-row waveforms
@@ -14,11 +15,30 @@ const DELAY_BETWEEN_TRACKS_MS = 350
 export function useBackgroundWaveformGeneration(tracks: Track[]): void {
   const setTrackDuration = useLibraryStore((s) => s.setTrackDuration)
   const setTrackLoudness = useLibraryStore((s) => s.setTrackLoudness)
+  const setTrackBpm = useLibraryStore((s) => s.setTrackBpm)
   const runIdRef = useRef(0)
 
   useEffect(() => {
     const runId = ++runIdRef.current
     const queue = tracks
+
+    async function fillInBpm(track: Track): Promise<void> {
+      // Sound effects and other clips too short to have a beat don't need decoding.
+      let bpm = 0
+      if (track.durationSeconds === null || track.durationSeconds >= MIN_SECONDS_FOR_BPM) {
+        let found: number | null
+        try {
+          found = await detectTrackBpm(track.id)
+        } catch {
+          return // Unreadable file: leave it for a later pass rather than marking it beatless.
+        }
+        if (runIdRef.current !== runId || found === null) return
+        bpm = found
+      }
+      void window.api.updateTrackBpm(track.id, bpm)
+      setTrackBpm(track.id, bpm)
+      await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_TRACKS_MS))
+    }
 
     async function run(): Promise<void> {
       for (const track of queue) {
@@ -26,10 +46,14 @@ export function useBackgroundWaveformGeneration(tracks: Track[]): void {
 
         const existing = await window.api.getWaveformPeaks(track.contentHash)
         if (runIdRef.current !== runId) return
-        if (existing) continue
+        if (existing) {
+          // Waveform made before tempo detection existed: just work out the tempo.
+          if (track.bpm === null) await fillInBpm(track)
+          continue
+        }
 
         try {
-          const { peaks, durationSeconds, rms } = await generateWaveformPeaks(track.id)
+          const { peaks, durationSeconds, rms, bpm } = await generateWaveformPeaks(track.id)
           if (runIdRef.current !== runId) return
           void window.api.saveWaveformPeaks(track.contentHash, peaks)
           if (track.durationSeconds === null) {
@@ -38,6 +62,10 @@ export function useBackgroundWaveformGeneration(tracks: Track[]): void {
           }
           void window.api.updateTrackLoudness(track.id, rms)
           setTrackLoudness(track.id, rms)
+          if (bpm !== null) {
+            void window.api.updateTrackBpm(track.id, bpm)
+            setTrackBpm(track.id, bpm)
+          }
         } catch {
           // One unreadable file shouldn't stop the rest of the background pass.
         }
@@ -51,5 +79,5 @@ export function useBackgroundWaveformGeneration(tracks: Track[]): void {
       runIdRef.current++
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tracks.length, setTrackDuration, setTrackLoudness])
+  }, [tracks.length, setTrackDuration, setTrackLoudness, setTrackBpm])
 }

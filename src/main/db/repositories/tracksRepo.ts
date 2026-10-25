@@ -17,6 +17,7 @@ export interface TrackRow {
   preview_start_seconds: number | null
   preview_end_seconds: number | null
   loudness_rms: number | null
+  bpm: number | null
 }
 
 export function listTracks(): TrackRow[] {
@@ -111,6 +112,10 @@ export function updateTrackDuration(id: number, durationSeconds: number): void {
 
 export function updateTrackLoudness(id: number, loudnessRms: number): void {
   getDb().prepare('UPDATE tracks SET loudness_rms = ? WHERE id = ?').run(loudnessRms, id)
+}
+
+export function updateTrackBpm(id: number, bpm: number): void {
+  getDb().prepare('UPDATE tracks SET bpm = ? WHERE id = ?').run(bpm, id)
 }
 
 export function updateTrackPreviewRange(id: number, startSeconds: number | null, endSeconds: number | null): void {

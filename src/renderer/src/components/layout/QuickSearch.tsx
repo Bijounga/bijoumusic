@@ -44,8 +44,9 @@ function bestMatches<T>(items: T[], score: (item: T) => number, sortLen: (item: 
 
 /** Ctrl + Space quick search: one box that finds songs, tags and folders.
  *  Enter opens the highlighted result (plays a song, filters to a tag, jumps to a
- *  folder); Shift + Enter on a tag adds it to (or removes it from) the playing
- *  song and keeps the popup open, so several tags can be typed in a row.
+ *  folder). On a tag, Shift + Enter adds it to (or removes it from) the current
+ *  search and keeps the popup open, so a search of several tags can be typed in a
+ *  row; Ctrl + Enter adds it to (or removes it from) the playing song instead.
  *  When a folder is selected, songs and folders are limited to that folder (Tab
  *  toggles to searching everywhere); every tag stays available. */
 function QuickSearch(): React.JSX.Element | null {
@@ -55,6 +56,9 @@ function QuickSearch(): React.JSX.Element | null {
   const [status, setStatus] = useState<string | null>(null)
   // Search is scoped to the folder you're in; Tab widens it to everything.
   const [searchEverywhere, setSearchEverywhere] = useState(false)
+  // True once a tag has been stacked onto the search with Shift + Enter in this popup:
+  // from then on a plain Enter on a tag adds it too, instead of replacing the stack.
+  const [stackedTags, setStackedTags] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -72,6 +76,7 @@ function QuickSearch(): React.JSX.Element | null {
   const blacklistedFolders = useSearchBlacklistStore((s) => s.folders)
   const selectedFolder = useFilterStore((s) => s.selectedFolder)
   const activeView = useFilterStore((s) => s.activeView)
+  const selectedTagIds = useFilterStore((s) => s.selectedTagIds)
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent): void {
@@ -90,6 +95,7 @@ function QuickSearch(): React.JSX.Element | null {
     setStatus(null)
     setActiveIndex(0)
     setSearchEverywhere(false)
+    setStackedTags(false)
     requestAnimationFrame(() => inputRef.current?.focus())
   }, [open])
 
@@ -200,8 +206,23 @@ function QuickSearch(): React.JSX.Element | null {
 
   const close = (): void => setOpen(false)
 
-  function run(result: Result, shift: boolean): void {
-    if (result.kind === 'tag' && shift) {
+  /** Puts a tag into the search alongside whatever is already there (or takes it out
+   *  again if it's already part of it). Keeps the folder when the search is scoped to
+   *  one; otherwise searches the whole library, as a plain Enter on a tag does. */
+  function addTagToSearch(tagId: number): void {
+    const current = useFilterStore.getState().selectedTagIds
+    const next = current.includes(tagId) ? current.filter((id) => id !== tagId) : [...current, tagId]
+    useFilterStore.setState(
+      scope
+        ? { selectedTagIds: next, searchQuery: '' }
+        : { activeView: 'library', selectedFolder: null, selectedProjectId: null, selectedTagIds: next, searchQuery: '' }
+    )
+    const names = next.map((id) => tags.find((t) => t.id === id)?.name).filter(Boolean)
+    setStatus(names.length > 0 ? `Searching for: ${names.join(' + ')}` : 'No tags in the search')
+  }
+
+  function run(result: Result, shift: boolean, ctrl: boolean): void {
+    if (result.kind === 'tag' && ctrl) {
       if (!currentTrack) {
         setStatus('Play a song first to tag it')
         return
@@ -212,6 +233,20 @@ function QuickSearch(): React.JSX.Element | null {
       setStatus(`${hasIt ? 'Removed' : 'Added'} “${result.tag.name}” ${hasIt ? 'from' : 'to'} ${currentTrack.filename}`)
       setQuery('')
       inputRef.current?.focus()
+      return
+    }
+    if (result.kind === 'tag' && shift) {
+      addTagToSearch(result.tag.id)
+      setStackedTags(true)
+      setQuery('')
+      inputRef.current?.focus()
+      return
+    }
+    // Having stacked tags, finishing with a plain Enter adds this one and closes,
+    // rather than throwing away the ones just built up.
+    if (result.kind === 'tag' && stackedTags) {
+      if (!useFilterStore.getState().selectedTagIds.includes(result.tag.id)) addTagToSearch(result.tag.id)
+      close()
       return
     }
     if (result.kind === 'song') {
@@ -248,7 +283,7 @@ function QuickSearch(): React.JSX.Element | null {
     } else if (event.key === 'Enter') {
       event.preventDefault()
       const result = results[activeIndex]
-      if (result) run(result, event.shiftKey)
+      if (result) run(result, event.shiftKey, event.ctrlKey || event.metaKey)
     }
   }
 
@@ -293,7 +328,7 @@ function QuickSearch(): React.JSX.Element | null {
                   data-index={index}
                   className={`${styles.item} ${index === activeIndex ? styles.itemActive : ''}`}
                   onMouseMove={() => setActiveIndex(index)}
-                  onClick={(e) => run(result, e.shiftKey)}
+                  onClick={(e) => run(result, e.shiftKey, e.ctrlKey || e.metaKey)}
                 >
                   {result.kind === 'song' && (
                     <>
@@ -316,6 +351,7 @@ function QuickSearch(): React.JSX.Element | null {
                         <span className={styles.sub}>
                           {result.tag.groupId !== null ? groupNames.get(result.tag.groupId) ?? 'Tag' : 'Tag'} · {result.count}{' '}
                           {result.count === 1 ? 'song' : 'songs'}
+                          {selectedTagIds.includes(result.tag.id) && ' · in the search'}
                         </span>
                       </span>
                     </>
@@ -340,8 +376,8 @@ function QuickSearch(): React.JSX.Element | null {
           {status ?? (
             <>
               <kbd>↑</kbd>
-              <kbd>↓</kbd> move · <kbd>Enter</kbd> open · <kbd>Shift</kbd>+<kbd>Enter</kbd> on a tag adds it to the playing song ·{' '}
-              <kbd>Esc</kbd> close
+              <kbd>↓</kbd> move · <kbd>Enter</kbd> open · <kbd>Shift</kbd>+<kbd>Enter</kbd> tag → add to search ·{' '}
+              <kbd>Ctrl</kbd>+<kbd>Enter</kbd> tag → add to song · <kbd>Esc</kbd> close
             </>
           )}
         </div>

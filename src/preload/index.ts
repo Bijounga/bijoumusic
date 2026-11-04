@@ -26,6 +26,8 @@ import type {
   MiniPlayerCommand,
   UpdateStatus,
   SyncStatus,
+  PlaylistInfo,
+  AutoTagBatchItem,
   DroppedOnProject,
   DroppedOnProjectResult,
   AutoTagInfo,
@@ -155,6 +157,7 @@ const api = {
     return () => ipcRenderer.removeListener(IpcChannels.downloadProgress, listener)
   },
   getVideoInfo: (url: string): Promise<VideoInfoPreview> => ipcRenderer.invoke(IpcChannels.getVideoInfo, url),
+  getPlaylistInfo: (url: string): Promise<PlaylistInfo> => ipcRenderer.invoke(IpcChannels.getPlaylistInfo, url),
   windowMinimize: (): Promise<void> => ipcRenderer.invoke(IpcChannels.windowMinimize),
   windowToggleMaximize: (): Promise<void> => ipcRenderer.invoke(IpcChannels.windowToggleMaximize),
   windowClose: (): Promise<void> => ipcRenderer.invoke(IpcChannels.windowClose),
@@ -209,6 +212,8 @@ const api = {
     ipcRenderer.invoke(IpcChannels.autoTagSuggest, trackId),
   autoTagApply: (trackId: number, names: string[]): Promise<void> =>
     ipcRenderer.invoke(IpcChannels.autoTagApply, trackId, names),
+  autoTagBatch: (trackIds: number[]): Promise<AutoTagBatchItem[]> =>
+    ipcRenderer.invoke(IpcChannels.autoTagBatch, trackIds),
   onAutoTagProgress: (callback: (detail: string) => void): (() => void) => {
     const listener = (_event: Electron.IpcRendererEvent, detail: string): void => callback(detail)
     ipcRenderer.on(IpcChannels.autoTagProgress, listener)

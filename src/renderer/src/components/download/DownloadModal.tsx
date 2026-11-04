@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FolderNode } from '../../lib/folderTree'
 import { flattenFolderTree, type FlatFolderOption } from '../../lib/folderTree'
-import type { DownloadProgressPayload } from '@shared/types'
+import type { AutoTagBatchItem, DownloadProgressPayload, PlaylistInfo } from '@shared/types'
 import { useLibraryStore } from '../../state/libraryStore'
 import { useEmbedThumbnailStore } from '../../state/embedThumbnailStore'
+import { useTagStore } from '../../state/tagStore'
 import TagEditorPopover from '../tags/TagEditorPopover'
 import FavoriteSelector from '../favorites/FavoriteSelector'
 import EnergySelector from '../favorites/EnergySelector'
@@ -21,14 +22,25 @@ type ThumbnailStatus = 'idle' | 'loading' | 'found' | 'none'
 
 const THUMBNAIL_LOOKUP_DEBOUNCE_MS = 700
 
+/** A link that points into a playlist (a playlist page, or a video opened from one). */
+function hasPlaylist(url: string): boolean {
+  return /[?&]list=/.test(url)
+}
+
+/** A playlist page itself, as opposed to one video that happens to be in a playlist. */
+function isPlaylistPage(url: string): boolean {
+  return hasPlaylist(url) && !/[?&]v=/.test(url)
+}
+
 function progressLabel(progress: DownloadProgressPayload | null): string {
   if (!progress) return ''
   if (progress.stage === 'preparing') return 'Preparing…'
   if (progress.stage === 'scanning') return 'Adding to your library…'
+  const which = progress.item !== undefined && progress.total !== undefined ? `Song ${progress.item} of ${progress.total} · ` : ''
   const pct = progress.percent !== undefined ? `${progress.percent.toFixed(0)}%` : ''
   const speed = progress.speed ? ` · ${progress.speed}` : ''
   const eta = progress.eta ? ` · ETA ${progress.eta}` : ''
-  return `Downloading… ${pct}${speed}${eta}`
+  return `${which}Downloading… ${pct}${speed}${eta}`
 }
 
 /** Paste a URL, pick a destination folder (searchable, same flattened list the
@@ -46,6 +58,22 @@ function DownloadModal({ folderTree, onClose }: DownloadModalProps): React.JSX.E
   const [downloadedTrackId, setDownloadedTrackId] = useState<number | null>(null)
   const [thumbnailStatus, setThumbnailStatus] = useState<ThumbnailStatus>('idle')
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
+  // Playlists: what the link holds, whether to take all of it, and what came of it.
+  const [playlistInfo, setPlaylistInfo] = useState<PlaylistInfo | null>(null)
+  const [wholePlaylist, setWholePlaylist] = useState(false)
+  const [playlistFolder, setPlaylistFolder] = useState(true)
+  const [autoTag, setAutoTag] = useState(true)
+  const [taggerFolder, setTaggerFolder] = useState<string | null | undefined>(undefined)
+  const [playlistResult, setPlaylistResult] = useState<{ trackIds: number[]; failed: number } | null>(null)
+  const [batchPhase, setBatchPhase] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
+  const [batchProgress, setBatchProgress] = useState('')
+  const [batchItems, setBatchItems] = useState<AutoTagBatchItem[]>([])
+  const [batchError, setBatchError] = useState('')
+  const loadTags = useTagStore((s) => s.loadAll)
+
+  useEffect(() => {
+    void window.api.autoTagInfo().then((info) => setTaggerFolder(info.folder))
+  }, [])
 
   const tracks = useLibraryStore((s) => s.tracks)
   const downloadedTrack = tracks.find((t) => t.id === downloadedTrackId) ?? null
@@ -60,14 +88,24 @@ function DownloadModal({ folderTree, onClose }: DownloadModalProps): React.JSX.E
   const thumbnailRequestId = useRef(0)
   useEffect(() => {
     const trimmed = url.trim()
+    setPlaylistInfo(null)
+    setWholePlaylist(isPlaylistPage(trimmed))
     if (!trimmed) {
       setThumbnailStatus('idle')
       setThumbnailUrl(null)
       return
     }
-    setThumbnailStatus('loading')
+    // A playlist page has no single thumbnail to preview - only what it holds.
+    const pageOnly = isPlaylistPage(trimmed)
+    setThumbnailStatus(pageOnly ? 'none' : 'loading')
     const requestId = ++thumbnailRequestId.current
     const timer = setTimeout(() => {
+      if (hasPlaylist(trimmed)) {
+        window.api.getPlaylistInfo(trimmed).then((info) => {
+          if (thumbnailRequestId.current === requestId) setPlaylistInfo(info)
+        })
+      }
+      if (pageOnly) return
       window.api.getVideoInfo(trimmed).then((info) => {
         if (thumbnailRequestId.current !== requestId) return
         if (info.thumbnail) {
@@ -90,6 +128,25 @@ function DownloadModal({ folderTree, onClose }: DownloadModalProps): React.JSX.E
   }, [flatFolders, folderQuery])
 
   const canDownload = url.trim().length > 0 && selectedFolder !== null && status !== 'running'
+  const downloadingPlaylist = wholePlaylist && hasPlaylist(url.trim())
+
+  /** Tags every song the playlist brought in with the Music Tagger, in one run. */
+  async function runBatchTagging(trackIds: number[]): Promise<void> {
+    setBatchPhase('running')
+    setBatchError('')
+    setBatchProgress('Starting the tagger… it takes about a minute to load')
+    const stop = window.api.onAutoTagProgress(setBatchProgress)
+    try {
+      setBatchItems(await window.api.autoTagBatch(trackIds))
+      await loadTags()
+      setBatchPhase('done')
+    } catch (err) {
+      setBatchError(err instanceof Error ? err.message.replace(/^Error invoking remote method '[^']*': (Error: )?/, '') : String(err))
+      setBatchPhase('error')
+    } finally {
+      stop()
+    }
+  }
 
   function handleDownload(): void {
     if (!selectedFolder) return
@@ -104,7 +161,9 @@ function DownloadModal({ folderTree, onClose }: DownloadModalProps): React.JSX.E
         url: url.trim(),
         libraryRootId: selectedFolder.libraryRootId,
         relativePath: selectedFolder.relativePath,
-        embedThumbnail
+        embedThumbnail,
+        playlist: downloadingPlaylist,
+        playlistFolder
       })
       .then(async (result) => {
         if (result.success) {
@@ -116,7 +175,13 @@ function DownloadModal({ folderTree, onClose }: DownloadModalProps): React.JSX.E
 
           setStatus('done')
           setResultPath(result.filePath ?? null)
-          setDownloadedTrackId(result.trackId ?? null)
+          if (downloadingPlaylist) {
+            const trackIds = result.trackIds ?? []
+            setPlaylistResult({ trackIds, failed: result.failed ?? 0 })
+            if (autoTag && taggerFolder && trackIds.length > 0) void runBatchTagging(trackIds)
+          } else {
+            setDownloadedTrackId(result.trackId ?? null)
+          }
         } else {
           setStatus('error')
           setError(result.error ?? 'Download failed')
@@ -165,6 +230,49 @@ function DownloadModal({ folderTree, onClose }: DownloadModalProps): React.JSX.E
               Embed thumbnail as cover art
             </label>
 
+            {hasPlaylist(url.trim()) && (
+              <>
+                <label className={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={wholePlaylist}
+                    onChange={(e) => setWholePlaylist(e.target.checked)}
+                    disabled={status === 'running'}
+                  />
+                  {playlistInfo?.title ? `Download the whole playlist “${playlistInfo.title}”` : 'Download the whole playlist'}
+                  {playlistInfo?.count != null ? ` (${playlistInfo.count} songs)` : ''}
+                </label>
+                {wholePlaylist && (
+                  <>
+                    <label className={styles.checkboxRow}>
+                      <input
+                        type="checkbox"
+                        checked={playlistFolder}
+                        onChange={(e) => setPlaylistFolder(e.target.checked)}
+                        disabled={status === 'running'}
+                      />
+                      Put the songs in a folder named after the playlist
+                    </label>
+                    {taggerFolder ? (
+                      <label className={styles.checkboxRow}>
+                        <input
+                          type="checkbox"
+                          checked={autoTag}
+                          onChange={(e) => setAutoTag(e.target.checked)}
+                          disabled={status === 'running'}
+                        />
+                        Auto-tag the songs when they&apos;re downloaded
+                      </label>
+                    ) : (
+                      taggerFolder === null && (
+                        <p className={styles.batchNote}>Auto-tagging needs your Music Tagger app, which BijouMusic couldn&apos;t find.</p>
+                      )
+                    )}
+                  </>
+                )}
+              </>
+            )}
+
             <label className={styles.label}>Destination folder</label>
             <input
               className={styles.folderSearchInput}
@@ -196,7 +304,11 @@ function DownloadModal({ folderTree, onClose }: DownloadModalProps): React.JSX.E
             )}
 
             <button className={styles.downloadBtn} disabled={!canDownload} onClick={handleDownload}>
-              {status === 'running' ? 'Downloading…' : 'Download'}
+              {status === 'running'
+                ? 'Downloading…'
+                : downloadingPlaylist
+                  ? `Download playlist${playlistInfo?.count != null ? ` (${playlistInfo.count} songs)` : ''}`
+                  : 'Download'}
             </button>
 
             {status === 'running' && <p className={styles.progressText}>{progressLabel(progress)}</p>}
@@ -204,7 +316,51 @@ function DownloadModal({ folderTree, onClose }: DownloadModalProps): React.JSX.E
           </>
         )}
 
-        {status === 'done' && (
+        {status === 'done' && playlistResult && (
+          <>
+            <p className={styles.successText}>
+              ✓ Downloaded {playlistResult.trackIds.length} song{playlistResult.trackIds.length === 1 ? '' : 's'} and added them to your library.
+            </p>
+            {playlistResult.failed > 0 && (
+              <p className={styles.batchNote}>
+                {playlistResult.failed} song{playlistResult.failed === 1 ? '' : 's'} couldn&apos;t be downloaded (private, removed or blocked videos).
+              </p>
+            )}
+
+            {batchPhase === 'running' && <p className={styles.progressText}>{batchProgress}</p>}
+            {batchPhase === 'error' && (
+              <>
+                <p className={styles.errorText}>⚠ {batchError}</p>
+                <button className={styles.downloadBtn} onClick={() => void runBatchTagging(playlistResult.trackIds)}>
+                  Try auto-tagging again
+                </button>
+              </>
+            )}
+            {batchPhase === 'done' && (
+              <>
+                <p className={styles.successText}>
+                  ✓ Tagged {batchItems.filter((i) => i.tags.length > 0).length} of {batchItems.length} songs. Only the tags the model is sure about were added.
+                </p>
+                <div className={styles.batchList}>
+                  {batchItems.map((item) => (
+                    <div key={item.trackId} className={styles.batchRow}>
+                      <span className={styles.batchName} title={item.filename}>
+                        {item.filename}
+                      </span>
+                      <span className={styles.batchTags}>{item.error ? item.error : item.tags.length > 0 ? item.tags.join(', ') : 'no confident tags'}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <button className={styles.downloadBtn} onClick={onClose} disabled={batchPhase === 'running'}>
+              Close
+            </button>
+          </>
+        )}
+
+        {status === 'done' && !playlistResult && (
           <>
             <p className={styles.successText}>✓ Downloaded and added to your library.</p>
             {resultPath && <p className={styles.pathText}>{resultPath}</p>}

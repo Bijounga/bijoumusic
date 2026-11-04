@@ -1,11 +1,11 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { join, basename } from 'path'
 import { IpcChannels } from '@shared/ipcChannels'
-import type { DownloadTrackPayload, DownloadResult, VideoInfoPreview } from '@shared/types'
+import type { DownloadTrackPayload, DownloadResult, PlaylistInfo, VideoInfoPreview } from '@shared/types'
 import { listLibraryRoots } from '../db/repositories/libraryRootsRepo'
-import { findTrackByFolderAndFilename } from '../db/repositories/tracksRepo'
+import { findTrackByFolderAndFilename, listTrackIdsByPaths } from '../db/repositories/tracksRepo'
 import { scanFolder } from '../scanner/libraryScanner'
-import { downloadAudioToFolder, getVideoThumbnail } from '../downloader/ytDlpDownloader'
+import { downloadAudioToFolder, getPlaylistSummary, getVideoThumbnail } from '../downloader/ytDlpDownloader'
 
 export function registerDownloaderIpc(): void {
   ipcMain.handle(
@@ -18,13 +18,14 @@ export function registerDownloaderIpc(): void {
       const destFolder = payload.relativePath ? join(root.path, payload.relativePath) : root.path
 
       try {
-        const { filePath } = await downloadAudioToFolder(
+        const { filePath, filePaths, failed } = await downloadAudioToFolder(
           payload.url,
           destFolder,
           payload.embedThumbnail,
           (progress) => {
             senderWindow?.webContents.send(IpcChannels.downloadProgress, progress)
-          }
+          },
+          { playlist: payload.playlist, playlistFolder: payload.playlistFolder }
         )
 
         senderWindow?.webContents.send(IpcChannels.downloadProgress, { stage: 'scanning' })
@@ -43,12 +44,27 @@ export function registerDownloaderIpc(): void {
           trackId = track?.id
         }
 
+        if (payload.playlist) {
+          // Every song the playlist brought in: the ones the scan just added, plus any
+          // that were already in the library at the path yt-dlp reported.
+          const trackIds = new Set<number>([...scanResult.insertedTrackIds, ...listTrackIdsByPaths(filePaths)])
+          return { success: true, filePath, trackId, trackIds: [...trackIds], failed }
+        }
+
         return { success: true, filePath, trackId }
       } catch (err) {
         return { success: false, error: err instanceof Error ? err.message : String(err) }
       }
     }
   )
+
+  ipcMain.handle(IpcChannels.getPlaylistInfo, async (_event, url: string): Promise<PlaylistInfo> => {
+    try {
+      return await getPlaylistSummary(url)
+    } catch (err) {
+      return { title: null, count: null, error: err instanceof Error ? err.message : String(err) }
+    }
+  })
 
   ipcMain.handle(IpcChannels.getVideoInfo, async (_event, url: string): Promise<VideoInfoPreview> => {
     try {

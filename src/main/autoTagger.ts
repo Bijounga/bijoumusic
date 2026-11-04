@@ -5,7 +5,7 @@ import { mkdtemp, rm, writeFile } from 'fs/promises'
 import { homedir, tmpdir } from 'os'
 import { join } from 'path'
 import { IpcChannels } from '@shared/ipcChannels'
-import type { AutoTagInfo, AutoTagSuggestion } from '@shared/types'
+import type { AutoTagBatchItem, AutoTagInfo, AutoTagSuggestion } from '@shared/types'
 import { getAllSettings, setSetting } from './db/repositories/settingsRepo'
 import { findTrackById } from './db/repositories/tracksRepo'
 import { addTrackTag, findTagByName } from './db/repositories/tagsRepo'
@@ -22,6 +22,8 @@ import { perfLog } from './perfLog'
 // before anything is written to the library.
 
 const SETTING_KEY = 'autoTagger.folder'
+// The job is stopped when it goes this long without saying anything (one song or a
+// whole playlist - it reports as it goes).
 const JOB_TIMEOUT_MS = 10 * 60 * 1000
 const isWin = process.platform === 'win32'
 
@@ -82,14 +84,27 @@ interface TagJobResult {
   game: string
 }
 
-/** Runs tag_job.py on one file and resolves with that file's result. */
-async function runTagJob(folder: string, audioPath: string, onProgress: (detail: string) => void): Promise<TagJobResult> {
+/** The same file can come back from the tagger spelled slightly differently. */
+function pathKey(path: string): string {
+  const slashed = path.replace(/\\/g, '/')
+  return isWin ? slashed.toLowerCase() : slashed
+}
+
+/** Runs tag_job.py on one or many files at once (the model loads once, which is the slow
+ *  part) and resolves with each file's result by path. `onItem` is told as each song
+ *  finishes, or fails, so a long batch can report progress. */
+async function runTagJob(
+  folder: string,
+  audioPaths: string[],
+  onProgress: (detail: string) => void,
+  onItem?: (path: string, ok: boolean) => void
+): Promise<Map<string, TagJobResult>> {
   const work = await mkdtemp(join(tmpdir(), 'bijoumusic-autotag-'))
   const listFile = join(work, 'paths.txt')
-  await writeFile(listFile, audioPath, 'utf8')
+  await writeFile(listFile, audioPaths.join('\n'), 'utf8')
 
   try {
-    return await new Promise<TagJobResult>((resolve, reject) => {
+    return await new Promise<Map<string, TagJobResult>>((resolve, reject) => {
       // A Mac app started from the Dock doesn't see the shell's PATH, which is where
       // ffmpeg usually lives.
       const env = {
@@ -100,14 +115,20 @@ async function runTagJob(folder: string, audioPath: string, onProgress: (detail:
       }
       const child = spawn(pythonIn(folder), ['tag_job.py', '--paths-from', listFile], { cwd: folder, env, windowsHide: true })
 
-      let result: TagJobResult | null = null
+      const results = new Map<string, TagJobResult>()
+      let firstFileError: string | null = null
       let failure: string | null = null
       let buffer = ''
       let stderrTail = ''
-      const timer = setTimeout(() => {
-        failure = 'The tagger took too long and was stopped.'
-        child.kill()
-      }, JOB_TIMEOUT_MS)
+      let timer: NodeJS.Timeout
+      const armTimer = (): void => {
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+          failure = 'The tagger took too long and was stopped.'
+          child.kill()
+        }, JOB_TIMEOUT_MS)
+      }
+      armTimer()
 
       const handleLine = (line: string): void => {
         let message: Record<string, unknown>
@@ -116,15 +137,23 @@ async function runTagJob(folder: string, audioPath: string, onProgress: (detail:
         } catch {
           return // diagnostic noise, not one of its JSON lines
         }
+        armTimer()
+        const path = typeof message.path === 'string' ? message.path : null
         if (message.event === 'loading' && typeof message.detail === 'string') onProgress(message.detail)
         else if (message.event === 'ready') onProgress('Tagging…')
-        else if (message.event === 'result') {
-          result = {
+        else if (message.event === 'result' && path) {
+          results.set(pathKey(path), {
             selected: (message.selected as string[]) ?? [],
             scores: (message.scores as RawScore[]) ?? [],
             game: typeof message.game === 'string' ? message.game : ''
-          }
-        } else if (message.event === 'error' && typeof message.message === 'string') failure = failure ?? message.message
+          })
+          onItem?.(path, true)
+        } else if (message.event === 'error' && typeof message.message === 'string') {
+          if (path) {
+            firstFileError = firstFileError ?? message.message
+            onItem?.(path, false)
+          } else failure = failure ?? message.message
+        }
       }
 
       child.stdout.on('data', (chunk: Buffer) => {
@@ -145,10 +174,10 @@ async function runTagJob(folder: string, audioPath: string, onProgress: (detail:
       child.on('close', () => {
         clearTimeout(timer)
         if (buffer.trim()) handleLine(buffer.trim())
-        if (result) resolve(result)
+        if (results.size > 0) resolve(results)
         else {
-          if (!failure) perfLog(`auto-tag produced no result; stderr: ${stderrTail}`)
-          reject(new Error(failure ?? 'The tagger finished without a result.'))
+          if (!failure && !firstFileError) perfLog(`auto-tag produced no result; stderr: ${stderrTail}`)
+          reject(new Error(failure ?? firstFileError ?? 'The tagger finished without a result.'))
         }
       })
     })
@@ -204,13 +233,56 @@ export function registerAutoTagIpc(): void {
     if (running) throw new Error('The tagger is already busy with another song.')
 
     const sender = BrowserWindow.fromWebContents(event.sender)
-    const job = runTagJob(folder, track.current_path, (detail) => sender?.webContents.send(IpcChannels.autoTagProgress, detail))
+    const job = runTagJob(folder, [track.current_path], (detail) => sender?.webContents.send(IpcChannels.autoTagProgress, detail))
     running = job
     try {
-      return toSuggestions(await job)
+      const results = await job
+      return toSuggestions(results.get(pathKey(track.current_path)) ?? [...results.values()][0])
     } finally {
       running = null
     }
+  })
+
+  // A whole batch of songs (a downloaded playlist): one run of the tagger over all of
+  // them, and the tags it is confident about are added straight away - there are too
+  // many songs to confirm one by one. Its maybe-tags and game guesses are left out.
+  ipcMain.handle(IpcChannels.autoTagBatch, async (event, trackIds: number[]): Promise<AutoTagBatchItem[]> => {
+    const folder = findFolder()
+    if (!folder) throw new Error('Music Tagger was not found.')
+    if (running) throw new Error('The tagger is already busy with another job.')
+
+    const tracks = trackIds.map((id) => findTrackById(id)).filter((t): t is NonNullable<typeof t> => t !== undefined)
+    if (tracks.length === 0) return []
+
+    const sender = BrowserWindow.fromWebContents(event.sender)
+    const names = new Map(tracks.map((t) => [pathKey(t.current_path), t.filename]))
+    let done = 0
+    const job = runTagJob(
+      folder,
+      tracks.map((t) => t.current_path),
+      (detail) => sender?.webContents.send(IpcChannels.autoTagProgress, detail),
+      () => {
+        done++
+        sender?.webContents.send(IpcChannels.autoTagProgress, `Tagged ${done} of ${tracks.length}`)
+      }
+    )
+    running = job
+    let results: Map<string, TagJobResult>
+    try {
+      results = await job
+    } finally {
+      running = null
+    }
+
+    return tracks.map((track) => {
+      const result = results.get(pathKey(track.current_path))
+      if (!result) return { trackId: track.id, filename: names.get(pathKey(track.current_path)) ?? track.filename, tags: [], error: 'The tagger could not read this song.' }
+      for (const name of result.selected) {
+        const { tag } = ensureTagByTitle(name)
+        addTrackTag(track.id, tag.id)
+      }
+      return { trackId: track.id, filename: track.filename, tags: result.selected }
+    })
   })
 
   // Applies the tags the user confirmed. Missing ones are created in the same

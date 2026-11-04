@@ -280,6 +280,27 @@ export interface DownloadTrackPayload {
   /** Embed the source's thumbnail as the mp3's cover art via yt-dlp's own
    *  --embed-thumbnail (muxed in with ffmpeg, no extra dependency). */
   embedThumbnail: boolean
+  /** The URL is a playlist and every song in it should be downloaded (instead of
+   *  just the one video it points at). */
+  playlist?: boolean
+  /** With a playlist: put the songs in a new folder named after the playlist. */
+  playlistFolder?: boolean
+}
+
+export interface PlaylistInfo {
+  title: string | null
+  /** How many songs the playlist lists, when yt-dlp could say. */
+  count: number | null
+  error?: string
+}
+
+/** What auto-tagging a batch of songs did for one of them. */
+export interface AutoTagBatchItem {
+  trackId: number
+  filename: string
+  /** The tags that were added (only the ones the model is confident about). */
+  tags: string[]
+  error?: string
 }
 
 export interface VideoInfoPreview {
@@ -290,6 +311,9 @@ export interface VideoInfoPreview {
 
 export interface DownloadProgressPayload {
   stage: 'preparing' | 'downloading' | 'scanning'
+  /** Playlist downloads: which song this is, out of how many. */
+  item?: number
+  total?: number
   percent?: number
   speed?: string
   eta?: string
@@ -302,6 +326,10 @@ export interface DownloadResult {
    *  row — included so the UI can jump straight to tagging it without the user
    *  having to go find it in the library themselves. */
   trackId?: number
+  /** Playlist downloads: every new song the download added to the library. */
+  trackIds?: number[]
+  /** Playlist downloads: how many songs in the playlist couldn't be downloaded. */
+  failed?: number
   error?: string
 }
 

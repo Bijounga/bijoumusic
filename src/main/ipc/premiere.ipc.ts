@@ -32,6 +32,18 @@ const ANALYZE_TIMEOUT_MS = 20000
 const EXTRACT_PADDING_SECONDS = 1
 // Mac apps launched from Finder don't inherit the shell's PATH, so the usual
 // Homebrew locations are listed explicitly.
+/** A song's length in seconds, read from the file itself; null if it can't be read. */
+async function readDurationSeconds(filePath: string): Promise<number | null> {
+  try {
+    const mm = await import('music-metadata')
+    const metadata = await mm.parseFile(filePath, { duration: true })
+    const seconds = metadata.format.duration
+    return typeof seconds === 'number' && seconds > 0 ? seconds : null
+  } catch {
+    return null
+  }
+}
+
 const FFMPEG_CANDIDATES = ['ffmpeg', 'C:\\ffmpeg\\bin\\ffmpeg.exe', '/opt/homebrew/bin/ffmpeg', '/usr/local/bin/ffmpeg']
 
 function runFfmpeg(ffmpegPath: string, args: string[]): Promise<void> {
@@ -271,7 +283,10 @@ export function registerPremiereIpc(): void {
     IpcChannels.premiereSendTrack,
     async (_event, payload: SendToPremierePayload): Promise<{ success: boolean; error?: string }> => {
       try {
-        const response = await sendPremiereRequest({ type: 'send-track', ...payload })
+        // The library only learns a song's length once its waveform has been made, so it can
+        // be unknown here. Premiere needs it to pick a track the whole song fits on.
+        const durationSeconds = payload.durationSeconds ?? (await readDurationSeconds(payload.originalFilePath))
+        const response = await sendPremiereRequest({ type: 'send-track', ...payload, durationSeconds })
         if (response.type === 'error') {
           return { success: false, error: String(response.error ?? 'Unknown error') }
         }

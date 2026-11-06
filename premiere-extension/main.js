@@ -4,7 +4,7 @@ const { entrypoints } = uxp
 
 // Shown in the activity log on load, so it's obvious which copy of this panel is
 // actually running (the panel loads from wherever it was last copied/loaded from).
-const PANEL_BUILD = '0.2.4 fewer-undo-steps'
+const PANEL_BUILD = '0.2.13 safe-placement'
 const BRIDGE_URL = 'ws://localhost:8934'
 const RECONNECT_DELAY_MS = 2000
 const DROP_WATCH_INTERVAL_MS = 700
@@ -109,14 +109,12 @@ async function getActiveProjectAndSequence() {
  *  one past the last existing track if none — SequenceEditor.createInsertProjectItemAction
  *  creates a new track automatically when handed an index beyond the current count.
  *
- *  durationSeconds may be null (the sending track's duration wasn't known on the
- *  BijouMusic side yet) — in that case this can only check whether the playhead's
- *  exact position is clear, not the clip's full span, so a track that looks empty
- *  here could still have something a bit further along that the placed clip would
- *  reach into. Always pass a real duration when at all possible; this is a
- *  deliberately-accepted fallback, not the normal path. */
+ *  durationSeconds may be null if BijouMusic couldn't work out the song's length. Then
+ *  the clip is assumed to run on forever, so only a track with nothing on it from the
+ *  playhead onward is used (or a new one) - never a track where a song of unknown
+ *  length could land on top of clips further along. */
 async function findEmptyAudioTrackIndex(sequence, atTime, durationSeconds) {
-  const rangeEnd = typeof durationSeconds === 'number' && durationSeconds > 0 ? atTime.seconds + durationSeconds : null
+  const rangeEnd = typeof durationSeconds === 'number' && durationSeconds > 0 ? atTime.seconds + durationSeconds : Infinity
   const count = await sequence.getAudioTrackCount()
   for (let i = 0; i < count; i++) {
     const track = await sequence.getAudioTrack(i)
@@ -125,10 +123,8 @@ async function findEmptyAudioTrackIndex(sequence, atTime, durationSeconds) {
     for (const item of items) {
       const start = await item.getStartTime()
       const end = await item.getEndTime()
-      // Two ranges overlap iff each starts before the other ends. With rangeEnd
-      // unknown, this degrades to the old point-only check (equivalent to a
-      // zero-length range starting at atTime).
-      const overlaps = rangeEnd !== null ? atTime.seconds < end.seconds && start.seconds < rangeEnd : atTime.seconds >= start.seconds && atTime.seconds < end.seconds
+      // Two ranges overlap iff each starts before the other ends.
+      const overlaps = atTime.seconds < end.seconds && start.seconds < rangeEnd
       if (overlaps) {
         occupied = true
         break

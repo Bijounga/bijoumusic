@@ -1,0 +1,188 @@
+/* Theme 7: Liquid Glass (light) — Apple's macOS / iOS 26 glass over a real photograph.
+   Panes are almost empty at the Clear end of the Frost slider (about 6% white, 3px blur);
+   the text stays readable because the picture behind a pane is brightened and calmed
+   through its backdrop-filter, NOT because the pane is milky. Sliding toward Frosted
+   raises the blur and fill and fades that brighten/calm back to normal. Colour is for
+   meaning only: system blue marks selected and primary. The panes are neutral white.
+
+   Frost (--lg-frost, 0-100) and the picture (--lg-wallpaper) are set on <html> by
+   lib/glass.ts. Material values below are the handoff's, unchanged; everything under
+   "BijouMusic's own tokens" maps them onto the names this app's components read. */
+html[data-theme='liquid-glass'] {
+  /* ---- the one knob ---- */
+  --lg-frost: 60;
+
+  /* ---- material (light) ---- */
+  --lg-tint: 255 255 255;
+  --lg-fill: calc(0.06 + var(--lg-frost) * 0.0055); /* Clear 0.06 -> Frosted 0.61 */
+  --lg-blur: calc(3px + var(--lg-frost) * 0.37px); /* Clear 3px -> Frosted 40px */
+  --lg-lift-bd: calc(1.7 - var(--lg-frost) * 0.0058); /* brightness 1.7 -> 1.12 */
+  --lg-calm-bd: calc(0.48 + var(--lg-frost) * 0.0052); /* contrast 0.48 -> 1.0 */
+  --lg-filter: blur(var(--lg-blur)) saturate(1.7) brightness(var(--lg-lift-bd)) contrast(var(--lg-calm-bd));
+
+  --lg-rim-crisp: linear-gradient(135deg, rgb(255 255 255 / 1) 0%, rgb(255 255 255 / 0.25) 22%, rgb(255 255 255 / 0.05) 50%, rgb(255 255 255 / 0.2) 78%, rgb(255 255 255 / 0.85) 100%);
+  --lg-rim-soft: inset 2px 2px 1px -1px rgb(255 255 255 / 0.7), inset -2px -2px 1px -1px rgb(255 255 255 / 0.4), inset 0 0 0 1px rgb(255 255 255 / 0.16), inset 0 0 24px rgb(255 255 255 / 0.2);
+  --lg-hair: rgb(0 0 0 / 0.09);
+  --lg-lift: 0 24px 56px -24px rgb(0 0 0 / 0.42), 0 3px 10px -4px rgb(0 0 0 / 0.14);
+  --lg-edge: rgb(255 255 255 / 0.85);
+
+  --lg-cap: linear-gradient(180deg, rgb(255 255 255 / 0.62), rgb(255 255 255 / 0.34));
+  --lg-cap-hover: linear-gradient(180deg, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.55));
+  --lg-cap-edge: inset 1px 1px 0 rgb(255 255 255 / 0.95), inset -1px -1px 0 rgb(255 255 255 / 0.45), inset 0 0 6px rgb(255 255 255 / 0.35), 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 3px 10px -4px rgb(0 0 0 / 0.22);
+  --lg-recess: rgb(118 118 128 / 0.12);
+  --lg-sep: rgb(60 60 67 / 0.12);
+  --lg-hover: rgb(0 0 0 / 0.045);
+
+  --lg-blue: #007aff;
+  --lg-select: rgb(0 122 255 / 0.13);
+  --lg-select-strong: rgb(0 122 255 / 0.2);
+
+  --lg-ink: #1d1d1f;
+  --lg-ink-dim: #3d3d42;
+  --lg-ink-faint: #4a4a4f;
+
+  --lg-radius: 22px;
+  --lg-wall-fallback: #6f8db0;
+
+  /* ---- BijouMusic's own tokens ---- */
+
+  /* Surfaces: translucent tints on the glass. surface-2 is the fill of every input, popover
+     and dropdown, so it stays nearly opaque white; surface-3 is the blue "selected / hovered row". */
+  --surface-0: var(--lg-wall-fallback);
+  --surface-1: rgb(255 255 255 / 0.22);
+  --surface-2: rgb(255 255 255 / 0.88);
+  --surface-3: var(--lg-select-strong);
+  --border-subtle: var(--lg-sep);
+
+  --text-primary: #1d1d1f;
+  --text-secondary: #3d3d42;
+  --text-disabled: #55555b;
+
+  --accent: #007aff;
+  --accent-strong: #0060c8; /* the darker blue: it's the one that reads as text on light glass */
+  --accent-contrast: #ffffff;
+  --accent-rgb: 0, 122, 255;
+
+  --error: #d70015;
+  --success: #1f8a3a;
+
+  --playhead: #ff3b30;
+
+  --waveform-dim: rgba(60, 60, 67, 0.42);
+  --row-waveform-dim: rgba(60, 60, 67, 0.48);
+
+  --favorite-level-3: #007aff;
+  --favorite-level-2: #2fa84f;
+  --favorite-level-1: #d98200;
+  --favorite-level-0: #6b6b72;
+  --favorite-level-1-rgb: 217, 130, 0;
+
+  --danger: #d70015;
+  --volume-boost: #ff9500;
+
+  /* Section headings are labels, not signals: one calm ink for all of them. */
+  --section-download: #3d3d42;
+  --section-library: #3d3d42;
+  --section-favorites: #3d3d42;
+  --section-energy: #3d3d42;
+  --section-folders: #3d3d42;
+  --section-tags: #3d3d42;
+  --section-projects: #3d3d42;
+  --section-keybinds: #3d3d42;
+
+  --font-ui: 'Inter Glass', 'Inter', -apple-system, 'SF Pro Text', 'Segoe UI Variable', system-ui, sans-serif;
+
+  --row-active-weight: 600;
+
+  /* The title bar is a thin strip of the same glass; the buttons are bare until hovered. */
+  --titlebar-bg: linear-gradient(180deg, rgb(var(--lg-tint) / calc(var(--lg-fill) + 0.12)), rgb(var(--lg-tint) / calc(var(--lg-fill) + 0.04)));
+  --titlebar-border: var(--lg-sep);
+  --titlebar-text: #1d1d1f;
+  --titlebar-text-shadow: none;
+  --caption-width: 46px;
+  --caption-close-width: 46px;
+  --caption-height: 32px;
+  --caption-gap: 0px;
+  --caption-inset: 0px;
+  --caption-radius: 0;
+  --caption-border: transparent;
+  --caption-bg: transparent;
+  --caption-bg-hover: rgba(0, 0, 0, 0.07);
+  --caption-bg-active: rgba(0, 0, 0, 0.11);
+  --caption-shadow: none;
+  --caption-icon: #1d1d1f;
+  --caption-icon-filter: none;
+  --caption-stroke: 1;
+  --caption-close-border: transparent;
+  --caption-close-bg: transparent;
+  --caption-close-bg-hover: #c42b1c;
+  --caption-close-bg-active: #b0281a;
+  --caption-close-shadow-hover: none;
+  --caption-close-icon-hover: #ffffff;
+
+  /* Menus and popovers: a bright edge, a hairline, a deep soft shadow. */
+  --shadow-float: inset 0 1px 0 var(--lg-edge), 0 0 0 0.5px var(--lg-hair), 0 30px 70px -20px rgb(0 0 0 / 0.45);
+
+  /* The picture behind everything. lib/glass.ts sets --lg-wallpaper; the flat colour is only
+     what shows for the instant before it does. */
+  --app-backdrop: var(--lg-wallpaper, linear-gradient(180deg, #8fb0d4, #5d7da3));
+
+  /* The four big panes: the translucent tint. The track list is the thick one, because that's
+     where people read dense rows. */
+  --pane-sidebar: linear-gradient(160deg, rgb(var(--lg-tint) / calc(var(--lg-fill) + 0.12)) 0%, rgb(var(--lg-tint) / var(--lg-fill)) 45%, rgb(var(--lg-tint) / calc(var(--lg-fill) + 0.05)) 100%);
+  --pane-header: linear-gradient(160deg, rgb(var(--lg-tint) / calc(var(--lg-fill) + 0.12)) 0%, rgb(var(--lg-tint) / var(--lg-fill)) 45%, rgb(var(--lg-tint) / calc(var(--lg-fill) + 0.05)) 100%);
+  --pane-list: linear-gradient(160deg, rgb(var(--lg-tint) / calc(var(--lg-fill) + 0.36)), rgb(var(--lg-tint) / calc(var(--lg-fill) + 0.28)));
+  --pane-footer: linear-gradient(160deg, rgb(var(--lg-tint) / calc(var(--lg-fill) + 0.12)) 0%, rgb(var(--lg-tint) / var(--lg-fill)) 45%, rgb(var(--lg-tint) / calc(var(--lg-fill) + 0.05)) 100%);
+  --pane-radius: var(--lg-radius);
+
+  /* Glass capsule buttons. */
+  --control-bg: var(--lg-cap);
+  --control-bg-hover: var(--lg-cap-hover);
+  --control-border: transparent;
+  --control-shadow: var(--lg-cap-edge);
+  --control-radius: 999px;
+
+  --bubble-bg: var(--lg-cap);
+  --bubble-shadow: var(--lg-cap-edge);
+
+  /* Play / pause: the one solid blue action. */
+  --orb-bg: linear-gradient(180deg, #1a8cff, #0071e3);
+  --orb-border: rgb(0 60 140 / 0.5);
+  --orb-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3), 0 6px 14px -4px rgb(0 113 227 / 0.6);
+  --orb-icon: #ffffff;
+
+  --well-shadow: inset 0 1px 2px rgb(0 0 0 / 0.12);
+
+  /* Waveform and analyzer "screens": a lighter pane of glass, with the picture still faintly there. */
+  --screen-bg: linear-gradient(180deg, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.3));
+  --screen-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.8);
+  --screen-text: #3d3d42;
+  --screen-accent: #007aff;
+  --screen-accent-strong: #4da3ff;
+  --screen-ring: rgba(255, 255, 255, 0.7);
+  /* Opaque on purpose: the spectrogram paints its quiet pixels with this exact colour. */
+  --analyzer-bar-dim: #aebfd6;
+  --analyzer-bg-dim: #e4ecf7;
+
+  --row-active-text-shadow: none;
+  --bubble-radius: 50%;
+  --titlebar-weight: 500;
+  --caption-top: 0px;
+
+  /* Flat, sleek waveform: no pill lighting. */
+  --waveform-gloss-top: transparent;
+  --waveform-gloss-mid: transparent;
+  --waveform-gloss-shade: transparent;
+  --waveform-gloss-glow: transparent;
+
+  --screen-overlay: none;
+
+  --thumb-width: 14px;
+  --thumb-height: 14px;
+  --thumb-radius: 50%;
+  --thumb-bg: var(--accent);
+  --thumb-boost-bg: var(--volume-boost);
+  --press-depth: 0px;
+  /* The spinning album art gets a soft top-left sheen, like a lens. */
+  --disc-overlay: radial-gradient(ellipse 60% 38% at 34% 18%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 100%);
+}

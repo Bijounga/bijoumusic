@@ -15,7 +15,7 @@ function TitleBar(): React.JSX.Element {
   useEffect(() => window.api.onMiniOpenChanged(setMiniOpen), [])
 
   return (
-    <div className={`${styles.bar} ${isMac ? styles.mac : ''}`}>
+    <div className={`${styles.bar} ${isMac ? styles.mac : ''}`} data-titlebar>
       <img className={styles.icon} src={iconUrl} alt="" draggable={false} />
       <span className={styles.title}>BijouMusic</span>
       <div className={styles.captions}>

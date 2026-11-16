@@ -1,0 +1,104 @@
+/* Liquid Glass — what the Light and Dark variants have in common (from the Liquid Glass
+   handoff, tuned for BijouMusic's layout). The two token files (liquid-glass.css,
+   liquid-glass-dark.css) own every colour and material value; this file owns the
+   structure that uses them, so it only ever matches when one of them is active.
+
+   How a pane becomes glass. Each of the four big panes (sidebar, header, track list,
+   player) carries data-pane. Its own background is the translucent tint (--pane-*), its
+   box-shadow is the lit edge and the lift, and a ::before layer behind it holds the
+   backdrop-filter. The filter sits on that layer, not on the pane, for two reasons: a
+   backdrop-filter on the pane itself would make the pane the containing block for every
+   position:fixed menu inside it, and a scrolling pane (the sidebar) would scroll its own
+   glass away. The ::before layer has z-index -1 and the pane is not a stacking context,
+   so the layer lands right above the wallpaper — which is exactly what it should blur. */
+
+@font-face {
+  font-family: 'Inter Glass';
+  src: url('../../assets/glass/fonts/inter-latin-opsz-normal.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+html[data-theme^='liquid-glass'] {
+  font-optical-sizing: auto;
+  letter-spacing: -0.006em;
+}
+
+/* Panes float: a gap between them and around the edge, with the picture showing through. */
+html[data-theme^='liquid-glass'] [data-app-shell] {
+  gap: 10px;
+  padding: 0 10px 10px;
+}
+
+html[data-theme^='liquid-glass'] [data-pane] {
+  position: relative;
+  border: 0;
+  border-radius: var(--lg-radius);
+  box-shadow: var(--lg-rim-soft), 0 0 0 0.5px var(--lg-hair), var(--lg-lift);
+}
+
+/* The blur layer (see the note at the top). */
+html[data-theme^='liquid-glass'] [data-pane]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  -webkit-backdrop-filter: var(--lg-filter);
+  backdrop-filter: var(--lg-filter);
+  pointer-events: none;
+}
+
+/* Edge refraction: liquidGlassRefraction.ts sets --lg-refract and data-lg-refract on a few
+   big panes (Chromium only), and the picture then bends along their rim like a lens. */
+html[data-theme^='liquid-glass'] [data-pane][data-lg-refract]::before {
+  -webkit-backdrop-filter: var(--lg-refract) var(--lg-filter);
+  backdrop-filter: var(--lg-refract) var(--lg-filter);
+}
+
+/* The crisp rim: a 1px gradient stroke on its own layer, masked to the edge — bright at the
+   top-left and bottom-right, fading between. */
+html[data-theme^='liquid-glass'] [data-pane]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--lg-rim-crisp);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* The title bar is a thin strip of the same glass, so the window title stays readable over any picture. */
+html[data-theme^='liquid-glass'] [data-titlebar] {
+  -webkit-backdrop-filter: var(--lg-filter);
+  backdrop-filter: var(--lg-filter);
+}
+
+html[data-theme^='liquid-glass'] ::selection {
+  background: rgb(0 122 255 / 0.25);
+  color: inherit;
+}
+
+html[data-theme^='liquid-glass'] :focus-visible {
+  outline: 3px solid rgb(0 122 255 / 0.45);
+  outline-offset: 1px;
+}
+
+html[data-theme^='liquid-glass'] input[type='range'] {
+  accent-color: var(--lg-blue);
+}
+
+/* The pop-out mini player is a whole window, so it gets the blur layer but not the
+   floating look (no rounded corners, lift or rim). */
+html[data-theme^='liquid-glass'] [data-pane='mini'] {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+html[data-theme^='liquid-glass'] [data-pane='mini']::after {
+  display: none;
+}

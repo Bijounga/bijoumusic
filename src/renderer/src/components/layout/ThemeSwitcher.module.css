@@ -1,3 +1,10 @@
+.group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .select {
   background: var(--surface-2);
   border: 1px solid var(--control-border);

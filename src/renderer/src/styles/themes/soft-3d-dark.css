@@ -1,0 +1,136 @@
+/* Theme 11: Soft 3D Dark — the same pressed-clay idea as Soft 3D, in the dark: charcoal
+   plastic lit from the top-left, where the "light" edge is a faint lift and the shadow
+   is deep. Raised things are slightly lighter than the case, sunk things darker. The
+   accent becomes a bright mint (it carries text on dark just fine), the display is a
+   near-black glass with a mint trace, and the knobs are dark with a pale ring.
+
+   The structure that floats the panes lives in soft-3d.css and covers both variants. */
+html[data-theme='soft-3d-dark'] {
+  --sf-raise: 8px 8px 18px rgba(0, 0, 0, 0.55), -6px -6px 14px rgba(255, 255, 255, 0.045);
+  --sf-raise-sm: 3px 3px 8px rgba(0, 0, 0, 0.6), -3px -3px 7px rgba(255, 255, 255, 0.05);
+  --sf-sunk: inset 3px 3px 8px rgba(0, 0, 0, 0.6), inset -3px -3px 7px rgba(255, 255, 255, 0.05);
+
+  --surface-0: #25272c;
+  --surface-1: #2d3036;
+  --surface-2: #33363d;
+  --surface-3: rgba(79, 224, 176, 0.2);
+  --border-subtle: rgba(255, 255, 255, 0.07);
+
+  --text-primary: #e8eaee;
+  --text-secondary: #a6abb5;
+  --text-disabled: #767b86;
+
+  --accent: #4fe0b0;
+  --accent-strong: #8ff3d3;
+  --accent-contrast: #06231a;
+  --accent-rgb: 79, 224, 176;
+
+  --error: #ff7a72;
+  --success: #4fe0b0;
+
+  --playhead: #ff8a7a;
+
+  --waveform-dim: rgba(120, 240, 205, 0.38);
+  --row-waveform-dim: rgba(200, 205, 215, 0.5);
+
+  --favorite-level-3: #4fe0b0;
+  --favorite-level-2: #a6d65a;
+  --favorite-level-1: #f0b84a;
+  --favorite-level-0: #8a8f99;
+  --favorite-level-1-rgb: 240, 184, 74;
+
+  --danger: #ff7a72;
+  --volume-boost: #ffa45c;
+
+  --section-download: #a6abb5;
+  --section-library: #a6abb5;
+  --section-favorites: #a6abb5;
+  --section-energy: #a6abb5;
+  --section-folders: #a6abb5;
+  --section-tags: #a6abb5;
+  --section-projects: #a6abb5;
+  --section-keybinds: #a6abb5;
+
+  --font-ui: 'Inter Glass', 'Inter', -apple-system, 'SF Pro Text', 'Segoe UI Variable', system-ui, sans-serif;
+
+  --row-active-weight: 600;
+  --row-active-text-shadow: none;
+
+  --titlebar-bg: #25272c;
+  --titlebar-border: transparent;
+  --titlebar-text: #e8eaee;
+  --titlebar-text-shadow: none;
+  --titlebar-weight: 500;
+  --caption-top: 5px;
+  --caption-width: 32px;
+  --caption-close-width: 32px;
+  --caption-height: 22px;
+  --caption-gap: 7px;
+  --caption-inset: 12px;
+  --caption-radius: 11px;
+  --caption-border: transparent;
+  --caption-bg: linear-gradient(145deg, #33363d, #222428);
+  --caption-bg-hover: linear-gradient(145deg, #3d4148, #2a2d32);
+  --caption-bg-active: #1f2125;
+  --caption-shadow: 2px 2px 5px rgba(0, 0, 0, 0.6), -2px -2px 5px rgba(255, 255, 255, 0.05);
+  --caption-icon: #e8eaee;
+  --caption-icon-filter: none;
+  --caption-stroke: 1.5;
+  --caption-close-border: transparent;
+  --caption-close-bg: linear-gradient(145deg, #33363d, #222428);
+  --caption-close-bg-hover: linear-gradient(145deg, #f08c84, #cf5d54);
+  --caption-close-bg-active: #b84a42;
+  --caption-close-shadow-hover: 0 0 8px rgba(240, 100, 90, 0.5);
+  --caption-close-icon-hover: #ffffff;
+
+  --shadow-float: 6px 8px 22px rgba(0, 0, 0, 0.65), -3px -3px 10px rgba(255, 255, 255, 0.04);
+
+  --app-backdrop: none;
+
+  --pane-sidebar: linear-gradient(145deg, #2e3137, #232529);
+  --pane-header: linear-gradient(145deg, #2e3137, #232529);
+  --pane-list: linear-gradient(145deg, #2c2f35, #222428);
+  --pane-footer: linear-gradient(145deg, #2e3137, #232529);
+  --pane-radius: 28px;
+
+  --control-bg: linear-gradient(145deg, #33363d, #222428);
+  --control-bg-hover: linear-gradient(145deg, #3d4148, #2a2d32);
+  --control-border: transparent;
+  --control-shadow: var(--sf-raise-sm);
+  --control-radius: 999px;
+
+  --bubble-bg: radial-gradient(circle at 34% 28%, #484c55 0%, #31343a 55%, #25272c 100%);
+  --bubble-shadow: 0 0 0 3px #2a2c31, 0 0 0 4px rgba(255, 255, 255, 0.1), 5px 6px 12px rgba(0, 0, 0, 0.6), -3px -3px 8px rgba(255, 255, 255, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+  --bubble-radius: 50%;
+
+  /* Play / pause: a dark knob in a pale ring, glowing mint. */
+  --orb-bg: radial-gradient(circle at 34% 28%, #50545d 0%, #33363d 50%, #1f2125 100%);
+  --orb-border: #c9ccd3;
+  --orb-shadow: 0 0 0 5px #2a2c31, 0 0 0 6px rgba(255, 255, 255, 0.1), 8px 10px 18px rgba(0, 0, 0, 0.65), -4px -4px 12px rgba(255, 255, 255, 0.05), 0 0 28px rgba(79, 224, 176, 0.45);
+  --orb-icon: #4fe0b0;
+
+  --well-shadow: var(--sf-sunk);
+
+  --screen-bg: linear-gradient(180deg, #17191c, #0f1113);
+  --screen-shadow: inset 3px 3px 9px rgba(0, 0, 0, 0.8), inset -2px -2px 6px rgba(255, 255, 255, 0.05);
+  --screen-text: #9fe9d0;
+  --screen-accent: #5ff0c0;
+  --screen-accent-strong: #c9fff0;
+  --screen-ring: #0f1113;
+  --analyzer-bar-dim: #33373d;
+  --analyzer-bg-dim: #14161a;
+  --screen-overlay: radial-gradient(circle, rgba(0, 0, 0, 0.5) 0 0.9px, rgba(0, 0, 0, 0) 1.3px) 0 0 / 4px 4px;
+
+  --waveform-gloss-top: transparent;
+  --waveform-gloss-mid: transparent;
+  --waveform-gloss-shade: transparent;
+  --waveform-gloss-glow: transparent;
+
+  --thumb-width: 18px;
+  --thumb-height: 18px;
+  --thumb-radius: 50%;
+  --thumb-bg: radial-gradient(circle at 34% 28%, #5a5e68, #33363d);
+  --thumb-boost-bg: radial-gradient(circle at 34% 28%, #ffd2a8, #f08a3a);
+  --press-depth: 1px;
+  --disc-overlay: radial-gradient(circle, #4a4e57 0 5%, #15171a 5.5% 7%, rgba(0, 0, 0, 0) 7.5%), radial-gradient(ellipse 60% 38% at 34% 18%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 100%);
+}

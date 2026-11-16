@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './styles/theme.css'
 import { bootstrapSettings } from './lib/settingsSync'
+import { applyGlassVars } from './lib/glass'
 
 // Applied here, inline, rather than by importing themeStore.ts — that file pulls
 // in zustand at module scope, which is exactly what bootstrapSettings() needs to
@@ -20,6 +21,8 @@ function applyStoredThemeEarly(): void {
   }
 }
 applyStoredThemeEarly()
+// The glass themes' Frost level and picture, from the same early read.
+applyGlassVars()
 
 async function main(): Promise<void> {
   // Reconciling settings has to finish before App's module graph (and the zustand

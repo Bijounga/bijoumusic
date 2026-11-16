@@ -1,11 +1,35 @@
 import { create } from 'zustand'
 import { setSetting } from '../lib/settingsSync'
+import { applyGlassVars } from '../lib/glass'
 
 // Grows as each theme actually ships (see the theming plan) — only list a theme
 // id here once its styles/themes/*.css file is real, or the switcher would offer
 // something with no styling behind it.
-export type ThemeId = 'dark' | 'frutiger-luna' | 'frutiger-aero-dark' | 'frutiger-aqua' | 'vaporwave-95' | 'y2k-chrome'
-const KNOWN_THEMES: ThemeId[] = ['dark', 'frutiger-luna', 'frutiger-aero-dark', 'frutiger-aqua', 'vaporwave-95', 'y2k-chrome']
+export type ThemeId =
+  | 'dark'
+  | 'frutiger-luna'
+  | 'frutiger-aero-dark'
+  | 'frutiger-aqua'
+  | 'vaporwave-95'
+  | 'y2k-chrome'
+  | 'liquid-glass'
+  | 'liquid-glass-dark'
+  | 'soft-3d'
+  | 'soft-3d-dark'
+  | 'techno-flat'
+const KNOWN_THEMES: ThemeId[] = [
+  'dark',
+  'frutiger-luna',
+  'frutiger-aero-dark',
+  'frutiger-aqua',
+  'vaporwave-95',
+  'y2k-chrome',
+  'liquid-glass',
+  'liquid-glass-dark',
+  'soft-3d',
+  'soft-3d-dark',
+  'techno-flat'
+]
 const DEFAULT_THEME: ThemeId = 'dark'
 
 const STORAGE_KEY = 'bijoumusic:theme'
@@ -38,6 +62,8 @@ function save(id: ThemeId): void {
  *  avoiding a flash of the default theme on startup. */
 export function applyThemeAttribute(id: ThemeId): void {
   document.documentElement.dataset.theme = id
+  // The glass themes' default picture depends on which one is active.
+  applyGlassVars()
 }
 
 interface ThemeState {

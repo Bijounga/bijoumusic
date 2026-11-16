@@ -1,0 +1,169 @@
+/* Theme 9: Soft 3D — matte plastic and clay, like a product-UI styleguide come to
+   life: everything is pressed up out of (or sunk into) the same soft grey surface,
+   lit from the top-left. Raised shapes get a light edge top-left and a soft shadow
+   bottom-right; inputs and the volume groove are sunk in; the transport buttons are
+   knobs in a ring bezel; the waveform is a dark recessed display behind a dot grille.
+   One quiet accent, mint, marks what's selected or playing.
+
+   The same grey is the page, every pane, and every control, which is what makes the
+   shadows read as depth rather than as outlines. Don't change one without the others.
+   Legibility: graphite text on light grey; mint is only ever a fill or a dark-mint
+   text colour (--accent-strong), never light mint text on grey. */
+html[data-theme='soft-3d'] {
+  /* The one light source: highlight top-left, shadow bottom-right. */
+  --sf-raise: 7px 7px 16px rgba(78, 82, 92, 0.26), -7px -7px 16px rgba(255, 255, 255, 0.88);
+  --sf-raise-sm: 3px 3px 7px rgba(78, 82, 92, 0.28), -3px -3px 7px rgba(255, 255, 255, 0.92);
+  --sf-sunk: inset 3px 3px 7px rgba(78, 82, 92, 0.26), inset -3px -3px 7px rgba(255, 255, 255, 0.9);
+
+  --surface-0: #d9dadd;
+  --surface-1: #e1e2e5;
+  --surface-2: #e9eaec;
+  --surface-3: rgba(30, 160, 122, 0.2);
+  --border-subtle: rgba(80, 84, 94, 0.14);
+
+  --text-primary: #2a2c31;
+  --text-secondary: #52555c;
+  --text-disabled: #80838a;
+
+  /* Deep mint: it is used as text colour as well as fill, so it has to clear 4.5:1 on the
+     grey (and carry white text when it is a fill). The pastel mint lives in glows only. */
+  --accent: #138565;
+  --accent-strong: #0d6b50;
+  --accent-contrast: #ffffff;
+  --accent-rgb: 19, 133, 101;
+
+  --error: #d4524f;
+  --success: #138565;
+
+  --playhead: #ff6f61;
+
+  /* The unplayed waveform lives on the dark display; the row waveforms on the grey. */
+  --waveform-dim: rgba(170, 240, 222, 0.5);
+  --row-waveform-dim: rgba(90, 94, 104, 0.5);
+
+  --favorite-level-3: #138565;
+  --favorite-level-2: #7a9f1f;
+  --favorite-level-1: #c98a0a;
+  --favorite-level-0: #7d8088;
+  --favorite-level-1-rgb: 201, 138, 10;
+
+  --danger: #d4524f;
+  --volume-boost: #f0903a;
+
+  --section-download: #52555c;
+  --section-library: #52555c;
+  --section-favorites: #52555c;
+  --section-energy: #52555c;
+  --section-folders: #52555c;
+  --section-tags: #52555c;
+  --section-projects: #52555c;
+  --section-keybinds: #52555c;
+
+  /* Inter, already bundled for Liquid Glass (its @font-face isn't tied to that theme). */
+  --font-ui: 'Inter Glass', 'Inter', -apple-system, 'SF Pro Text', 'Segoe UI Variable', system-ui, sans-serif;
+
+  --row-active-weight: 600;
+  --row-active-text-shadow: none;
+
+  /* The title bar is the page itself; the window buttons are small raised pills. */
+  --titlebar-bg: #d9dadd;
+  --titlebar-border: transparent;
+  --titlebar-text: #2a2c31;
+  --titlebar-text-shadow: none;
+  --titlebar-weight: 500;
+  --caption-top: 5px;
+  --caption-width: 32px;
+  --caption-close-width: 32px;
+  --caption-height: 22px;
+  --caption-gap: 7px;
+  --caption-inset: 12px;
+  --caption-radius: 11px;
+  --caption-border: transparent;
+  --caption-bg: linear-gradient(145deg, #eaebee, #d2d3d7);
+  --caption-bg-hover: linear-gradient(145deg, #f2f3f5, #dcdde1);
+  --caption-bg-active: #cfd0d4;
+  --caption-shadow: 2px 2px 5px rgba(78, 82, 92, 0.3), -2px -2px 5px rgba(255, 255, 255, 0.92);
+  --caption-icon: #2a2c31;
+  --caption-icon-filter: none;
+  --caption-stroke: 1.5;
+  --caption-close-border: transparent;
+  --caption-close-bg: linear-gradient(145deg, #eaebee, #d2d3d7);
+  --caption-close-bg-hover: linear-gradient(145deg, #f5b3ad, #e07a72);
+  --caption-close-bg-active: #d4645c;
+  --caption-close-shadow-hover: 0 0 8px rgba(240, 100, 90, 0.5);
+  --caption-close-icon-hover: #ffffff;
+
+  --shadow-float: 6px 8px 20px rgba(78, 82, 92, 0.38), -4px -4px 12px rgba(255, 255, 255, 0.75);
+
+  --app-backdrop: none;
+
+  /* The four big panes: raised slabs of the same grey (the structure below floats them). */
+  --pane-sidebar: linear-gradient(145deg, #e3e4e7, #d6d7da);
+  --pane-header: linear-gradient(145deg, #e3e4e7, #d6d7da);
+  --pane-list: linear-gradient(145deg, #e6e7ea, #dadbde);
+  --pane-footer: linear-gradient(145deg, #e3e4e7, #d6d7da);
+  --pane-radius: 28px;
+
+  /* Raised pill buttons. */
+  --control-bg: linear-gradient(145deg, #e8e9ec, #d3d4d8);
+  --control-bg-hover: linear-gradient(145deg, #eff0f2, #dcdde1);
+  --control-border: transparent;
+  --control-shadow: var(--sf-raise-sm);
+  --control-radius: 999px;
+
+  /* Round keys sit in a ring bezel, the way the knobs in a hardware kit do. */
+  --bubble-bg: radial-gradient(circle at 34% 28%, #f3f4f6 0%, #dfe0e4 55%, #cbccd1 100%);
+  --bubble-shadow: 0 0 0 3px #d6d7db, 0 0 0 4px rgba(80, 84, 94, 0.2), 5px 6px 11px rgba(78, 82, 92, 0.32), -4px -4px 9px rgba(255, 255, 255, 0.92), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  --bubble-radius: 50%;
+
+  /* Play / pause: the big white knob with a dark ring and a faint mint glow. */
+  --orb-bg: radial-gradient(circle at 34% 28%, #ffffff 0%, #eaebee 50%, #cfd0d5 100%);
+  --orb-border: #2b2d31;
+  --orb-shadow: 0 0 0 5px #d6d7db, 0 0 0 6px rgba(80, 84, 94, 0.22), 7px 9px 17px rgba(78, 82, 92, 0.36), -5px -5px 12px rgba(255, 255, 255, 0.92), 0 0 26px rgba(47, 191, 146, 0.4);
+  --orb-icon: #12755a;
+
+  --well-shadow: var(--sf-sunk);
+
+  /* The display: sunk into the case, dark glass with a dot grille over it (like a speaker). */
+  --screen-bg: linear-gradient(180deg, #34373d, #25282c);
+  --screen-shadow: inset 3px 3px 9px rgba(0, 0, 0, 0.65), inset -2px -2px 6px rgba(255, 255, 255, 0.07);
+  --screen-text: #9fe9d0;
+  --screen-accent: #5ff0c0;
+  --screen-accent-strong: #c9fff0;
+  --screen-ring: #25282c;
+  --analyzer-bar-dim: #454950;
+  --analyzer-bg-dim: #26292e;
+  --screen-overlay: radial-gradient(circle, rgba(0, 0, 0, 0.45) 0 0.9px, rgba(0, 0, 0, 0) 1.3px) 0 0 / 4px 4px;
+
+  --waveform-gloss-top: transparent;
+  --waveform-gloss-mid: transparent;
+  --waveform-gloss-shade: transparent;
+  --waveform-gloss-glow: transparent;
+
+  /* Fader knobs: round, raised, white. */
+  --thumb-width: 18px;
+  --thumb-height: 18px;
+  --thumb-radius: 50%;
+  --thumb-bg: radial-gradient(circle at 34% 28%, #ffffff, #d3d4d9);
+  --thumb-boost-bg: radial-gradient(circle at 34% 28%, #ffe6cc, #f0903a);
+  --press-depth: 1px;
+  /* The spinning album art gets a knob's centre cap and a soft sheen. */
+  --disc-overlay: radial-gradient(circle, #eaebee 0 5%, #b7b9bf 5.5% 7%, rgba(0, 0, 0, 0) 7.5%), radial-gradient(ellipse 60% 38% at 34% 18%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+/* Floating, raised panes: the same grey as the page, lit from the top-left (both variants). */
+html[data-theme^='soft-3d'] [data-app-shell] {
+  gap: 16px;
+  padding: 0 16px 16px;
+}
+
+html[data-theme^='soft-3d'] [data-pane] {
+  border: 0;
+  box-shadow: var(--sf-raise);
+}
+
+/* The pop-out mini player is a whole window: no floating. */
+html[data-theme^='soft-3d'] [data-pane='mini'] {
+  border-radius: 0;
+  box-shadow: none;
+}

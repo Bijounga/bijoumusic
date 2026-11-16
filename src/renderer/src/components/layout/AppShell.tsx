@@ -27,6 +27,7 @@ import WaveformPanel from '../player/WaveformPanel'
 import TagSidebarSection from '../tags/TagSidebarSection'
 import TagFilterSearch from '../tags/TagFilterSearch'
 import { useNoShiftTextSelect } from '../../hooks/useNoShiftTextSelect'
+import { useGlassRefraction } from '../../hooks/useGlassRefraction'
 import DurationFilterControl from './DurationFilterControl'
 import BpmFilterControl from './BpmFilterControl'
 import SearchBlacklistControl from './SearchBlacklistControl'
@@ -143,6 +144,7 @@ function AppShell(): React.JSX.Element {
   useMiniPlayerBridge(visibleTracks)
   useBackgroundWaveformGeneration(tracks)
   usePremiereAnalysisResponder()
+  useGlassRefraction()
   useNoShiftTextSelect()
 
   useEffect(() => {
@@ -189,9 +191,10 @@ function AppShell(): React.JSX.Element {
   )
 
   return (
-    <div className={styles.shell}>
+    <div className={styles.shell} data-app-shell>
       <PlaybackBoundaryWatcher visibleTracks={visibleTracks} />
-      <aside className={styles.sidebar}>
+      <aside className={styles.sidebarPane} data-pane="sidebar">
+      <div className={styles.sidebar}>
         <UpdateBadge />
         <SyncBadge />
         <PremiereExtBadge />
@@ -293,9 +296,10 @@ function AppShell(): React.JSX.Element {
         <SidebarSection title="Keybinds" accentColor="var(--section-keybinds)" storageKey="keybinds">
           <KeybindsSection folderTree={folderTree} />
         </SidebarSection>
+      </div>
       </aside>
 
-      <div className={styles.search}>
+      <div className={styles.search} data-pane="header">
         <input
           className={styles.searchInput}
           placeholder="Search tracks, tags, aliases…"
@@ -360,7 +364,7 @@ function AppShell(): React.JSX.Element {
         </div>
       </div>
 
-      <main className={styles.list}>
+      <main className={styles.list} data-pane="list">
         {isLoadingInitial ? (
           <div className={styles.emptyHint}>Loading your library…</div>
         ) : loadError ? (
@@ -378,7 +382,7 @@ function AppShell(): React.JSX.Element {
         <ReactiveVisualizer track={currentTrack} />
       </main>
 
-      <footer className={styles.nowPlaying}>
+      <footer className={styles.nowPlaying} data-pane="footer">
         <div className={styles.waveformArea}>
           <WaveformPanel />
         </div>

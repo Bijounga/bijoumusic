@@ -1,0 +1,166 @@
+/* Theme 10: Techno Flat — an instrument panel printed on paper-grey: flat shapes,
+   hairline rules, black ink, one signal orange, and a dot-matrix display. No gradients
+   and no soft shadows anywhere; depth comes only from hard edges (popovers get a hard
+   offset shadow, like a printed drop). Labels use a condensed DIN-style face.
+
+   Orange is the one colour that means something: selected, playing, the fader. Where
+   text has to be orange on paper it is --accent-strong (a burnt orange that clears 4.5:1);
+   the bright orange is for fills and for the dark display only.
+
+   Backgrounds that feed `background-image` (the control tokens) are written as flat
+   linear-gradients, because a bare colour isn't valid there. */
+html[data-theme='techno-flat'] {
+  --surface-0: #e8e8e6;
+  --surface-1: #eaeae8;
+  --surface-2: #fafaf8;
+  --surface-3: rgba(239, 125, 26, 0.22);
+  --border-subtle: #c4c4c0;
+
+  --text-primary: #1d1e20;
+  --text-secondary: #4a4d52;
+  --text-disabled: #80838a;
+
+  /* --accent is both a fill and a text colour in this app, so it is a notch deeper than the
+     signal orange used for the tabs, the display and the fader (#ef7d1a, written out where
+     it is only ever a fill). --accent-strong is the burnt orange for selected-row text. */
+  --accent: #d4600a;
+  --accent-strong: #a84800;
+  --accent-contrast: #ffffff;
+  --accent-rgb: 212, 96, 10;
+
+  --error: #d63a1a;
+  --success: #2f8f4a;
+
+  --playhead: #ff4f1f;
+
+  /* Unlit dots of the display ghost faintly; row waveforms are ink. */
+  --waveform-dim: rgba(255, 138, 31, 0.3);
+  --row-waveform-dim: rgba(29, 30, 32, 0.5);
+
+  --favorite-level-3: #d4600a;
+  --favorite-level-2: #2f8f4a;
+  --favorite-level-1: #a87a12;
+  --favorite-level-0: #80838a;
+  --favorite-level-1-rgb: 168, 122, 18;
+
+  --danger: #d63a1a;
+  --volume-boost: #e8401c;
+
+  --section-download: #4a4d52;
+  --section-library: #4a4d52;
+  --section-favorites: #4a4d52;
+  --section-energy: #4a4d52;
+  --section-folders: #4a4d52;
+  --section-tags: #4a4d52;
+  --section-projects: #4a4d52;
+  --section-keybinds: #4a4d52;
+
+  /* Condensed DIN: Bahnschrift on Windows, DIN Alternate / Avenir Next Condensed on Mac. */
+  --font-ui: 'Bahnschrift SemiCondensed', 'Bahnschrift', 'DIN Alternate', 'Avenir Next Condensed', 'Segoe UI', system-ui, sans-serif;
+
+  --row-active-weight: 700;
+  --row-active-text-shadow: none;
+
+  /* A black bar with an orange rule under it; bare window buttons that light up orange. */
+  --titlebar-bg: #1d1e20;
+  --titlebar-border: #ef7d1a;
+  --titlebar-text: #e8e8e6;
+  --titlebar-text-shadow: none;
+  --titlebar-weight: 600;
+  --caption-top: 0px;
+  --caption-width: 46px;
+  --caption-close-width: 46px;
+  --caption-height: 32px;
+  --caption-gap: 0px;
+  --caption-inset: 0px;
+  --caption-radius: 0;
+  --caption-border: transparent;
+  --caption-bg: transparent;
+  --caption-bg-hover: rgba(255, 255, 255, 0.16);
+  --caption-bg-active: rgba(255, 255, 255, 0.08);
+  --caption-shadow: none;
+  --caption-icon: #e8e8e6;
+  --caption-icon-filter: none;
+  --caption-stroke: 1;
+  --caption-close-border: transparent;
+  --caption-close-bg: transparent;
+  --caption-close-bg-hover: #ef7d1a;
+  --caption-close-bg-active: #c9620a;
+  --caption-close-shadow-hover: none;
+  --caption-close-icon-hover: #1d1e20;
+
+  /* A hard printed drop shadow, no blur. */
+  --shadow-float: 4px 4px 0 #1d1e20;
+
+  --app-backdrop: none;
+
+  /* Flat paper panes, each with a short orange tab at its top-left corner. */
+  --pane-sidebar: linear-gradient(#ef7d1a, #ef7d1a) left 0 top 0 / 34px 4px no-repeat, #dcdcda;
+  --pane-header: linear-gradient(#ef7d1a, #ef7d1a) left 0 top 0 / 34px 3px no-repeat, #e4e4e2;
+  --pane-list: #f2f2f0;
+  --pane-footer: linear-gradient(#ef7d1a, #ef7d1a) left 0 top 0 / 34px 4px no-repeat, #dcdcda;
+
+  /* Square-ish keys outlined in ink. */
+  --control-bg: linear-gradient(#f4f4f2, #f4f4f2);
+  --control-bg-hover: linear-gradient(rgba(239, 125, 26, 0.2), rgba(239, 125, 26, 0.2));
+  --control-border: #1d1e20;
+  --control-shadow: none;
+  --control-radius: 3px;
+
+  /* Round keys: a paper disc in an ink ring. */
+  --bubble-bg: #f4f4f2;
+  --bubble-shadow: inset 0 0 0 1.5px #1d1e20;
+  --bubble-radius: 50%;
+
+  /* Play / pause: a black disc with an orange symbol, ringed by a thin outer line. */
+  --orb-bg: #1d1e20;
+  --orb-border: #1d1e20;
+  --orb-shadow: 0 0 0 3px #e4e4e2, 0 0 0 4px #1d1e20;
+  --orb-icon: #ef7d1a;
+
+  --well-shadow: none;
+
+  /* The display: near-black slate with orange dot-matrix. */
+  --screen-bg: #26292d;
+  --screen-shadow: inset 0 0 0 1px #1d1e20;
+  --screen-text: #ff9a3d;
+  --screen-accent: #ff8a1f;
+  --screen-accent-strong: #ffd1a1;
+  --screen-ring: #26292d;
+  --analyzer-bar-dim: #3d4147;
+  --analyzer-bg-dim: #202327;
+  --screen-overlay: radial-gradient(circle, rgba(0, 0, 0, 0.55) 0 1px, rgba(0, 0, 0, 0) 1.4px) 0 0 / 4px 4px;
+
+  --waveform-gloss-top: transparent;
+  --waveform-gloss-mid: transparent;
+  --waveform-gloss-shade: transparent;
+  --waveform-gloss-glow: transparent;
+
+  /* The volume fader: a flat orange blade. */
+  --thumb-width: 8px;
+  --thumb-height: 18px;
+  --thumb-radius: 0;
+  --thumb-bg: #ef7d1a;
+  --thumb-boost-bg: #e8401c;
+  --press-depth: 1px;
+  /* The spinning album art becomes a record: orange hub, ink spindle, a thin orange ring. */
+  --disc-overlay: radial-gradient(circle, #1d1e20 0 3%, #ef7d1a 3.5% 8%, rgba(0, 0, 0, 0) 8.5%), radial-gradient(circle, rgba(0, 0, 0, 0) 80%, rgba(239, 125, 26, 0.95) 81% 83%, rgba(0, 0, 0, 0) 84%);
+}
+
+/* Hard ink rules between the panes. */
+html[data-theme='techno-flat'] [data-pane='sidebar'] {
+  border-right: 1px solid #1d1e20;
+}
+
+html[data-theme='techno-flat'] [data-pane='header'] {
+  border-bottom: 1px solid #1d1e20;
+}
+
+html[data-theme='techno-flat'] [data-pane='footer'] {
+  border-top: 1px solid #1d1e20;
+}
+
+html[data-theme='techno-flat'] ::selection {
+  background: #ef7d1a;
+  color: #1d1e20;
+}

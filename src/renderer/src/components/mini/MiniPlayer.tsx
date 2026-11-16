@@ -35,7 +35,7 @@ function MiniPlayer(): React.JSX.Element {
   const send = window.api.miniSendCommand
 
   return (
-    <div className={styles.player}>
+    <div className={styles.player} data-pane="mini">
       <div className={styles.art}>{art ? <img src={art} alt="" draggable={false} /> : <span>♪</span>}</div>
 
       <div className={styles.info}>
